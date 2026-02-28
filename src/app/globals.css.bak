@@ -18,11 +18,9 @@
   --card: #1c1c1c;
   --input: #121212;
   --muted: #808080;
-
-  --accent: #eab308;
-  /* Tailwind yellow-500 equivalent */
-  --accent-hover: #ca8a04;
-  /* Tailwind yellow-600 equivalent */
+  
+  --accent: #eab308; /* Tailwind yellow-500 equivalent */
+  --accent-hover: #ca8a04; /* Tailwind yellow-600 equivalent */
 }
 
 body {
