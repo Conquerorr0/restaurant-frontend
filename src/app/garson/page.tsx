@@ -6,6 +6,28 @@ import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown } from "lucide-rea
 
 type TableStatus = "EMPTY" | "OCCUPIED";
 
+// Masa İkonu SVG
+const TableIcon = ({ size = 28, color = "currentColor" }: { size?: number; color?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <rect x="3" y="8" width="18" height="4" rx="1" />
+        <path d="M5 12v6" />
+        <path d="M19 12v6" />
+        <path d="M9 12v4" />
+        <path d="M15 12v4" />
+        <path d="M5 8V5c0-.6.4-1 1-1h12c.6 0 1 .4 1 1v3" />
+    </svg>
+);
+
 interface TableData {
     id: string;
     name: string;
@@ -355,6 +377,25 @@ export default function GarsonMasalarPage() {
                                         pointerEvents: "none",
                                     }} />
 
+                                    {/* Table Name — top left corner */}
+                                    <div style={{
+                                        position: "absolute",
+                                        top: "8px", left: "8px",
+                                        fontWeight: 800,
+                                        fontSize: "11px",
+                                        color: isOccupied ? "#fca5a5" : "#fde047",
+                                        letterSpacing: "0.08em",
+                                        lineHeight: 1,
+                                        zIndex: 2,
+                                        background: isOccupied
+                                            ? "rgba(239,68,68,0.15)"
+                                            : "rgba(234,179,8,0.15)",
+                                        borderRadius: "6px",
+                                        padding: "3px 6px",
+                                    }}>
+                                        {table.name}
+                                    </div>
+
                                     {/* Status dot (top right) */}
                                     <div style={{
                                         position: "absolute",
@@ -367,7 +408,7 @@ export default function GarsonMasalarPage() {
                                             : "0 0 6px rgba(34,197,94,0.7)",
                                     }} />
 
-                                    {/* Table Name Badge */}
+                                    {/* Table Icon Badge */}
                                     <div style={{
                                         width: "44px", height: "44px",
                                         borderRadius: "12px",
@@ -378,14 +419,13 @@ export default function GarsonMasalarPage() {
                                             ? "1px solid rgba(239,68,68,0.35)"
                                             : "1px solid rgba(234,179,8,0.3)",
                                         display: "flex", alignItems: "center", justifyContent: "center",
-                                        fontWeight: 800,
-                                        fontSize: "14px",
-                                        color: isOccupied ? "#fca5a5" : "#fde047",
-                                        letterSpacing: "0.05em",
                                         flexShrink: 0,
                                         zIndex: 1,
                                     }}>
-                                        {table.name}
+                                        <TableIcon
+                                            size={24}
+                                            color={isOccupied ? "#fca5a5" : "#fde047"}
+                                        />
                                     </div>
 
                                     {/* Capacity */}
