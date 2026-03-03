@@ -4,7 +4,7 @@ import React, { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import {
     ArrowLeft, Plus, Minus, ShoppingBag, CheckCircle2,
-    ChevronRight, UtensilsCrossed, Trash2, Receipt, X, ChevronUp
+    ChevronRight, UtensilsCrossed, Trash2, Receipt, X, ChevronUp, MessageSquare
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -84,6 +84,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
     const [order, setOrder] = useState<Order | null>(null);
     const [localCart, setLocalCart] = useState<{ product: Product; quantity: number }[]>([]);
     const [cartOpen, setCartOpen] = useState(false);
+    const [orderNote, setOrderNote] = useState("");
 
     useEffect(() => {
         const init = async () => {
@@ -177,8 +178,28 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                     )}
                 </div>
                 {localCart.length > 0 && (
-                    <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(234,179,8,0.1)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                    <div style={{ padding: "12px", borderTop: "1px solid rgba(234,179,8,0.1)" }}>
+                        {/* Sipariş Notu */}
+                        <div style={{ marginBottom: "12px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                <MessageSquare size={13} color="#9ca3af" />
+                                <span style={{ fontSize: "11px", fontWeight: 600, color: "#9ca3af", letterSpacing: "0.05em" }}>SİPARİŞ NOTU</span>
+                            </div>
+                            <textarea
+                                value={orderNote}
+                                onChange={(e) => setOrderNote(e.target.value)}
+                                placeholder="Örn: Acısız olsun, ekstra malzeme..."
+                                style={{
+                                    width: "100%", height: "54px", padding: "8px 10px",
+                                    borderRadius: "8px", background: "rgba(255,255,255,0.03)",
+                                    border: "1px solid rgba(255,255,255,0.1)", color: "#e5e7eb",
+                                    fontSize: "12px", outline: "none", resize: "none",
+                                    fontFamily: "inherit",
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                             <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: 600 }}>Eklenecek</span>
                             <span style={{ fontSize: "15px", fontWeight: 800, color: "#fde047" }}>₺{localTotal.toLocaleString("tr-TR")}</span>
                         </div>
