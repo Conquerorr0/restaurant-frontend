@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, Printer, ArrowRightLeft, X, Check, Search, CreditCard, Banknote, Ban, Gift } from "lucide-react";
+import { Clock, Printer, ArrowRightLeft, X, Check, Search, CreditCard, Banknote, Ban, Gift, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { tableService } from "@/services/tableService";
 import { orderService } from "@/services/orderService";
@@ -31,7 +31,7 @@ interface TableData {
 // Mock data functions removed
 
 export default function KasaDashboard() {
-    const { token } = useAuth();
+    const { token, logout } = useAuth();
     const [tables, setTables] = useState<TableData[]>([]);
     const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
     const [isPartialPaymentModalOpen, setIsPartialPaymentModalOpen] = useState(false);
@@ -225,9 +225,33 @@ export default function KasaDashboard() {
                 {/* ── Left Side: Table Grid ── */}
                 <div style={{ flex: 1 }}>
                     <div style={{ marginBottom: "20px" }}>
-                        <h1 style={{ color: "#fbbf24", fontSize: "28px", fontWeight: 900, letterSpacing: "-0.02em", margin: 0 }}>
-                            KASA DASHBOARD
-                        </h1>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <h1 style={{ color: "#fbbf24", fontSize: "28px", fontWeight: 900, letterSpacing: "-0.02em", margin: 0 }}>
+                                KASA DASHBOARD
+                            </h1>
+                            <button
+                                title="Çıkış Yap"
+                                onClick={logout}
+                                style={{
+                                    padding: "8px 12px",
+                                    background: "rgba(239, 68, 68, 0.1)",
+                                    border: "1px solid rgba(239, 68, 68, 0.2)",
+                                    borderRadius: "10px",
+                                    color: "#ef4444",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    fontSize: "12px",
+                                    fontWeight: 700,
+                                    transition: "all 0.2s"
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"}
+                            >
+                                <LogOut size={16} /> ÇIKIŞ
+                            </button>
+                        </div>
                         <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e" }} />
