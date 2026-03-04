@@ -26,6 +26,8 @@ interface TableData {
     time?: string;
     duration?: string;
     items?: Product[];
+    orderId?: string;
+    note?: string;
     hasNewOrder?: boolean;
 }
 
@@ -40,6 +42,26 @@ export default function KasaDashboard() {
     const [processingPayment, setProcessingPayment] = useState(false);
     const [loading, setLoading] = useState(true);
     const [successPopup, setSuccessPopup] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: "" });
+    const [seenOrderIds, setSeenOrderIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('seenOrderIds');
+        if (saved) {
+            try {
+                setSeenOrderIds(JSON.parse(saved));
+            } catch (e) {
+                console.error("Failed to parse seenOrderIds from localStorage", e);
+                setSeenOrderIds([]);
+            }
+        }
+    }, []);
+
+    const markAsSeen = (orderId: string) => {
+        if (!orderId || seenOrderIds.includes(orderId)) return;
+        const newSeen = [...seenOrderIds, orderId];
+        setSeenOrderIds(newSeen);
+        localStorage.setItem('seenOrderIds', JSON.stringify(newSeen));
+    };
 
     const floors = useMemo(() => {
         const floorSet = new Set<string>();
@@ -55,10 +77,14 @@ export default function KasaDashboard() {
                 const mappedTables: TableData[] = await Promise.all(tableRes.data.map(async (t) => {
                     let items: Product[] = [];
                     let duration = "---";
+                    let orderId = undefined;
+                    let note = undefined;
                     if (t.status === "OCCUPIED") {
                         try {
                             const orderRes = await orderService.getActiveOrder(t.id, token);
                             if (orderRes.success && orderRes.data) {
+                                orderId = orderRes.data.id;
+                                note = orderRes.data.note;
                                 if (t.id === selectedTableId) {
                                     items = orderRes.data.items.map(item => ({
                                         id: item.id,
@@ -91,7 +117,9 @@ export default function KasaDashboard() {
                         items: items,
                         floor: t.floor,
                         time: "---",
-                        duration: duration
+                        duration: duration,
+                        orderId,
+                        note
                     };
                 }));
                 setTables(mappedTables);
@@ -107,7 +135,7 @@ export default function KasaDashboard() {
         fetchTablesAndDetails();
         const interval = setInterval(fetchTablesAndDetails, 30000);
         return () => clearInterval(interval);
-    }, [token, selectedTableId]);
+    }, [token, selectedTableId, seenOrderIds]); // Added seenOrderIds to dependencies to re-evaluate unread status
 
     // Initial table selection update
     useEffect(() => {
@@ -117,7 +145,7 @@ export default function KasaDashboard() {
                 fetchTablesAndDetails();
             }
         }
-    }, [selectedTableId]);
+    }, [selectedTableId, tables, token]); // Added tables to dependencies
 
     const selectedTable = tables.find(t => t.id === selectedTableId);
 
@@ -133,6 +161,8 @@ export default function KasaDashboard() {
     const handleTableClick = async (id: string) => {
         const t = tables.find(tbl => tbl.id === id);
         if (!t) return;
+
+        if (t.orderId) markAsSeen(t.orderId);
 
         if (selectionMode === "MOVE" && selectedTableId) {
             if (t.status === "OCCUPIED") {
@@ -225,10 +255,17 @@ export default function KasaDashboard() {
             const orderRes = await orderService.getActiveOrder(selectedTable.id, token);
             if (!orderRes.success || !orderRes.data) throw new Error("Aktif sipariş bulunamadı.");
 
+            const fullAmount = Number(orderRes.data.total_amount);
+            const allItems = orderRes.data.items.map((item: any) => ({
+                orderItemId: item.id,
+                quantity: item.quantity
+            }));
+
             const response = await paymentService.processPayment({
                 orderId: orderRes.data.id,
                 paymentMethod: method,
-                amount: selectedTable.totalAmount
+                amount: fullAmount,
+                items: allItems
             }, token);
 
             if (response.success) {
@@ -291,14 +328,31 @@ export default function KasaDashboard() {
         if (confirm("Seçili ürünleri ikram etmek istediğinize emin misiniz?")) {
             setProcessingPayment(true);
             try {
+                let orderClosed = false;
                 for (const itemId of Object.keys(selectedQuantities)) {
-                    await orderService.treatItem(itemId, selectedQuantities[itemId], token);
+                    const res = await orderService.treatItem(itemId, selectedQuantities[itemId], token);
+                    if (res.success && res.data && res.data.balance <= 0.01) {
+                        orderClosed = true;
+                    }
                 }
-                setSuccessPopup({ isOpen: true, message: "İkram işlemi başarıyla tamamlandı." });
-                setSelectedQuantities({});
-                setIsPartialPaymentModalOpen(false);
+
                 await fetchTablesAndDetails();
-            } catch (error: any) { alert(error.message); } finally { setProcessingPayment(false); }
+                setSelectedQuantities({});
+
+                if (orderClosed) {
+                    setIsPartialPaymentModalOpen(false);
+                    setSelectedTableId(null);
+                    setSuccessPopup({ isOpen: true, message: "İkramlar sonrası masa hesabı kapandı." });
+                } else {
+                    setSuccessPopup({ isOpen: true, message: "İkram işlemi başarıyla tamamlandı." });
+                }
+
+                setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
+            } catch (error: any) {
+                alert(error.message);
+            } finally {
+                setProcessingPayment(false);
+            }
         }
     };
 
@@ -310,19 +364,47 @@ export default function KasaDashboard() {
         if (confirm("Seçili ürünleri iptal etmek istediğinize emin misiniz?")) {
             setProcessingPayment(true);
             try {
+                let orderClosed = false;
                 for (const itemId of Object.keys(selectedQuantities)) {
-                    await orderService.cancelItem(itemId, selectedQuantities[itemId], token);
+                    const res = await orderService.cancelItem(itemId, selectedQuantities[itemId], token);
+                    if (res.success && res.data && res.data.balance <= 0.01) {
+                        orderClosed = true;
+                    }
                 }
-                setSuccessPopup({ isOpen: true, message: "İptal işlemi başarıyla tamamlandı." });
-                setSelectedQuantities({});
-                setIsPartialPaymentModalOpen(false);
+
                 await fetchTablesAndDetails();
-            } catch (error: any) { alert(error.message); } finally { setProcessingPayment(false); }
+                setSelectedQuantities({});
+
+                if (orderClosed) {
+                    setIsPartialPaymentModalOpen(false);
+                    setSelectedTableId(null);
+                    setSuccessPopup({ isOpen: true, message: "İptaller sonrası masa hesabı kapandı." });
+                } else {
+                    setSuccessPopup({ isOpen: true, message: "İptal işlemi başarıyla tamamlandı." });
+                }
+
+                setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
+            } catch (error: any) {
+                alert(error.message);
+            } finally {
+                setProcessingPayment(false);
+            }
         }
     };
 
     return (
         <div className="min-h-screen font-sans p-6" style={{ background: "#0d0d0d" }}>
+            <style>{`
+                @keyframes pulse-gold {
+                    0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); transform: scale(1); }
+                    50% { box-shadow: 0 0 20px 10px rgba(251, 191, 36, 0.1); transform: scale(1.02); }
+                    100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); transform: scale(1); }
+                }
+                .pulse-new-order {
+                    animation: pulse-gold 2s infinite ease-in-out;
+                    border: 2px solid #fbbf24 !important;
+                }
+            `}</style>
             <div style={{ width: "100%", maxWidth: "1300px", margin: "0 auto", display: "flex", gap: "32px", alignItems: "flex-start" }}>
 
                 {/* ── Left Side: Table Grid ── */}
@@ -366,19 +448,21 @@ export default function KasaDashboard() {
                             const isSelected = selectedTableId === table.id;
                             const isTargetForMove = selectionMode === "MOVE" && !isSelected && !isOccupied;
                             const isTargetForMerge = selectionMode === "MERGE" && !isSelected && isOccupied;
+                            const isUnread = isOccupied && table.orderId && !seenOrderIds.includes(table.orderId);
 
                             return (
-                                <button key={table.id} onClick={() => handleTableClick(table.id)} style={{
-                                    position: "relative", aspectRatio: "1/1.05", borderRadius: "24px", background: "#18181b",
-                                    border: isSelected ? "2px solid #fbbf24" : (isTargetForMove || isTargetForMerge ? "2px dashed #fbbf24" : "2px solid transparent"),
-                                    cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px",
-                                    transition: "all 0.2s ease", boxShadow: isOccupied ? "0 4px 10px rgba(0,0,0,0.5)" : "none"
+                                <div key={table.id} onClick={() => handleTableClick(table.id)} className={isUnread ? "pulse-new-order" : ""} style={{
+                                    padding: "24px",
+                                    background: isSelected ? "linear-gradient(135deg, #fde047 0%, #ca8a04 100%)" : (isTargetForMove || isTargetForMerge) ? "rgba(251, 191, 36, 0.1)" : "#111113",
+                                    border: isSelected ? "none" : (isTargetForMove || isTargetForMerge) ? "2px dashed #fbbf24" : "1px solid #27272a",
+                                    borderRadius: "32px", cursor: "pointer", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", textAlign: "center", position: "relative",
+                                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", aspectRatio: "1/1.05"
                                 }}>
                                     {isOccupied && <div style={{ position: "absolute", top: "10px", right: "10px", width: "20px", height: "20px", borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }}><Check size={12} color="#fff" /></div>}
                                     <span style={{ fontSize: "24px", fontWeight: 800, color: isOccupied ? "#ef4444" : "#22c55e" }}>{table.name}</span>
                                     <span style={{ fontSize: "10px", fontWeight: 800, color: "#71717a" }}>{table.duration !== "---" ? table.duration : (isOccupied ? "DOLU" : "BOŞ")}</span>
                                     <span style={{ fontSize: "16px", fontWeight: 800, color: "#fff" }}>{isOccupied ? `₺${table.totalAmount}` : "-"}</span>
-                                </button>
+                                </div>
                             );
                         })}
                     </div>
@@ -428,6 +512,12 @@ export default function KasaDashboard() {
                                         <div style={{ color: "#fbbf24", fontWeight: 900 }}>₺{item.totalPrice}</div>
                                     </div>
                                 ))}
+                                {selectedTable.note && (
+                                    <div style={{ marginTop: "12px", padding: "12px", background: "rgba(251, 191, 36, 0.05)", border: "1px dashed rgba(251, 191, 36, 0.3)", borderRadius: "12px" }}>
+                                        <div style={{ fontSize: "10px", color: "#fbbf24", fontWeight: 800, letterSpacing: "0.1em", marginBottom: "4px" }}>GARSON NOTU</div>
+                                        <div style={{ color: "#a1a1aa", fontSize: "13px", lineHeight: "1.4" }}>{selectedTable.note}</div>
+                                    </div>
+                                )}
                             </div>
 
                             <div style={{ marginTop: "24px", padding: "24px", background: "#18181b", borderRadius: "20px", border: "1px solid #27272a" }}>

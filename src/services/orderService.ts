@@ -18,6 +18,7 @@ export interface Order {
     total_amount: number;
     items: OrderItem[];
     created_at: string;
+    note?: string;
 }
 
 export const orderService = {
@@ -34,7 +35,7 @@ export const orderService = {
     /**
      * Create or update an order (add items)
      */
-    createOrUpdateOrder: async (data: { tableId: string, items: { productId: string, quantity: number }[] }, token: string): Promise<ApiResponse<any>> => {
+    createOrUpdateOrder: async (data: { tableId: string, items: { productId: string, quantity: number }[], note?: string }, token: string): Promise<ApiResponse<any>> => {
         return apiRequest<ApiResponse<any>>('/orders', {
             method: 'POST',
             token,

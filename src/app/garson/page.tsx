@@ -50,6 +50,25 @@ export default function GarsonMasalarPage() {
     const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
     const [selectionMode, setSelectionMode] = useState<"view" | "move" | "merge">("view");
     const [selectedTables, setSelectedTables] = useState<string[]>([]);
+    const [seenOrderIds, setSeenOrderIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('garson_seenOrderIds');
+        if (saved) {
+            try {
+                setSeenOrderIds(JSON.parse(saved));
+            } catch (e) {
+                setSeenOrderIds([]);
+            }
+        }
+    }, []);
+
+    const markAsSeen = (orderId: string) => {
+        if (!orderId || seenOrderIds.includes(orderId)) return;
+        const newSeen = [...seenOrderIds, orderId];
+        setSeenOrderIds(newSeen);
+        localStorage.setItem('garson_seenOrderIds', JSON.stringify(newSeen));
+    };
 
     const floors = React.useMemo(() => {
         const uniqueFloors = Array.from(new Set(tables.map(t => t.floor))).sort();
@@ -101,6 +120,7 @@ export default function GarsonMasalarPage() {
         if (!table) return;
 
         if (selectionMode === "view") {
+            if (table.active_order_id) markAsSeen(table.active_order_id);
             router.push(`/garson/${tableId}`);
             return;
         }
@@ -180,6 +200,17 @@ export default function GarsonMasalarPage() {
 
     return (
         <div className="min-h-screen font-sans" style={{ background: "#0d0d0d" }}>
+            <style>{`
+                @keyframes breathe {
+                    0% { transform: scale(1); box-shadow: 0 4px 20px rgba(239,68,68,0.12); }
+                    50% { transform: scale(1.03); box-shadow: 0 8px 30px rgba(239,68,68,0.3); }
+                    100% { transform: scale(1); box-shadow: 0 4px 20px rgba(239,68,68,0.12); }
+                }
+                .breathe-order {
+                    animation: breathe 2.5s infinite ease-in-out;
+                    border: 1.5px solid rgba(239,68,68,0.8) !important;
+                }
+            `}</style>
 
             {/* ── Header ── */}
             <header style={{
@@ -419,11 +450,13 @@ export default function GarsonMasalarPage() {
                         {filteredTables.map(table => {
                             const isOccupied = table.status === "OCCUPIED";
                             const isSelected = selectedTables.includes(table.id);
+                            const isUnread = isOccupied && table.active_order_id && !seenOrderIds.includes(table.active_order_id);
 
                             return (
                                 <button
                                     key={table.id}
                                     onClick={() => handleTableClick(table.id)}
+                                    className={isUnread ? "breathe-order" : ""}
                                     style={{
                                         position: "relative",
                                         aspectRatio: "1/1",
