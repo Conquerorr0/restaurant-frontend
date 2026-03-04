@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown, GitMerge } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { tableService } from "@/services/tableService";
+import { socketService } from "@/services/socketService";
 
 type TableStatus = "EMPTY" | "OCCUPIED";
 
@@ -53,6 +54,24 @@ export default function GarsonMasalarPage() {
     const [seenOrderIds, setSeenOrderIds] = useState<string[]>([]);
 
     useEffect(() => {
+        if (!token) return;
+
+        const socket = socketService.connect(token);
+
+        socketService.onTableUpdate(() => {
+            loadTables();
+        });
+
+        socketService.onNewOrder(() => {
+            loadTables();
+        });
+
+        return () => {
+            socketService.disconnect();
+        };
+    }, [token]);
+
+    useEffect(() => {
         const saved = localStorage.getItem('garson_seenOrderIds');
         if (saved) {
             try {
@@ -75,38 +94,34 @@ export default function GarsonMasalarPage() {
         return ["Tümü", ...uniqueFloors];
     }, [tables]);
 
-    useEffect(() => {
+    const loadTables = React.useCallback(async () => {
         if (!token) return;
-
-        const loadTables = async () => {
-            try {
-                const response = await tableService.getTables(token);
-                if (response.success) {
-                    // Map backend data to frontend interface
-                    const mappedTables: TableData[] = response.data.map(t => ({
-                        id: t.id,
-                        name: t.name,
-                        status: t.status,
-                        capacity: t.capacity,
-                        active_order_id: t.active_order_id,
-                        current_total_amount: t.total_order_amount,
-                        floor: t.floor
-                    }));
-                    setTables(mappedTables);
-                }
-            } catch (error) {
-                console.error("Error loading tables:", error);
-            } finally {
-                setLoading(false);
+        try {
+            const response = await tableService.getTables(token);
+            if (response.success) {
+                const mappedTables: TableData[] = response.data.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    status: t.status,
+                    capacity: t.capacity,
+                    active_order_id: t.active_order_id,
+                    current_total_amount: t.total_order_amount,
+                    floor: t.floor
+                }));
+                setTables(mappedTables);
             }
-        };
-
-        loadTables();
-
-        // Polling every 10 seconds for real-time updates
-        const interval = setInterval(loadTables, 10000);
-        return () => clearInterval(interval);
+        } catch (error) {
+            console.error("Error loading tables:", error);
+        } finally {
+            setLoading(false);
+        }
     }, [token]);
+
+    useEffect(() => {
+        loadTables();
+        const interval = setInterval(loadTables, 30000);
+        return () => clearInterval(interval);
+    }, [loadTables]);
 
     const filteredTables = selectedFloor === "Tümü"
         ? tables

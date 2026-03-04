@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { tableService } from "@/services/tableService";
 import { orderService, Order } from "@/services/orderService";
 import { paymentService } from "@/services/paymentService";
+import { socketService } from "@/services/socketService";
 
 type TableStatus = "EMPTY" | "OCCUPIED";
 
@@ -43,6 +44,44 @@ export default function KasaDashboard() {
     const [loading, setLoading] = useState(true);
     const [successPopup, setSuccessPopup] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: "" });
     const [seenOrderIds, setSeenOrderIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (!token) return;
+
+        socketService.connect(token);
+
+        const handleNewOrder = (data: any) => {
+            console.log("New order received:", data);
+            fetchTablesAndDetails();
+
+            // Get latest seenOrderIds from localStorage to avoid stale closure
+            const saved = localStorage.getItem('seenOrderIds');
+            const currentSeen = saved ? JSON.parse(saved) : [];
+
+            if (data.orderId && !currentSeen.includes(data.orderId)) {
+                try {
+                    const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+                    audio.play().catch(e => console.log("Audio play failed:", e));
+                } catch (e) {
+                    console.log("Audio error:", e);
+                }
+            }
+        };
+
+        const handleTableUpdate = (data: any) => {
+            console.log("Table update received:", data);
+            fetchTablesAndDetails();
+        };
+
+        socketService.onNewOrder(handleNewOrder);
+        socketService.onTableUpdate(handleTableUpdate);
+
+        return () => {
+            socketService.offNewOrder();
+            socketService.offTableUpdate();
+            socketService.disconnect();
+        };
+    }, [token]);
 
     useEffect(() => {
         const saved = localStorage.getItem('seenOrderIds');
