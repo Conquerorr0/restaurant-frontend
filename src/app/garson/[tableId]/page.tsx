@@ -6,75 +6,23 @@ import {
     ArrowLeft, Plus, Minus, ShoppingBag, CheckCircle2,
     ChevronRight, UtensilsCrossed, Trash2, Receipt, X, ChevronUp, MessageSquare
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { menuService } from "@/services/menuService";
+import { orderService } from "@/services/orderService";
+
+import { Category as ServiceCategory, Product as ServiceProduct } from "@/services/menuService";
+import { Order, OrderItem } from "@/services/orderService";
 
 /* ─── Types ─── */
-interface OrderItem {
-    id: string; product_name: string;
-    quantity: number; unit_price: number; subtotal: number;
-}
-interface Order {
-    id: string; table_id: string;
-    status: string; total_amount: number; items: OrderItem[];
-}
 interface Product { id: string; name: string; price: number; }
 interface Category { id: string; name: string; emoji: string; products: Product[]; }
 
-/* ─── Mock Data ─── */
-const fetchCategoriesWithProductsMock = async (): Promise<Category[]> => ([
-    {
-        id: "cat-1", name: "Başlangıçlar", emoji: "🥗",
-        products: [
-            { id: "p-1", name: "Mercimek Çorbası", price: 85 },
-            { id: "p-2", name: "Paçanga Böreği", price: 120 },
-            { id: "p-3", name: "İçli Köfte", price: 90 },
-            { id: "p-4", name: "Günün Çorbası", price: 80 },
-        ]
-    },
-    {
-        id: "cat-2", name: "Ana Yemekler", emoji: "🍖",
-        products: [
-            { id: "p-5", name: "Adana Kebap", price: 200 },
-            { id: "p-6", name: "Izgara Köfte", price: 250 },
-            { id: "p-7", name: "Tavuk Şiş", price: 210 },
-            { id: "p-8", name: "Dana Bonfile", price: 450 },
-        ]
-    },
-    {
-        id: "cat-3", name: "İçecekler", emoji: "🥤",
-        products: [
-            { id: "p-9", name: "Kutu Kola", price: 40 },
-            { id: "p-10", name: "Ayran", price: 30 },
-            { id: "p-11", name: "Su", price: 15 },
-            { id: "p-12", name: "Türk Çayı", price: 25 },
-        ]
-    },
-    {
-        id: "cat-4", name: "Tatlılar", emoji: "🍮",
-        products: [
-            { id: "p-13", name: "Sütlaç", price: 85 },
-            { id: "p-14", name: "Künefe", price: 150 },
-            { id: "p-15", name: "Katmer", price: 180 },
-        ]
-    }
-]);
-
-const fetchOrderMock = async (tableId: string): Promise<Order | null> => {
-    if (["1", "4", "6", "9", "10"].includes(tableId)) {
-        return {
-            id: "order-" + tableId, table_id: tableId, status: "OPEN", total_amount: 580,
-            items: [
-                { id: "item-1", product_name: "Adana Kebap", quantity: 2, unit_price: 200, subtotal: 400 },
-                { id: "item-2", product_name: "Mercimek Çorbası", quantity: 2, unit_price: 85, subtotal: 170 },
-                { id: "item-3", product_name: "Ayran", quantity: 1, unit_price: 30, subtotal: 30 },
-            ]
-        };
-    }
-    return null;
-};
+// Mock data functions removed
 
 /* ─── Page ─── */
 export default function OrderPage({ params }: { params: Promise<{ tableId: string }> | { tableId: string } }) {
     const router = useRouter();
+    const { token } = useAuth();
     const resolvedParams = "then" in params ? use(params as any) : params;
     const tableId = (resolvedParams as any).tableId;
 
@@ -85,18 +33,85 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
     const [localCart, setLocalCart] = useState<{ product: Product; quantity: number }[]>([]);
     const [cartOpen, setCartOpen] = useState(false);
     const [orderNote, setOrderNote] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        if (!token) return;
+
         const init = async () => {
-            const cats = await fetchCategoriesWithProductsMock();
-            setCategories(cats);
-            if (cats.length > 0) setActiveCategoryId(cats[0].id);
-            const existingOrder = await fetchOrderMock(tableId);
-            if (existingOrder) setOrder(existingOrder);
-            setLoading(false);
+            try {
+                // Fetch categories and products in parallel
+                const [catRes, prodRes] = await Promise.all([
+                    menuService.getCategories(token),
+                    menuService.getProducts(token)
+                ]);
+
+                if (catRes.success && prodRes.success) {
+                    // Group products by category
+                    const grouped: Category[] = catRes.data.map(cat => ({
+                        id: cat.id,
+                        name: cat.name,
+                        emoji: "🍴", // Default emoji or map from name
+                        products: prodRes.data
+                            .filter(p => p.category_id === cat.id)
+                            .map(p => ({ id: p.id, name: p.name, price: p.price }))
+                    })).filter(cat => cat.products.length > 0);
+
+                    setCategories(grouped);
+                    if (grouped.length > 0) setActiveCategoryId(grouped[0].id);
+                }
+
+                // Fetch active order
+                try {
+                    const orderRes = await orderService.getActiveOrder(tableId, token);
+                    if (orderRes.success && orderRes.data) {
+                        setOrder(orderRes.data);
+                    }
+                } catch (e) {
+                    setOrder(null);
+                }
+
+                setLoading(false);
+            } catch (error) {
+                console.error("Error initializing order page:", error);
+                setLoading(false);
+            }
         };
         init();
-    }, [tableId]);
+    }, [tableId, token]);
+
+    const handleConfirmOrder = async () => {
+        if (localCart.length === 0 || !token) return;
+
+        setIsSubmitting(true);
+        try {
+            const items = localCart.map(item => ({
+                productId: item.product.id,
+                quantity: item.quantity
+            }));
+
+            const response = await orderService.createOrUpdateOrder({
+                tableId,
+                items
+            }, token);
+
+            if (response.success) {
+                // Refresh order data
+                const orderRes = await orderService.getActiveOrder(tableId, token);
+                if (orderRes.success && orderRes.data) {
+                    setOrder(orderRes.data);
+                }
+                setLocalCart([]);
+                setOrderNote("");
+                setCartOpen(false);
+                alert("Sipariş başarıyla gönderildi!");
+            }
+        } catch (error: any) {
+            alert("Sipariş gönderilirken hata oluştu: " + (error.message || "Bilinmeyen hata"));
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const handleAdd = (product: Product) =>
         setLocalCart(prev => {
@@ -204,19 +219,29 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                             <span style={{ fontSize: "15px", fontWeight: 800, color: "#fde047" }}>₺{localTotal.toLocaleString("tr-TR")}</span>
                         </div>
                         <button
-                            onClick={() => onClose?.()}
+                            onClick={handleConfirmOrder}
+                            disabled={isSubmitting}
                             style={{
                                 width: "100%", padding: "11px",
                                 borderRadius: "11px",
-                                background: "linear-gradient(135deg,#eab308,#ca8a04)",
+                                background: isSubmitting ? "#6b7280" : "linear-gradient(135deg,#eab308,#ca8a04)",
                                 border: "none", color: "#000", fontWeight: 800, fontSize: "13px",
-                                letterSpacing: "0.06em", cursor: "pointer",
+                                letterSpacing: "0.06em", cursor: isSubmitting ? "not-allowed" : "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
-                                boxShadow: "0 4px 18px rgba(234,179,8,0.3)",
+                                boxShadow: isSubmitting ? "none" : "0 4px 18px rgba(234,179,8,0.3)",
                             }}>
-                            <ShoppingBag size={14} strokeWidth={2.5} />
-                            SİPARİŞİ ONAYLA
-                            <ChevronRight size={13} strokeWidth={2.5} />
+                            {isSubmitting ? (
+                                <div style={{
+                                    width: "14px", height: "14px",
+                                    border: "2px solid rgba(0,0,0,0.1)",
+                                    borderTop: "2px solid #000",
+                                    borderRadius: "50%", animation: "spin 0.6s linear infinite",
+                                }} />
+                            ) : (
+                                <ShoppingBag size={14} strokeWidth={2.5} />
+                            )}
+                            {isSubmitting ? "GÖNDERİLİYOR..." : "SİPARİŞİ ONAYLA"}
+                            {!isSubmitting && <ChevronRight size={13} strokeWidth={2.5} />}
                         </button>
                     </div>
                 )}
