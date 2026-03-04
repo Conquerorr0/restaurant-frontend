@@ -42,18 +42,18 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
 
         const init = async () => {
             try {
-                // Fetch categories and products in parallel
-                const [catRes, prodRes] = await Promise.all([
+                // Fetch everything in parallel for better speed and no UI flicker
+                const [catRes, prodRes, tableRes] = await Promise.all([
                     menuService.getCategories(token),
-                    menuService.getProducts(token)
+                    menuService.getProducts(token),
+                    tableService.getTableById(tableId, token).catch(() => null)
                 ]);
 
                 if (catRes.success && prodRes.success) {
-                    // Group products by category
                     const grouped: Category[] = catRes.data.map(cat => ({
                         id: cat.id,
                         name: cat.name,
-                        emoji: "🍴", // Default emoji or map from name
+                        emoji: "🍴",
                         products: prodRes.data
                             .filter(p => p.category_id === cat.id)
                             .map(p => ({ id: p.id, name: p.name, price: p.price }))
@@ -63,7 +63,11 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                     if (grouped.length > 0) setActiveCategoryId(grouped[0].id);
                 }
 
-                // Fetch active order
+                if (tableRes && tableRes.success) {
+                    setTableName(tableRes.data.name);
+                }
+
+                // Fetch active order separately or in parallel
                 try {
                     const orderRes = await orderService.getActiveOrder(tableId, token);
                     if (orderRes.success && orderRes.data) {
@@ -74,11 +78,6 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                 }
 
                 setLoading(false);
-
-                // Fetch table details to get name
-                tableService.getTableById(tableId, token).then(res => {
-                    if (res.success) setTableName(res.data.name);
-                });
             } catch (error) {
                 console.error("Error initializing order page:", error);
                 setLoading(false);
@@ -353,7 +352,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                         borderRadius: "11px", flexShrink: 0,
                     }}>
                         <UtensilsCrossed size={14} color="#eab308" />
-                        <span style={{ color: "#eab308", fontWeight: 700, fontSize: "13px", letterSpacing: "0.1em" }}>MASA {tableId}</span>
+                        <span style={{ color: "#eab308", fontWeight: 700, fontSize: "13px", letterSpacing: "0.1em" }}>MASA {tableName || "..."}</span>
                     </div>
 
                     <div style={{
