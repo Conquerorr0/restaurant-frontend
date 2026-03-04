@@ -2,6 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { Clock, Printer, ArrowRightLeft, X, Check, Search, CreditCard, Banknote, Ban, Gift } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { tableService } from "@/services/tableService";
+import { orderService } from "@/services/orderService";
+import { paymentService } from "@/services/paymentService";
 
 type TableStatus = "EMPTY" | "OCCUPIED";
 
@@ -24,62 +28,75 @@ interface TableData {
     hasNewOrder?: boolean;
 }
 
-const mockTables: TableData[] = [
-    {
-        id: "1",
-        name: "A1",
-        status: "OCCUPIED",
-        totalAmount: 580,
-        time: "14:20",
-        duration: "45 DK",
-        items: [
-            { id: "p1", name: "Mercimek Çorbası", quantity: 2, unitPrice: 85, totalPrice: 170 },
-            { id: "p2", name: "Adana Kebap", quantity: 1, unitPrice: 340, totalPrice: 340 },
-            { id: "p3", name: "Ayran", quantity: 2, unitPrice: 35, totalPrice: 70 },
-        ],
-    },
-    { id: "2", name: "A2", status: "EMPTY", totalAmount: 0 },
-    { id: "3", name: "A3", status: "EMPTY", totalAmount: 0 },
-    {
-        id: "4",
-        name: "B1",
-        status: "OCCUPIED",
-        totalAmount: 1410,
-        time: "13:10",
-        duration: "1 SA 55 DK",
-        items: [
-            { id: "p4", name: "Karışık Izgara", quantity: 2, unitPrice: 500, totalPrice: 1000 },
-            { id: "p5", name: "Çoban Salata", quantity: 1, unitPrice: 150, totalPrice: 150 },
-            { id: "p6", name: "Şalgam", quantity: 4, unitPrice: 40, totalPrice: 160 },
-            { id: "p7", name: "Künefe", quantity: 1, unitPrice: 100, totalPrice: 100 },
-        ],
-    },
-    { id: "5", name: "B2", status: "EMPTY", totalAmount: 0 },
-    { id: "6", name: "B3", status: "EMPTY", totalAmount: 0 },
-    { id: "7", name: "T1", status: "EMPTY", totalAmount: 0 },
-    {
-        id: "8",
-        name: "T2",
-        status: "OCCUPIED",
-        totalAmount: 1660,
-        time: "12:45",
-        duration: "2 SA 20 DK",
-        hasNewOrder: true,
-        items: [
-            { id: "p8", name: "Bonfile", quantity: 2, unitPrice: 700, totalPrice: 1400 },
-            { id: "p9", name: "Kola", quantity: 2, unitPrice: 60, totalPrice: 120 },
-            { id: "p10", name: "Sufle", quantity: 1, unitPrice: 140, totalPrice: 140 },
-        ],
-    },
-];
+// Mock data functions removed
 
 export default function KasaDashboard() {
-    const [tables, setTables] = useState<TableData[]>(mockTables);
-    const [selectedTableId, setSelectedTableId] = useState<string | null>("1");
+    const { token } = useAuth();
+    const [tables, setTables] = useState<TableData[]>([]);
+    const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
     const [isPartialPaymentModalOpen, setIsPartialPaymentModalOpen] = useState(false);
     const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
     const [processingPayment, setProcessingPayment] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [successPopup, setSuccessPopup] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: "" });
+
+    const fetchTablesAndDetails = async () => {
+        if (!token) return;
+        try {
+            const tableRes = await tableService.getTables(token);
+            if (tableRes.success) {
+                const mappedTables: TableData[] = await Promise.all(tableRes.data.map(async (t) => {
+                    let items: Product[] = [];
+                    if (t.status === "OCCUPIED" && t.id === selectedTableId) {
+                        try {
+                            const orderRes = await orderService.getActiveOrder(t.id, token);
+                            if (orderRes.success && orderRes.data) {
+                                items = orderRes.data.items.map(item => ({
+                                    id: item.id,
+                                    name: item.product_name,
+                                    quantity: item.quantity,
+                                    unitPrice: item.unit_price,
+                                    totalPrice: item.subtotal
+                                }));
+                            }
+                        } catch (e) {
+                            console.error("Error fetching order for table", t.id, e);
+                        }
+                    }
+                    return {
+                        id: t.id,
+                        name: t.name,
+                        status: t.status,
+                        totalAmount: t.current_remaining_amount,
+                        items: items,
+                        time: "---", // Placeholder
+                        duration: "---" // Placeholder
+                    };
+                }));
+                setTables(mappedTables);
+            }
+        } catch (error) {
+            console.error("Error loading cashier data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTablesAndDetails();
+        const interval = setInterval(fetchTablesAndDetails, 15000);
+        return () => clearInterval(interval);
+    }, [token, selectedTableId]);
+
+    // Initial table selection update
+    useEffect(() => {
+        if (selectedTableId && token) {
+            const table = tables.find(t => t.id === selectedTableId);
+            if (table && table.status === "OCCUPIED" && (!table.items || table.items.length === 0)) {
+                fetchTablesAndDetails();
+            }
+        }
+    }, [selectedTableId]);
 
     const emptyCount = tables.filter(t => t.status === "EMPTY").length;
     const occupiedCount = tables.filter(t => t.status === "OCCUPIED").length;
@@ -132,84 +149,62 @@ export default function KasaDashboard() {
         }, 0);
     };
 
-    const handleFullPayment = async (method: "CASH" | "CREDIT_CARD" | "MEAL_CARD") => {
-        if (!selectedTable) return;
+    const handleFullPayment = async (method: "CASH" | "CREDIT_CARD") => {
+        if (!selectedTable || !token) return;
         setProcessingPayment(true);
         try {
-            // Simulated API call matching the requested post format
-            const payload = {
-                orderId: selectedTable.id, // using table id as order uuid for mockup
+            // Find active order ID for the table
+            const orderRes = await orderService.getActiveOrder(selectedTable.id, token);
+            if (!orderRes.success || !orderRes.data) {
+                throw new Error("Aktif sipariş bulunamadı.");
+            }
+
+            const response = await paymentService.processPayment({
+                orderId: orderRes.data.id,
                 paymentMethod: method,
-                amount: selectedTable.totalAmount,
-            };
-            console.log("POST /payments", payload);
-            await new Promise(res => setTimeout(res, 800)); // Simulate network delay
+                amount: selectedTable.totalAmount
+            }, token);
 
-            // Trigger success popup
-            setSuccessPopup({ isOpen: true, message: `Masa ${selectedTable.name} ödemesi başarıyla alındı!` });
-
-            // Auto hide
-            setTimeout(() => {
-                setSuccessPopup(prev => ({ ...prev, isOpen: false }));
-            }, 3000);
-
-            // Update UI: Mark table as empty
-            setTables(prev => prev.map(t =>
-                t.id === selectedTable.id ? { ...t, status: "EMPTY", totalAmount: 0, items: [] } : t
-            ));
-            setSelectedTableId(null);
-
-        } catch (error) {
-            console.error("Payment failed", error);
+            if (response.success) {
+                setSuccessPopup({ isOpen: true, message: `Masa ${selectedTable.name} ödemesi başarıyla alındı!` });
+                setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
+                setSelectedTableId(null);
+                await fetchTablesAndDetails();
+            }
+        } catch (error: any) {
+            alert("Ödeme hatası: " + (error.message || "Bilinmeyen hata"));
         } finally {
             setProcessingPayment(false);
         }
     };
 
-    const handlePartialPayment = async (method: "CASH" | "CREDIT_CARD" | "CANCEL" | "TREAT") => {
-        if (!selectedTable || Object.keys(selectedQuantities).length === 0) return;
+    const handlePartialPayment = async (method: "CASH" | "CREDIT_CARD") => {
+        if (!selectedTable || Object.keys(selectedQuantities).length === 0 || !token) return;
         setProcessingPayment(true);
         const amountToPay = calculateSelectedTotal();
 
         try {
-            // Simulated API call
-            const payload = {
-                orderId: selectedTable.id,
-                paymentMethod: method,
-                amount: (method === "CANCEL" || method === "TREAT") ? 0 : amountToPay,
-                originalAmount: amountToPay, // To track value of cancelled/treated items
-            };
-            console.log("POST /payments (Partial)", payload);
-            await new Promise(res => setTimeout(res, 800)); // Simulate network delay
-
-            // Update UI
-            setTables(prev => prev.map(t => {
-                if (t.id === selectedTable.id) {
-                    const updatedItems = t.items?.map(item => {
-                        const paidQty = selectedQuantities[item.id] || 0;
-                        return { ...item, quantity: item.quantity - paidQty, totalPrice: (item.quantity - paidQty) * item.unitPrice };
-                    }).filter(item => item.quantity > 0) || [];
-
-                    const remainingAmount = updatedItems.reduce((sum, item) => sum + item.totalPrice, 0);
-
-                    if (remainingAmount <= 0) {
-                        return { ...t, status: "EMPTY", totalAmount: 0, items: [], hasNewOrder: false };
-                    }
-                    return { ...t, items: updatedItems, totalAmount: remainingAmount };
-                }
-                return t;
-            }));
-
-            setSelectedQuantities({});
-
-            // if zero total left, close selection
-            if (selectedTable.totalAmount - amountToPay <= 0) {
-                setIsPartialPaymentModalOpen(false);
-                setSelectedTableId(null);
+            const orderRes = await orderService.getActiveOrder(selectedTable.id, token);
+            if (!orderRes.success || !orderRes.data) {
+                throw new Error("Aktif sipariş bulunamadı.");
             }
 
-        } catch (error) {
-            console.error("Payment failed", error);
+            const response = await paymentService.processPayment({
+                orderId: orderRes.data.id,
+                paymentMethod: method,
+                amount: amountToPay
+            }, token);
+
+            if (response.success) {
+                setSelectedQuantities({});
+                if (response.data.isFullyPaid) {
+                    setIsPartialPaymentModalOpen(false);
+                    setSelectedTableId(null);
+                }
+                await fetchTablesAndDetails();
+            }
+        } catch (error: any) {
+            alert("Ödeme hatası: " + (error.message || "Bilinmeyen hata"));
         } finally {
             setProcessingPayment(false);
         }
@@ -683,7 +678,7 @@ export default function KasaDashboard() {
                                     <CreditCard size={18} /> KART
                                 </button>
                                 <button
-                                    onClick={() => handlePartialPayment("CANCEL")}
+                                    onClick={() => alert("İptal işlemi şu an aktif değil.")}
                                     disabled={Object.keys(selectedQuantities).length === 0 || processingPayment}
                                     style={{
                                         padding: "14px",
@@ -700,7 +695,7 @@ export default function KasaDashboard() {
                                     <Ban size={18} /> İPTAL ET
                                 </button>
                                 <button
-                                    onClick={() => handlePartialPayment("TREAT")}
+                                    onClick={() => alert("İkram işlemi şu an aktif değil.")}
                                     disabled={Object.keys(selectedQuantities).length === 0 || processingPayment}
                                     style={{
                                         padding: "14px",
