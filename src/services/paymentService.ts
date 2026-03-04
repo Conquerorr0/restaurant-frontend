@@ -3,18 +3,22 @@ import { ApiResponse } from './tableService';
 
 export type PaymentMethod = 'CASH' | 'CREDIT_CARD';
 
+export interface PaymentItem {
+    orderItemId: string;
+    quantity: number;
+}
+
 export interface PaymentRequest {
     orderId: string;
     paymentMethod: PaymentMethod;
     amount: number;
+    items?: PaymentItem[];
 }
 
 export interface PaymentResult {
     payment: any;
-    totalPaid: number;
-    balanceRemaining: number;
     isFullyPaid: boolean;
-    orderTotal: number;
+    balanceRemaining: number;
 }
 
 export const paymentService = {

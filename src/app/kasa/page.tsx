@@ -253,10 +253,16 @@ export default function KasaDashboard() {
             const orderRes = await orderService.getActiveOrder(selectedTable.id, token);
             if (!orderRes.success || !orderRes.data) throw new Error("Aktif sipariş bulunamadı.");
 
+            const itemsToPay = Object.keys(selectedQuantities).map(id => ({
+                orderItemId: id,
+                quantity: selectedQuantities[id]
+            }));
+
             const response = await paymentService.processPayment({
                 orderId: orderRes.data.id,
                 paymentMethod: method,
-                amount: amountToPay
+                amount: amountToPay,
+                items: itemsToPay
             }, token);
 
             if (response.success) {
@@ -264,6 +270,9 @@ export default function KasaDashboard() {
                 if (response.data.isFullyPaid) {
                     setIsPartialPaymentModalOpen(false);
                     setSelectedTableId(null);
+                    setSuccessPopup({ isOpen: true, message: "Ödeme başarıyla alındı, masa kapatıldı." });
+                } else {
+                    setSuccessPopup({ isOpen: true, message: "Parçalı ödeme başarıyla kaydedildi." });
                 }
                 await fetchTablesAndDetails();
             }
