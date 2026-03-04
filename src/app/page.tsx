@@ -11,8 +11,11 @@ import {
   Delete,
   Loader2
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { authService } from "@/services/authService";
 
 export default function LoginPage() {
+  const { login: setAuth } = useAuth();
   const [role, setRole] = useState<"GARSON" | "YONETIM">("YONETIM");
 
   // UI States
@@ -45,23 +48,16 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     try {
-      // TODO: Gerçek API 엔드포인트 entegrasyonu (POST /api/v1/auth/pin-login)
-      const payload = { pin_code: pin };
-      console.log("Mock API Request:", payload);
-
-      // Simüle edilmiş API Beklemesi
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (pin === "1234") {
-        alert("Başarılı! Garson Girişi Onaylandı.");
-        // Başarılı yönlendirme işlemi burada yapılacak.
+      const response = await authService.pinLogin(pin);
+      if (response.success) {
+        setAuth(response);
       } else {
-        // Mock Fail: Invalid credentials
-        setErrorMsg("Hatalı PIN. Lütfen tekrar deneyin.");
-        setPin(""); // PIN formunu temizle
+        setErrorMsg(response.message || "Hatalı PIN.");
+        setPin("");
       }
-    } catch (error) {
-      setErrorMsg("Bağlantı hatası oluştu.");
+    } catch (error: any) {
+      setErrorMsg(error.message || "Bağlantı hatası oluştu.");
+      setPin("");
     } finally {
       setIsLoading(false);
     }
@@ -78,22 +74,14 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     try {
-      // TODO: Gerçek API 엔드포인트 entegrasyonu (POST /api/v1/auth/login)
-      const payload = { username, password };
-      console.log("Mock API Request:", payload);
-
-      // Simüle edilmiş API Beklemesi
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (username === "admin" && password === "123") {
-        alert("Başarılı! Yönetim Girişi Onaylandı.");
-        // Başarılı yönlendirme işlemi burada yapılacak.
+      const response = await authService.login({ username, password });
+      if (response.success) {
+        setAuth(response);
       } else {
-        // Mock Fail: Invalid credentials
-        setErrorMsg("Hatalı kullanıcı adı veya şifre.");
+        setErrorMsg(response.message || "Hatalı kullanıcı adı veya şifre.");
       }
-    } catch (error) {
-      setErrorMsg("Bağlantı hatası oluştu.");
+    } catch (error: any) {
+      setErrorMsg(error.message || "Bağlantı hatası oluştu.");
     } finally {
       setIsLoading(false);
     }
@@ -222,10 +210,10 @@ export default function LoginPage() {
                 <div
                   key={index}
                   className={`w-14 h-16 rounded-xl border flex items-center justify-center text-2xl font-bold transition-all ${pin[index]
-                      ? 'border-[#eab308] bg-[#eab308]/10 text-white shadow-[0_0_10px_rgba(234,179,8,0.2)]'
-                      : errorMsg
-                        ? 'border-red-500/50 bg-red-500/10 text-transparent'
-                        : 'border-white/10 bg-[#121212] text-transparent'
+                    ? 'border-[#eab308] bg-[#eab308]/10 text-white shadow-[0_0_10px_rgba(234,179,8,0.2)]'
+                    : errorMsg
+                      ? 'border-red-500/50 bg-red-500/10 text-transparent'
+                      : 'border-white/10 bg-[#121212] text-transparent'
                     }`}
                 >
                   {pin[index] ? '•' : ''}
