@@ -40,5 +40,27 @@ export const orderService = {
             token,
             body: JSON.stringify(data),
         });
+    },
+
+    /**
+     * Cancel an item from an order
+     */
+    cancelItem: async (orderItemId: string, quantity: number, token: string): Promise<ApiResponse<any>> => {
+        return apiRequest<ApiResponse<any>>('/orders/cancel-item', {
+            method: 'POST',
+            token,
+            body: JSON.stringify({ orderItemId, quantity }),
+        });
+    },
+
+    /**
+     * Treat an item (ikram) from an order
+     */
+    treatItem: async (orderItemId: string, quantity: number, token: string): Promise<ApiResponse<any>> => {
+        return apiRequest<ApiResponse<any>>('/orders/treat-item', {
+            method: 'POST',
+            token,
+            body: JSON.stringify({ orderItemId, quantity }),
+        });
     }
 };

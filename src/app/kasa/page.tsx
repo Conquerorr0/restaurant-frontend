@@ -34,11 +34,18 @@ export default function KasaDashboard() {
     const { token, logout } = useAuth();
     const [tables, setTables] = useState<TableData[]>([]);
     const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+    const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
     const [isPartialPaymentModalOpen, setIsPartialPaymentModalOpen] = useState(false);
     const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
     const [processingPayment, setProcessingPayment] = useState(false);
     const [loading, setLoading] = useState(true);
     const [successPopup, setSuccessPopup] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: "" });
+
+    const floors = React.useMemo(() => {
+        const floorSet = new Set<string>();
+        tables.forEach(t => { if ((t as any).floor) floorSet.add((t as any).floor); });
+        return ["Tümü", ...Array.from(floorSet).sort()];
+    }, [tables]);
 
     const fetchTablesAndDetails = async () => {
         if (!token) return;
@@ -47,17 +54,30 @@ export default function KasaDashboard() {
             if (tableRes.success) {
                 const mappedTables: TableData[] = await Promise.all(tableRes.data.map(async (t) => {
                     let items: Product[] = [];
-                    if (t.status === "OCCUPIED" && t.id === selectedTableId) {
+                    let duration = "---";
+                    if (t.status === "OCCUPIED") {
                         try {
                             const orderRes = await orderService.getActiveOrder(t.id, token);
                             if (orderRes.success && orderRes.data) {
-                                items = orderRes.data.items.map(item => ({
-                                    id: item.id,
-                                    name: item.product_name,
-                                    quantity: item.quantity,
-                                    unitPrice: item.unit_price,
-                                    totalPrice: item.subtotal
-                                }));
+                                if (t.id === selectedTableId) {
+                                    items = orderRes.data.items.map(item => ({
+                                        id: item.id,
+                                        name: item.product_name,
+                                        quantity: item.quantity,
+                                        unitPrice: item.unit_price,
+                                        totalPrice: item.subtotal
+                                    }));
+                                }
+
+                                // Calculate duration
+                                if (orderRes.data.created_at) {
+                                    const start = new Date(orderRes.data.created_at).getTime();
+                                    const now = Date.now();
+                                    const diffMs = now - start;
+                                    const diffMins = Math.floor(diffMs / 60000);
+                                    if (diffMins < 60) duration = `${diffMins} dk`;
+                                    else duration = `${Math.floor(diffMins / 60)} sa ${diffMins % 60} dk`;
+                                }
                             }
                         } catch (e) {
                             console.error("Error fetching order for table", t.id, e);
@@ -69,8 +89,9 @@ export default function KasaDashboard() {
                         status: t.status,
                         totalAmount: t.current_remaining_amount,
                         items: items,
+                        floor: t.floor,
                         time: "---", // Placeholder
-                        duration: "---" // Placeholder
+                        duration: duration
                     };
                 }));
                 setTables(mappedTables);
@@ -210,13 +231,65 @@ export default function KasaDashboard() {
         }
     };
 
+    const filteredTables = selectedFloor === "Tümü"
+        ? tables
+        : tables.filter(t => (t as any).floor === selectedFloor);
+
+    const fEmptyCount = filteredTables.filter(t => t.status === "EMPTY").length;
+    const fOccupiedCount = filteredTables.filter(t => t.status === "OCCUPIED").length;
+
+    const handleTreat = async () => {
+        if (!selectedTable || Object.keys(selectedQuantities).length === 0 || !token) {
+            alert("Lütfen ikram edilecek ürünleri adet seçerek işaretleyin!");
+            return;
+        }
+        if (confirm("Seçili ürünleri ikram etmek istediğinize emin misiniz?")) {
+            setProcessingPayment(true);
+            try {
+                for (const itemId of Object.keys(selectedQuantities)) {
+                    await orderService.treatItem(itemId, selectedQuantities[itemId], token);
+                }
+                setSuccessPopup({ isOpen: true, message: "İkram işlemi başarıyla tamamlandı." });
+                setSelectedQuantities({});
+                await fetchTablesAndDetails();
+            } catch (error: any) {
+                alert("İkram hatası: " + (error.message || "Bilinmeyen hata"));
+            } finally {
+                setProcessingPayment(false);
+            }
+        }
+    };
+
+    const handleCancel = async () => {
+        if (!selectedTable || Object.keys(selectedQuantities).length === 0 || !token) {
+            alert("Lütfen iptal edilecek ürünleri adet seçerek işaretleyin!");
+            return;
+        }
+        if (confirm("Seçili ürünleri iptal etmek istediğinize emin misiniz?")) {
+            setProcessingPayment(true);
+            try {
+                for (const itemId of Object.keys(selectedQuantities)) {
+                    await orderService.cancelItem(itemId, selectedQuantities[itemId], token);
+                }
+                setSuccessPopup({ isOpen: true, message: "İptal işlemi başarıyla tamamlandı." });
+                setSelectedQuantities({});
+                await fetchTablesAndDetails();
+            } catch (error: any) {
+                alert("İptal hatası: " + (error.message || "Bilinmeyen hata"));
+            } finally {
+                setProcessingPayment(false);
+            }
+        }
+    };
+
     return (
-        <div className="min-h-screen font-sans flex items-center justify-center p-4" style={{ background: "#0d0d0d" }}>
+        <div className="min-h-screen font-sans p-6" style={{ background: "#0d0d0d" }}>
 
             {/* Main Wrapper matching the desired centered layout */}
             <div style={{
                 width: "100%",
-                maxWidth: "1100px",
+                maxWidth: "1300px",
+                margin: "0 auto",
                 display: "flex",
                 gap: "32px",
                 alignItems: "flex-start",
@@ -224,44 +297,66 @@ export default function KasaDashboard() {
 
                 {/* ── Left Side: Table Grid ── */}
                 <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: "20px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <h1 style={{ color: "#fbbf24", fontSize: "28px", fontWeight: 900, letterSpacing: "-0.02em", margin: 0 }}>
+                    <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                        <div>
+                            <h1 style={{ color: "#fbbf24", fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em", margin: 0 }}>
                                 KASA DASHBOARD
                             </h1>
-                            <button
-                                title="Çıkış Yap"
-                                onClick={logout}
-                                style={{
-                                    padding: "8px 12px",
-                                    background: "rgba(239, 68, 68, 0.1)",
-                                    border: "1px solid rgba(239, 68, 68, 0.2)",
-                                    borderRadius: "10px",
-                                    color: "#ef4444",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    fontSize: "12px",
-                                    fontWeight: 700,
-                                    transition: "all 0.2s"
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)"}
-                                onMouseLeave={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"}
-                            >
-                                <LogOut size={16} /> ÇIKIŞ
-                            </button>
-                        </div>
-                        <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e" }} />
-                                <span style={{ color: "#a1a1aa", fontSize: "12px", fontWeight: 700, letterSpacing: "0.05em" }}>BOŞ: {emptyCount}</span>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} />
-                                <span style={{ color: "#a1a1aa", fontSize: "12px", fontWeight: 700, letterSpacing: "0.05em" }}>DOLU: {occupiedCount}</span>
+                            <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 10px rgba(34,197,94,0.4)" }} />
+                                    <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>BOŞ: {fEmptyCount}</span>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ef4444", boxShadow: "0 0 10px rgba(239,68,68,0.4)" }} />
+                                    <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>DOLU: {fOccupiedCount}</span>
+                                </div>
                             </div>
                         </div>
+
+                        {/* Floor Filters */}
+                        <div style={{ display: "flex", gap: "8px", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                            {floors.map(floor => (
+                                <button
+                                    key={floor}
+                                    onClick={() => setSelectedFloor(floor)}
+                                    style={{
+                                        padding: "8px 16px",
+                                        borderRadius: "10px",
+                                        fontSize: "13px",
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                        transition: "all 0.2s",
+                                        background: selectedFloor === floor ? "#fbbf24" : "transparent",
+                                        color: selectedFloor === floor ? "#000" : "#71717a",
+                                        border: "none",
+                                    }}
+                                >
+                                    {floor}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            title="Çıkış Yap"
+                            onClick={logout}
+                            style={{
+                                padding: "10px 16px",
+                                background: "rgba(239, 68, 68, 0.08)",
+                                border: "1px solid rgba(239, 68, 68, 0.15)",
+                                borderRadius: "12px",
+                                color: "#ef4444",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                fontSize: "13px",
+                                fontWeight: 800,
+                                transition: "all 0.2s"
+                            }}
+                        >
+                            <LogOut size={16} /> ÇIKIŞ
+                        </button>
                     </div>
 
                     <style>{`
@@ -276,7 +371,7 @@ export default function KasaDashboard() {
                         gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
                         gap: "16px",
                     }}>
-                        {tables.map(table => {
+                        {filteredTables.map(table => {
                             const isOccupied = table.status === "OCCUPIED";
                             const isSelected = selectedTableId === table.id;
 
