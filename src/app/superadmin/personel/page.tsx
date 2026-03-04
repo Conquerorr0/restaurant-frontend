@@ -1,0 +1,8 @@
+export default function PersonnelManagement() {
+    return (
+        <div className="flex flex-col gap-6">
+            <h1 className="text-3xl font-black text-white tracking-wide">Personel Yönetimi</h1>
+            <p className="text-[#a1a1aa] text-[15px] font-bold">Yapım aşamasında...</p>
+        </div>
+    );
+}
