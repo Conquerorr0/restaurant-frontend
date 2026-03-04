@@ -45,6 +45,35 @@ export const tableService = {
     },
 
     /**
+     * Get table details by ID
+     */
+    getTableById: async (id: string, token: string): Promise<ApiResponse<Table>> => {
+        return apiRequest<ApiResponse<Table>>(`/tables/${id}`, { token });
+    },
+
+    /**
+     * Move table (transfer order)
+     */
+    moveTable: async (fromTableId: string, toTableId: string, token: string): Promise<ApiResponse<any>> => {
+        return apiRequest<ApiResponse<any>>('/tables/move', {
+            method: 'POST',
+            token,
+            body: JSON.stringify({ fromTableId, toTableId })
+        });
+    },
+
+    /**
+     * Merge two tables
+     */
+    mergeTable: async (sourceTableId: string, targetTableId: string, token: string): Promise<ApiResponse<any>> => {
+        return apiRequest<ApiResponse<any>>('/tables/merge', {
+            method: 'POST',
+            token,
+            body: JSON.stringify({ sourceTableId, targetTableId })
+        });
+    },
+
+    /**
      * Update table status or info (Admin only)
      */
     updateTable: async (id: string, data: Partial<Table>, token: string): Promise<ApiResponse<Table>> => {

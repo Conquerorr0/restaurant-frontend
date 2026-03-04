@@ -48,8 +48,13 @@ export default function GarsonMasalarPage() {
     const [tables, setTables] = useState<TableData[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
+    const [selectionMode, setSelectionMode] = useState<"view" | "move" | "merge">("view");
+    const [selectedTables, setSelectedTables] = useState<string[]>([]);
 
-    const floors = ["Tümü", "1. Kat", "Bahçe", "Teras"];
+    const floors = React.useMemo(() => {
+        const uniqueFloors = Array.from(new Set(tables.map(t => t.floor))).sort();
+        return ["Tümü", ...uniqueFloors];
+    }, [tables]);
 
     useEffect(() => {
         if (!token) return;
@@ -91,8 +96,86 @@ export default function GarsonMasalarPage() {
     const occupiedCount = filteredTables.filter(t => t.status === "OCCUPIED").length;
     const emptyCount = filteredTables.filter(t => t.status === "EMPTY").length;
 
-    const handleTableClick = (tableId: string) => {
-        router.push(`/garson/${tableId}`);
+    const handleTableClick = async (tableId: string) => {
+        const table = tables.find(t => t.id === tableId);
+        if (!table) return;
+
+        if (selectionMode === "view") {
+            router.push(`/garson/${tableId}`);
+            return;
+        }
+
+        if (selectionMode === "move") {
+            if (selectedTables.length === 0) {
+                if (table.status !== "OCCUPIED") {
+                    alert("Taşımak istediğiniz masa dolu olmalıdır!");
+                    return;
+                }
+                setSelectedTables([tableId]);
+            } else {
+                const sourceId = selectedTables[0];
+                if (tableId === sourceId) {
+                    setSelectedTables([]);
+                    return;
+                }
+                if (table.status !== "EMPTY") {
+                    alert("Hedef masa boş olmalıdır!");
+                    return;
+                }
+
+                if (confirm(`${tables.find(t => t.id === sourceId)?.name} masasını ${table.name} masasına taşımak istediğinize emin misiniz?`)) {
+                    const res = await tableService.moveTable(sourceId, tableId, token!);
+                    if (res.success) {
+                        setSelectionMode("view");
+                        setSelectedTables([]);
+                        // Immediate reload
+                        const refreshRes = await tableService.getTables(token!);
+                        if (refreshRes.success) setTables(refreshRes.data.map(t => ({
+                            id: t.id, name: t.name, status: t.status, capacity: t.capacity,
+                            active_order_id: t.active_order_id, current_total_amount: t.total_order_amount, floor: t.floor
+                        })));
+                    } else {
+                        alert("Hata: " + res.message);
+                    }
+                }
+            }
+        }
+
+        if (selectionMode === "merge") {
+            if (table.status !== "OCCUPIED") {
+                alert("Birleştirmek istediğiniz masalar dolu olmalıdır!");
+                return;
+            }
+            if (selectedTables.includes(tableId)) {
+                setSelectedTables(prev => prev.filter(id => id !== tableId));
+            } else {
+                if (selectedTables.length < 2) {
+                    const newSelection = [...selectedTables, tableId];
+                    if (newSelection.length === 2) {
+                        const [sId, tId] = newSelection;
+                        if (confirm(`${tables.find(t => t.id === sId)?.name} ve ${tables.find(t => t.id === tId)?.name} masalarını birleştirmek istediğinize emin misiniz?`)) {
+                            const res = await tableService.mergeTable(sId, tId, token!);
+                            if (res.success) {
+                                setSelectionMode("view");
+                                setSelectedTables([]);
+                                // Immediate reload
+                                const refreshRes = await tableService.getTables(token!);
+                                if (refreshRes.success) setTables(refreshRes.data.map(t => ({
+                                    id: t.id, name: t.name, status: t.status, capacity: t.capacity,
+                                    active_order_id: t.active_order_id, current_total_amount: t.total_order_amount, floor: t.floor
+                                })));
+                            } else {
+                                alert("Hata: " + res.message);
+                            }
+                        } else {
+                            setSelectedTables(newSelection);
+                        }
+                    } else {
+                        setSelectedTables(newSelection);
+                    }
+                }
+            }
+        }
     };
 
     return (
@@ -137,42 +220,38 @@ export default function GarsonMasalarPage() {
                     <div style={{ display: "flex", gap: "8px" }}>
                         <button
                             title="Masa Taşı"
+                            onClick={() => {
+                                setSelectionMode(selectionMode === "move" ? "view" : "move");
+                                setSelectedTables([]);
+                            }}
                             style={{
                                 padding: "10px",
-                                background: "rgba(234,179,8,0.08)",
+                                background: selectionMode === "move" ? "#eab308" : "rgba(234,179,8,0.08)",
                                 border: "1px solid rgba(234,179,8,0.18)",
                                 borderRadius: "12px",
-                                color: "#eab308",
+                                color: selectionMode === "move" ? "#000" : "#eab308",
                                 cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 transition: "all 0.2s",
-                            }}
-                            onMouseEnter={e => {
-                                (e.currentTarget as HTMLButtonElement).style.background = "rgba(234,179,8,0.18)";
-                            }}
-                            onMouseLeave={e => {
-                                (e.currentTarget as HTMLButtonElement).style.background = "rgba(234,179,8,0.08)";
                             }}
                         >
                             <ArrowRightLeft size={17} />
                         </button>
                         <button
                             title="Masa Birleştir"
+                            onClick={() => {
+                                setSelectionMode(selectionMode === "merge" ? "view" : "merge");
+                                setSelectedTables([]);
+                            }}
                             style={{
                                 padding: "10px",
-                                background: "rgba(234,179,8,0.08)",
+                                background: selectionMode === "merge" ? "#eab308" : "rgba(234,179,8,0.08)",
                                 border: "1px solid rgba(234,179,8,0.18)",
                                 borderRadius: "12px",
-                                color: "#eab308",
+                                color: selectionMode === "merge" ? "#000" : "#eab308",
                                 cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 transition: "all 0.2s",
-                            }}
-                            onMouseEnter={e => {
-                                (e.currentTarget as HTMLButtonElement).style.background = "rgba(234,179,8,0.18)";
-                            }}
-                            onMouseLeave={e => {
-                                (e.currentTarget as HTMLButtonElement).style.background = "rgba(234,179,8,0.08)";
                             }}
                         >
                             <Users size={17} />
@@ -339,6 +418,7 @@ export default function GarsonMasalarPage() {
                     }}>
                         {filteredTables.map(table => {
                             const isOccupied = table.status === "OCCUPIED";
+                            const isSelected = selectedTables.includes(table.id);
 
                             return (
                                 <button
@@ -348,12 +428,16 @@ export default function GarsonMasalarPage() {
                                         position: "relative",
                                         aspectRatio: "1/1",
                                         borderRadius: "18px",
-                                        border: isOccupied
-                                            ? "1.5px solid rgba(239,68,68,0.35)"
-                                            : "1.5px solid rgba(34,197,94,0.3)",
-                                        background: isOccupied
-                                            ? "linear-gradient(145deg, rgba(60,10,10,0.85) 0%, rgba(40,6,6,0.95) 100%)"
-                                            : "linear-gradient(145deg, rgba(6,38,12,0.85) 0%, rgba(4,28,10,0.95) 100%)",
+                                        border: isSelected
+                                            ? "2.5px solid #eab308"
+                                            : isOccupied
+                                                ? "1.5px solid rgba(239,68,68,0.35)"
+                                                : "1.5px solid rgba(34,197,94,0.3)",
+                                        background: isSelected
+                                            ? "rgba(234,179,8,0.2)"
+                                            : isOccupied
+                                                ? "linear-gradient(145deg, rgba(60,10,10,0.85) 0%, rgba(40,6,6,0.95) 100%)"
+                                                : "linear-gradient(145deg, rgba(6,38,12,0.85) 0%, rgba(4,28,10,0.95) 100%)",
                                         cursor: "pointer",
                                         overflow: "hidden",
                                         display: "flex",

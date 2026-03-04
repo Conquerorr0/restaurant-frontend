@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { menuService } from "@/services/menuService";
 import { orderService } from "@/services/orderService";
+import { tableService } from "@/services/tableService";
 
 import { Category as ServiceCategory, Product as ServiceProduct } from "@/services/menuService";
 import { Order, OrderItem } from "@/services/orderService";
@@ -30,6 +31,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
     const [categories, setCategories] = useState<Category[]>([]);
     const [activeCategoryId, setActiveCategoryId] = useState("");
     const [order, setOrder] = useState<Order | null>(null);
+    const [tableName, setTableName] = useState("");
     const [localCart, setLocalCart] = useState<{ product: Product; quantity: number }[]>([]);
     const [cartOpen, setCartOpen] = useState(false);
     const [orderNote, setOrderNote] = useState("");
@@ -72,6 +74,11 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                 }
 
                 setLoading(false);
+
+                // Fetch table details to get name
+                tableService.getTableById(tableId, token).then(res => {
+                    if (res.success) setTableName(res.data.name);
+                });
             } catch (error) {
                 console.error("Error initializing order page:", error);
                 setLoading(false);

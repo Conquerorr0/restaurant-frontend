@@ -57,6 +57,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push('/');
     };
 
+    // Role-based protection logic
+    useEffect(() => {
+        if (!isLoading) {
+            const path = window.location.pathname;
+            const authenticated = !!token;
+
+            if (!authenticated && path !== '/') {
+                router.push('/');
+            } else if (authenticated && user) {
+                // If logged in and at root, redirect to home page
+                if (path === '/') {
+                    if (user.role === 'WAITER') router.push('/garson');
+                    else if (user.role === 'CASHIER') router.push('/kasa');
+                    else if (user.role === 'SUPER_ADMIN') router.push('/superadmin');
+                }
+
+                // Prevent Waiters from accessing Kasa or SuperAdmin
+                if (user.role === 'WAITER' && (path.startsWith('/kasa') || path.startsWith('/superadmin'))) {
+                    router.push('/garson');
+                }
+
+                // Prevent Cashiers from accessing Garson or SuperAdmin
+                if (user.role === 'CASHIER' && (path.startsWith('/garson') || path.startsWith('/superadmin'))) {
+                    router.push('/kasa');
+                }
+
+                // Super Admin can theoretically access all, but usually stays in /superadmin
+            }
+        }
+    }, [token, user, isLoading, router]);
+
     return (
         <AuthContext.Provider value={{
             user,
