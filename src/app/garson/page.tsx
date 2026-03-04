@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown } from "lucide-react";
+import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown, GitMerge } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { tableService } from "@/services/tableService";
 
@@ -254,7 +254,7 @@ export default function GarsonMasalarPage() {
                                 transition: "all 0.2s",
                             }}
                         >
-                            <Users size={17} />
+                            <GitMerge size={17} />
                         </button>
                         <button
                             title="Çıkış"
