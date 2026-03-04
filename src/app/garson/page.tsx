@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { tableService } from "@/services/tableService";
 
 type TableStatus = "EMPTY" | "OCCUPIED";
 
@@ -38,38 +40,49 @@ interface TableData {
     floor: string;
 }
 
-const fetchTablesMock = async (): Promise<TableData[]> => {
-    return [
-        { id: "1", name: "A1", status: "OCCUPIED", capacity: 4, active_order_id: "order-1", current_total_amount: 580, floor: "1. Kat" },
-        { id: "2", name: "A2", status: "EMPTY", capacity: 2, active_order_id: null, current_total_amount: 0, floor: "1. Kat" },
-        { id: "3", name: "A3", status: "EMPTY", capacity: 4, active_order_id: null, current_total_amount: 0, floor: "1. Kat" },
-        { id: "4", name: "A4", status: "OCCUPIED", capacity: 6, active_order_id: "order-4", current_total_amount: 320, floor: "1. Kat" },
-        { id: "5", name: "A5", status: "EMPTY", capacity: 2, active_order_id: null, current_total_amount: 0, floor: "1. Kat" },
-        { id: "6", name: "B1", status: "OCCUPIED", capacity: 6, active_order_id: "order-2", current_total_amount: 1410, floor: "Bahçe" },
-        { id: "7", name: "B2", status: "EMPTY", capacity: 4, active_order_id: null, current_total_amount: 0, floor: "Bahçe" },
-        { id: "8", name: "B3", status: "EMPTY", capacity: 4, active_order_id: null, current_total_amount: 0, floor: "Bahçe" },
-        { id: "9", name: "B4", status: "OCCUPIED", capacity: 8, active_order_id: "order-5", current_total_amount: 2150, floor: "Bahçe" },
-        { id: "10", name: "T1", status: "OCCUPIED", capacity: 4, active_order_id: "order-3", current_total_amount: 250, floor: "Teras" },
-        { id: "11", name: "T2", status: "EMPTY", capacity: 2, active_order_id: null, current_total_amount: 0, floor: "Teras" },
-        { id: "12", name: "T3", status: "EMPTY", capacity: 4, active_order_id: null, current_total_amount: 0, floor: "Teras" },
-    ];
-};
+// Mock function removed as we now use real api service
 
 export default function GarsonMasalarPage() {
     const router = useRouter();
+    const { token, logout } = useAuth();
     const [tables, setTables] = useState<TableData[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
-    const [isSelectOpen, setIsSelectOpen] = useState(false);
 
     const floors = ["Tümü", "1. Kat", "Bahçe", "Teras"];
 
     useEffect(() => {
-        fetchTablesMock().then((data) => {
-            setTables(data);
-            setLoading(false);
-        });
-    }, []);
+        if (!token) return;
+
+        const loadTables = async () => {
+            try {
+                const response = await tableService.getTables(token);
+                if (response.success) {
+                    // Map backend data to frontend interface
+                    const mappedTables: TableData[] = response.data.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        status: t.status,
+                        capacity: t.capacity,
+                        active_order_id: t.active_order_id,
+                        current_total_amount: t.total_order_amount,
+                        floor: t.floor
+                    }));
+                    setTables(mappedTables);
+                }
+            } catch (error) {
+                console.error("Error loading tables:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadTables();
+
+        // Polling every 10 seconds for real-time updates
+        const interval = setInterval(loadTables, 10000);
+        return () => clearInterval(interval);
+    }, [token]);
 
     const filteredTables = selectedFloor === "Tümü"
         ? tables
@@ -166,6 +179,7 @@ export default function GarsonMasalarPage() {
                         </button>
                         <button
                             title="Çıkış"
+                            onClick={logout}
                             style={{
                                 padding: "10px",
                                 background: "rgba(239,68,68,0.08)",
