@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown } from "lucide-react";
+import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown, GitMerge } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { tableService } from "@/services/tableService";
+import { socketService } from "@/services/socketService";
 
 type TableStatus = "EMPTY" | "OCCUPIED";
 
@@ -38,38 +41,87 @@ interface TableData {
     floor: string;
 }
 
-const fetchTablesMock = async (): Promise<TableData[]> => {
-    return [
-        { id: "1", name: "A1", status: "OCCUPIED", capacity: 4, active_order_id: "order-1", current_total_amount: 580, floor: "1. Kat" },
-        { id: "2", name: "A2", status: "EMPTY", capacity: 2, active_order_id: null, current_total_amount: 0, floor: "1. Kat" },
-        { id: "3", name: "A3", status: "EMPTY", capacity: 4, active_order_id: null, current_total_amount: 0, floor: "1. Kat" },
-        { id: "4", name: "A4", status: "OCCUPIED", capacity: 6, active_order_id: "order-4", current_total_amount: 320, floor: "1. Kat" },
-        { id: "5", name: "A5", status: "EMPTY", capacity: 2, active_order_id: null, current_total_amount: 0, floor: "1. Kat" },
-        { id: "6", name: "B1", status: "OCCUPIED", capacity: 6, active_order_id: "order-2", current_total_amount: 1410, floor: "Bahçe" },
-        { id: "7", name: "B2", status: "EMPTY", capacity: 4, active_order_id: null, current_total_amount: 0, floor: "Bahçe" },
-        { id: "8", name: "B3", status: "EMPTY", capacity: 4, active_order_id: null, current_total_amount: 0, floor: "Bahçe" },
-        { id: "9", name: "B4", status: "OCCUPIED", capacity: 8, active_order_id: "order-5", current_total_amount: 2150, floor: "Bahçe" },
-        { id: "10", name: "T1", status: "OCCUPIED", capacity: 4, active_order_id: "order-3", current_total_amount: 250, floor: "Teras" },
-        { id: "11", name: "T2", status: "EMPTY", capacity: 2, active_order_id: null, current_total_amount: 0, floor: "Teras" },
-        { id: "12", name: "T3", status: "EMPTY", capacity: 4, active_order_id: null, current_total_amount: 0, floor: "Teras" },
-    ];
-};
+// Mock function removed as we now use real api service
 
 export default function GarsonMasalarPage() {
     const router = useRouter();
+    const { token, logout } = useAuth();
     const [tables, setTables] = useState<TableData[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
-    const [isSelectOpen, setIsSelectOpen] = useState(false);
-
-    const floors = ["Tümü", "1. Kat", "Bahçe", "Teras"];
+    const [selectionMode, setSelectionMode] = useState<"view" | "move" | "merge">("view");
+    const [selectedTables, setSelectedTables] = useState<string[]>([]);
+    const [seenOrderIds, setSeenOrderIds] = useState<string[]>([]);
 
     useEffect(() => {
-        fetchTablesMock().then((data) => {
-            setTables(data);
-            setLoading(false);
+        if (!token) return;
+
+        const socket = socketService.connect(token);
+
+        socketService.onTableUpdate(() => {
+            loadTables();
         });
+
+        socketService.onNewOrder(() => {
+            loadTables();
+        });
+
+        return () => {
+            socketService.disconnect();
+        };
+    }, [token]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('garson_seenOrderIds');
+        if (saved) {
+            try {
+                setSeenOrderIds(JSON.parse(saved));
+            } catch (e) {
+                setSeenOrderIds([]);
+            }
+        }
     }, []);
+
+    const markAsSeen = (orderId: string) => {
+        if (!orderId || seenOrderIds.includes(orderId)) return;
+        const newSeen = [...seenOrderIds, orderId];
+        setSeenOrderIds(newSeen);
+        localStorage.setItem('garson_seenOrderIds', JSON.stringify(newSeen));
+    };
+
+    const floors = React.useMemo(() => {
+        const uniqueFloors = Array.from(new Set(tables.map(t => t.floor))).sort();
+        return ["Tümü", ...uniqueFloors];
+    }, [tables]);
+
+    const loadTables = React.useCallback(async () => {
+        if (!token) return;
+        try {
+            const response = await tableService.getTables(token);
+            if (response.success) {
+                const mappedTables: TableData[] = response.data.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    status: t.status,
+                    capacity: t.capacity,
+                    active_order_id: t.active_order_id,
+                    current_total_amount: t.total_order_amount,
+                    floor: t.floor
+                }));
+                setTables(mappedTables);
+            }
+        } catch (error) {
+            console.error("Error loading tables:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [token]);
+
+    useEffect(() => {
+        loadTables();
+        const interval = setInterval(loadTables, 30000);
+        return () => clearInterval(interval);
+    }, [loadTables]);
 
     const filteredTables = selectedFloor === "Tümü"
         ? tables
@@ -78,12 +130,102 @@ export default function GarsonMasalarPage() {
     const occupiedCount = filteredTables.filter(t => t.status === "OCCUPIED").length;
     const emptyCount = filteredTables.filter(t => t.status === "EMPTY").length;
 
-    const handleTableClick = (tableId: string) => {
-        router.push(`/garson/${tableId}`);
+    const handleTableClick = async (tableId: string) => {
+        const table = tables.find(t => t.id === tableId);
+        if (!table) return;
+
+        if (selectionMode === "view") {
+            if (table.active_order_id) markAsSeen(table.active_order_id);
+            router.push(`/garson/${tableId}`);
+            return;
+        }
+
+        if (selectionMode === "move") {
+            if (selectedTables.length === 0) {
+                if (table.status !== "OCCUPIED") {
+                    alert("Taşımak istediğiniz masa dolu olmalıdır!");
+                    return;
+                }
+                setSelectedTables([tableId]);
+            } else {
+                const sourceId = selectedTables[0];
+                if (tableId === sourceId) {
+                    setSelectedTables([]);
+                    return;
+                }
+                if (table.status !== "EMPTY") {
+                    alert("Hedef masa boş olmalıdır!");
+                    return;
+                }
+
+                if (confirm(`${tables.find(t => t.id === sourceId)?.name} masasını ${table.name} masasına taşımak istediğinize emin misiniz?`)) {
+                    const res = await tableService.moveTable(sourceId, tableId, token!);
+                    if (res.success) {
+                        setSelectionMode("view");
+                        setSelectedTables([]);
+                        // Immediate reload
+                        const refreshRes = await tableService.getTables(token!);
+                        if (refreshRes.success) setTables(refreshRes.data.map(t => ({
+                            id: t.id, name: t.name, status: t.status, capacity: t.capacity,
+                            active_order_id: t.active_order_id, current_total_amount: t.total_order_amount, floor: t.floor
+                        })));
+                    } else {
+                        alert("Hata: " + res.message);
+                    }
+                }
+            }
+        }
+
+        if (selectionMode === "merge") {
+            if (table.status !== "OCCUPIED") {
+                alert("Birleştirmek istediğiniz masalar dolu olmalıdır!");
+                return;
+            }
+            if (selectedTables.includes(tableId)) {
+                setSelectedTables(prev => prev.filter(id => id !== tableId));
+            } else {
+                if (selectedTables.length < 2) {
+                    const newSelection = [...selectedTables, tableId];
+                    if (newSelection.length === 2) {
+                        const [sId, tId] = newSelection;
+                        if (confirm(`${tables.find(t => t.id === sId)?.name} ve ${tables.find(t => t.id === tId)?.name} masalarını birleştirmek istediğinize emin misiniz?`)) {
+                            const res = await tableService.mergeTable(sId, tId, token!);
+                            if (res.success) {
+                                setSelectionMode("view");
+                                setSelectedTables([]);
+                                // Immediate reload
+                                const refreshRes = await tableService.getTables(token!);
+                                if (refreshRes.success) setTables(refreshRes.data.map(t => ({
+                                    id: t.id, name: t.name, status: t.status, capacity: t.capacity,
+                                    active_order_id: t.active_order_id, current_total_amount: t.total_order_amount, floor: t.floor
+                                })));
+                            } else {
+                                alert("Hata: " + res.message);
+                            }
+                        } else {
+                            setSelectedTables(newSelection);
+                        }
+                    } else {
+                        setSelectedTables(newSelection);
+                    }
+                }
+            }
+        }
     };
 
     return (
         <div className="min-h-screen font-sans" style={{ background: "#0d0d0d" }}>
+            <style>{`
+                @keyframes breathe {
+                    0% { transform: scale(1); box-shadow: 0 4px 20px rgba(239,68,68,0.12); }
+                    50% { transform: scale(1.03); box-shadow: 0 8px 30px rgba(239,68,68,0.3); }
+                    100% { transform: scale(1); box-shadow: 0 4px 20px rgba(239,68,68,0.12); }
+                }
+                .breathe-order {
+                    animation: breathe 2.5s infinite ease-in-out;
+                    border: 1.5px solid rgba(239,68,68,0.8) !important;
+                }
+            `}</style>
 
             {/* ── Header ── */}
             <header style={{
@@ -124,48 +266,45 @@ export default function GarsonMasalarPage() {
                     <div style={{ display: "flex", gap: "8px" }}>
                         <button
                             title="Masa Taşı"
+                            onClick={() => {
+                                setSelectionMode(selectionMode === "move" ? "view" : "move");
+                                setSelectedTables([]);
+                            }}
                             style={{
                                 padding: "10px",
-                                background: "rgba(234,179,8,0.08)",
+                                background: selectionMode === "move" ? "#eab308" : "rgba(234,179,8,0.08)",
                                 border: "1px solid rgba(234,179,8,0.18)",
                                 borderRadius: "12px",
-                                color: "#eab308",
+                                color: selectionMode === "move" ? "#000" : "#eab308",
                                 cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 transition: "all 0.2s",
-                            }}
-                            onMouseEnter={e => {
-                                (e.currentTarget as HTMLButtonElement).style.background = "rgba(234,179,8,0.18)";
-                            }}
-                            onMouseLeave={e => {
-                                (e.currentTarget as HTMLButtonElement).style.background = "rgba(234,179,8,0.08)";
                             }}
                         >
                             <ArrowRightLeft size={17} />
                         </button>
                         <button
                             title="Masa Birleştir"
+                            onClick={() => {
+                                setSelectionMode(selectionMode === "merge" ? "view" : "merge");
+                                setSelectedTables([]);
+                            }}
                             style={{
                                 padding: "10px",
-                                background: "rgba(234,179,8,0.08)",
+                                background: selectionMode === "merge" ? "#eab308" : "rgba(234,179,8,0.08)",
                                 border: "1px solid rgba(234,179,8,0.18)",
                                 borderRadius: "12px",
-                                color: "#eab308",
+                                color: selectionMode === "merge" ? "#000" : "#eab308",
                                 cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 transition: "all 0.2s",
                             }}
-                            onMouseEnter={e => {
-                                (e.currentTarget as HTMLButtonElement).style.background = "rgba(234,179,8,0.18)";
-                            }}
-                            onMouseLeave={e => {
-                                (e.currentTarget as HTMLButtonElement).style.background = "rgba(234,179,8,0.08)";
-                            }}
                         >
-                            <Users size={17} />
+                            <GitMerge size={17} />
                         </button>
                         <button
                             title="Çıkış"
+                            onClick={logout}
                             style={{
                                 padding: "10px",
                                 background: "rgba(239,68,68,0.08)",
@@ -325,21 +464,28 @@ export default function GarsonMasalarPage() {
                     }}>
                         {filteredTables.map(table => {
                             const isOccupied = table.status === "OCCUPIED";
+                            const isSelected = selectedTables.includes(table.id);
+                            const isUnread = isOccupied && table.active_order_id && !seenOrderIds.includes(table.active_order_id);
 
                             return (
                                 <button
                                     key={table.id}
                                     onClick={() => handleTableClick(table.id)}
+                                    className={isUnread ? "breathe-order" : ""}
                                     style={{
                                         position: "relative",
                                         aspectRatio: "1/1",
                                         borderRadius: "18px",
-                                        border: isOccupied
-                                            ? "1.5px solid rgba(239,68,68,0.35)"
-                                            : "1.5px solid rgba(34,197,94,0.3)",
-                                        background: isOccupied
-                                            ? "linear-gradient(145deg, rgba(60,10,10,0.85) 0%, rgba(40,6,6,0.95) 100%)"
-                                            : "linear-gradient(145deg, rgba(6,38,12,0.85) 0%, rgba(4,28,10,0.95) 100%)",
+                                        border: isSelected
+                                            ? "2.5px solid #eab308"
+                                            : isOccupied
+                                                ? "1.5px solid rgba(239,68,68,0.35)"
+                                                : "1.5px solid rgba(34,197,94,0.3)",
+                                        background: isSelected
+                                            ? "rgba(234,179,8,0.2)"
+                                            : isOccupied
+                                                ? "linear-gradient(145deg, rgba(60,10,10,0.85) 0%, rgba(40,6,6,0.95) 100%)"
+                                                : "linear-gradient(145deg, rgba(6,38,12,0.85) 0%, rgba(4,28,10,0.95) 100%)",
                                         cursor: "pointer",
                                         overflow: "hidden",
                                         display: "flex",
