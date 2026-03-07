@@ -53,7 +53,7 @@ export default function TableManagement() {
         if (floor === floorName) setFloor("");
     };
 
-    const handleAddTable = (e: React.FormEvent) => {
+    const handleAddTable = (e: React.FormEvent | React.MouseEvent) => {
         e.preventDefault();
         // Mock: sadece UI. Backend entegrasyonunda tableService/create çağrılacak.
         if (!tableName.trim() || !capacity.trim() || !floor) return;
@@ -98,7 +98,7 @@ export default function TableManagement() {
                             <h2 className="text-xl font-black text-white tracking-wide">+ YENİ MASA EKLE</h2>
                         </div>
 
-                        <form onSubmit={handleAddTable} className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-5">
                             <div className="flex flex-col gap-2">
                                 <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">
                                     MASA ADI
@@ -194,12 +194,13 @@ export default function TableManagement() {
                             </div>
 
                             <button
-                                type="submit"
+                                type="button"
+                                onClick={handleAddTable}
                                 className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2"
                             >
                                 MASA EKLE
                             </button>
-                        </form>
+                        </div>
                     </div>
                 </div>
 
