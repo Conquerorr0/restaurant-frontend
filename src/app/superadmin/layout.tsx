@@ -39,8 +39,8 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                                     key={item.href}
                                     href={item.href}
                                     className={`flex items-center gap-4 px-5 py-4 rounded-[16px] transition-all duration-300 font-bold ${isActive
-                                            ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_4px_20px_rgba(234,179,8,0.2)]"
-                                            : "text-[#a1a1aa] hover:bg-[#1c1c1c] hover:text-white"
+                                        ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_4px_20px_rgba(234,179,8,0.2)]"
+                                        : "text-[#a1a1aa] hover:bg-[#1c1c1c] hover:text-white"
                                         }`}
                                 >
                                     <Icon size={20} className={isActive ? "text-[#0d0d0d]" : "text-[#eab308]"} />
