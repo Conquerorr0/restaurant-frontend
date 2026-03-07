@@ -2,15 +2,20 @@
   "name": "restaurant-frontend",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=18.17.0 <=20.x"
+  },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
+    "dev:turbo": "next dev --turbopack",
+    "dev:port": "next dev --webpack -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "lucide-react": "^0.575.0",
-    "next": "^15.5.12",
+    "next": "^16.1.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "socket.io-client": "^4.8.3"
@@ -21,7 +26,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "^16.1.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
