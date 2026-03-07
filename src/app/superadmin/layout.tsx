@@ -2,11 +2,17 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, UtensilsCrossed, LayoutGrid, Users, LogOut, ShieldCheck } from "lucide-react";
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = () => {
+        // You might want to add token clearing logic here later
+        router.push("/");
+    };
 
     const navItems = [
         { name: "Dashboard", href: "/superadmin", icon: BarChart3 },
@@ -53,7 +59,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 </div>
 
                 {/* Logout Button */}
-                <button className="flex items-center gap-3 text-[#ef4444] font-bold hover:text-red-400 transition-colors px-5 pt-8 mt-auto border-t border-[#1c1c1c]/50">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 text-[#ef4444] font-bold hover:text-red-400 transition-colors px-5 pt-8 mt-auto border-t border-[#1c1c1c]/50"
+                >
                     <LogOut size={20} />
                     <span className="text-[15px]">Güvenli Çıkış</span>
                 </button>
