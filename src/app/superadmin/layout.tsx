@@ -2,23 +2,20 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, UtensilsCrossed, LayoutGrid, Users, LogOut, ShieldCheck } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { BarChart3, UtensilsCrossed, LayoutGrid, Users, LogOut, ShieldCheck, Wallet } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const router = useRouter();
-
-    const handleLogout = () => {
-        // You might want to add token clearing logic here later
-        router.push("/");
-    };
+    const { logout } = useAuth(); // Bizim çalışan logout fonksiyonumuz
 
     const navItems = [
         { name: "Dashboard", href: "/superadmin", icon: BarChart3 },
         { name: "Menü Yönetimi", href: "/superadmin/menu", icon: UtensilsCrossed },
         { name: "Masalar", href: "/superadmin/masalar", icon: LayoutGrid },
         { name: "Personel", href: "/superadmin/personel", icon: Users },
+        { name: "Giderler", href: "/superadmin/giderler", icon: Wallet }, // Bizim eklediğimiz link
     ];
 
     return (
@@ -60,7 +57,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
                 {/* Logout Button */}
                 <button
-                    onClick={handleLogout}
+                    onClick={logout}
                     className="flex items-center gap-3 text-[#ef4444] font-bold hover:text-red-400 transition-colors px-5 pt-8 mt-auto border-t border-[#1c1c1c]/50"
                 >
                     <LogOut size={20} />

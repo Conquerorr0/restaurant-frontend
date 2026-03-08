@@ -20,23 +20,53 @@ export interface Product {
 }
 
 export const menuService = {
-    /**
-     * Fetch all active categories
-     */
+    // Categories
     getCategories: async (token: string): Promise<ApiResponse<Category[]>> => {
-        return apiRequest<ApiResponse<Category[]>>('/categories', {
-            method: 'GET',
-            token,
+        return apiRequest<ApiResponse<Category[]>>('/categories', { token });
+    },
+    createCategory: async (data: any, token: string): Promise<ApiResponse<Category>> => {
+        return apiRequest<ApiResponse<Category>>('/categories', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            token
+        });
+    },
+    updateCategory: async (id: string, data: any, token: string): Promise<ApiResponse<Category>> => {
+        return apiRequest<ApiResponse<Category>>(`/categories/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+            token
+        });
+    },
+    deleteCategory: async (id: string, token: string): Promise<ApiResponse<void>> => {
+        return apiRequest<ApiResponse<void>>(`/categories/${id}`, {
+            method: 'DELETE',
+            token
         });
     },
 
-    /**
-     * Fetch all active products
-     */
+    // Products
     getProducts: async (token: string): Promise<ApiResponse<Product[]>> => {
-        return apiRequest<ApiResponse<Product[]>>('/products', {
-            method: 'GET',
-            token,
+        return apiRequest<ApiResponse<Product[]>>('/products', { token });
+    },
+    createProduct: async (data: any, token: string): Promise<ApiResponse<Product>> => {
+        return apiRequest<ApiResponse<Product>>('/products', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            token
+        });
+    },
+    updateProduct: async (id: string, data: any, token: string): Promise<ApiResponse<Product>> => {
+        return apiRequest<ApiResponse<Product>>(`/products/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+            token
+        });
+    },
+    deleteProduct: async (id: string, token: string): Promise<ApiResponse<void>> => {
+        return apiRequest<ApiResponse<void>>(`/products/${id}`, {
+            method: 'DELETE',
+            token
         });
     }
 };

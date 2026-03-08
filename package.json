@@ -6,9 +6,9 @@
     "node": ">=18.17.0 <=20.x"
   },
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev",
     "dev:turbo": "next dev --turbopack",
-    "dev:port": "next dev --webpack -p 3001",
+    "dev:port": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
