@@ -148,7 +148,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
             `}</style>
 
             <header style={{ background: "var(--card-alt)", borderBottom: "1px solid rgba(234,179,8,0.12)", position: "sticky", top: 0, zIndex: 30 }}>
-                <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "11px 16px", display: "flex", alignItems: "center", gap: "10px", paddingRight: "100px" }}>
+                <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "11px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
                     <button onClick={() => router.push('/garson')} style={{ padding: "9px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "11px", color: "var(--muted)", cursor: "pointer" }}><ArrowLeft size={17} /></button>
                     <div style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.25)", borderRadius: "11px", padding: "7px 13px", display: "flex", alignItems: "center", gap: "7px" }}>
                         <UtensilsCrossed size={14} color="#eab308" />

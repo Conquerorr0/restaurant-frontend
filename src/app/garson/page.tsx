@@ -237,7 +237,7 @@ export default function GarsonMasalarPage() {
                 <div style={{
                     maxWidth: "1100px",
                     margin: "0 auto",
-                    padding: "14px 24px",
+                    padding: "12px 16px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
