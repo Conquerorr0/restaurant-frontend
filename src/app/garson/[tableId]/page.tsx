@@ -133,7 +133,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
     const currentCategory = categories.find(c => c.id === activeCategoryId);
 
     return (
-        <div style={{ minHeight: "100vh", background: "#0d0d0d", fontFamily: "sans-serif", color: "#e5e7eb" }}>
+        <div style={{ minHeight: "100vh", background: "var(--background)", fontFamily: "sans-serif", color: "#e5e7eb" }}>
             <style>{`
                 *, *::before, *::after { box-sizing: border-box; }
                 @keyframes spin    { to { transform: rotate(360deg); } }
@@ -149,14 +149,14 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
 
             <header style={{ background: "#111", borderBottom: "1px solid rgba(234,179,8,0.12)", position: "sticky", top: 0, zIndex: 30 }}>
                 <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "11px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
-                    <button onClick={() => router.push('/garson')} style={{ padding: "9px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "11px", color: "#9ca3af", cursor: "pointer" }}><ArrowLeft size={17} /></button>
+                    <button onClick={() => router.push('/garson')} style={{ padding: "9px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "11px", color: "var(--muted)", cursor: "pointer" }}><ArrowLeft size={17} /></button>
                     <div style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.25)", borderRadius: "11px", padding: "7px 13px", display: "flex", alignItems: "center", gap: "7px" }}>
                         <UtensilsCrossed size={14} color="#eab308" />
                         <span style={{ color: "#eab308", fontWeight: 700, fontSize: "13px" }}>MASA {tableName || "..."}</span>
                     </div>
                     <div style={{ flex: 1 }} />
                     <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "10px", color: "#6b7280" }}>TOPLAM</div>
+                        <div style={{ fontSize: "10px", color: "var(--muted)" }}>TOPLAM</div>
                         <div style={{ fontSize: "20px", fontWeight: 800, color: "#eab308" }}>₺{grandTotal.toLocaleString("tr-TR")}</div>
                     </div>
                 </div>
@@ -170,7 +170,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                             <div style={{ display: "flex", gap: "7px", overflowX: "auto", paddingBottom: "5px" }}>
                                 {categories.map(cat => (
-                                    <button key={cat.id} onClick={() => setActiveCategoryId(cat.id)} style={{ padding: "8px 13px", borderRadius: "10px", fontSize: "13px", fontWeight: 700, cursor: "pointer", border: activeCategoryId === cat.id ? "1px solid #eab308" : "1px solid rgba(255,255,255,0.07)", background: activeCategoryId === cat.id ? "#eab308" : "rgba(255,255,255,0.04)", color: activeCategoryId === cat.id ? "#000" : "#9ca3af" }}>{cat.emoji} {cat.name}</button>
+                                    <button key={cat.id} onClick={() => setActiveCategoryId(cat.id)} style={{ padding: "8px 13px", borderRadius: "10px", fontSize: "13px", fontWeight: 700, cursor: "pointer", border: activeCategoryId === cat.id ? "1px solid #eab308" : "1px solid rgba(255,255,255,0.07)", background: activeCategoryId === cat.id ? "#eab308" : "rgba(255,255,255,0.04)", color: activeCategoryId === cat.id ? "var(--background)" : "var(--muted)" }}>{cat.emoji} {cat.name}</button>
                                 ))}
                             </div>
                             <div className="product-grid">
@@ -189,7 +189,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                                                             width: "32px", height: "32px",
                                                             background: "rgba(255,255,255,0.08)",
                                                             border: "1px solid rgba(255,255,255,0.1)",
-                                                            borderRadius: "8px", color: "#fff",
+                                                            borderRadius: "8px", color: "var(--foreground)",
                                                             display: "flex", alignItems: "center", justifyContent: "center",
                                                             cursor: "pointer"
                                                         }}
@@ -204,7 +204,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                                                 style={{
                                                     width: "32px", height: "32px",
                                                     background: "#eab308",
-                                                    border: "none", borderRadius: "8px", color: "#000",
+                                                    border: "none", borderRadius: "8px", color: "var(--background)",
                                                     display: "flex", alignItems: "center", justifyContent: "center",
                                                     cursor: "pointer",
                                                     boxShadow: "0 2px 8px rgba(234,179,8,0.2)"
@@ -218,7 +218,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                             </div>
                             {order && (
                                 <div style={{ marginTop: "20px", padding: "15px", borderRadius: "13px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                                    <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: 700, marginBottom: "10px" }}>MASADA MEVCUT SİPARİŞ</div>
+                                    <div style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 700, marginBottom: "10px" }}>MASADA MEVCUT SİPARİŞ</div>
                                     {order.items.map((item: any) => (
                                         <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", fontSize: "14px" }}>
                                             <span>{item.quantity}x {item.product_name}</span>
@@ -228,7 +228,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                                     {order.note && (
                                         <div style={{ marginTop: "10px", padding: "8px", background: "rgba(234,179,8,0.05)", borderRadius: "8px", border: "1px dashed rgba(234,179,8,0.2)" }}>
                                             <div style={{ fontSize: "10px", color: "#eab308", fontWeight: 800 }}>NOT:</div>
-                                            <div style={{ fontSize: "12px", color: "#9ca3af" }}>{order.note}</div>
+                                            <div style={{ fontSize: "12px", color: "var(--muted)" }}>{order.note}</div>
                                         </div>
                                     )}
                                 </div>
@@ -253,7 +253,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
 
             {!loading && (
                 <div style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 40 }} className="mobile-fab">
-                    <button onClick={() => setCartOpen(true)} style={{ padding: "12px 24px", borderRadius: "50px", background: "#eab308", color: "#000", fontWeight: 800, boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }}>
+                    <button onClick={() => setCartOpen(true)} style={{ padding: "12px 24px", borderRadius: "50px", background: "#eab308", color: "var(--background)", fontWeight: 800, boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }}>
                         SEPETİ GÖR ({cartCount})
                     </button>
                 </div>
@@ -262,7 +262,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
             {cartOpen && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 50 }}>
                     <div onClick={() => setCartOpen(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)" }} />
-                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#141414", borderRadius: "20px 20px 0 0", padding: "20px", maxHeight: "80vh", overflowY: "auto", animation: "slideUp 0.3s ease" }}>
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "var(--card-alt)", borderRadius: "20px 20px 0 0", padding: "20px", maxHeight: "80vh", overflowY: "auto", animation: "slideUp 0.3s ease" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
                             <span style={{ fontWeight: 800, color: "#eab308" }}>SEPET</span>
                             <button onClick={() => setCartOpen(false)}><X size={20} /></button>
@@ -300,19 +300,19 @@ function CartContent({ cartCount, localCart, setLocalCart, orderNote, setOrderNo
             {localCart.length > 0 && (
                 <div style={{ marginTop: "10px" }}>
                     <div style={{ marginBottom: "10px" }}>
-                        <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px" }}>SİPARİŞ NOTU</div>
+                        <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>SİPARİŞ NOTU</div>
                         <textarea
                             value={orderNote}
                             onChange={(e) => setOrderNote(e.target.value)}
                             placeholder="Notunuz..."
-                            style={{ width: "100%", height: "60px", background: "#000", border: "1px solid #333", borderRadius: "8px", color: "#fff", padding: "8px", fontSize: "12px", resize: "none" }}
+                            style={{ width: "100%", height: "60px", background: "var(--background)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--foreground)", padding: "8px", fontSize: "12px", resize: "none" }}
                         />
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
                         <span>Eklenecek</span>
                         <span style={{ color: "#eab308", fontWeight: 800 }}>₺{localTotal}</span>
                     </div>
-                    <button onClick={handleConfirmOrder} disabled={isSubmitting} style={{ width: "100%", padding: "12px", background: "#eab308", color: "#000", fontWeight: 800, borderRadius: "8px", cursor: isSubmitting ? "not-allowed" : "pointer" }}>
+                    <button onClick={handleConfirmOrder} disabled={isSubmitting} style={{ width: "100%", padding: "12px", background: "#eab308", color: "var(--background)", fontWeight: 800, borderRadius: "8px", cursor: isSubmitting ? "not-allowed" : "pointer" }}>
                         {isSubmitting ? "GÖNDERİLİYOR..." : "SİPARİŞİ ONAYLA"}
                     </button>
                 </div>

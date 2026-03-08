@@ -120,7 +120,7 @@ export default function SuperAdminDashboard() {
 
     if (loading && !stats) {
         return (
-            <div className="w-full h-[60vh] flex flex-col items-center justify-center gap-4 text-[#a1a1aa]">
+            <div className="w-full h-[60vh] flex flex-col items-center justify-center gap-4 text-[var(--muted)]">
                 <Loader2 className="animate-spin" size={40} />
                 <p className="font-bold">Veriler yükleniyor...</p>
             </div>
@@ -140,14 +140,14 @@ export default function SuperAdminDashboard() {
             {/* Header */}
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-black text-white tracking-wide mb-1 uppercase italic">
+                    <h1 className="text-3xl font-black text-[var(--foreground)] tracking-wide mb-1 uppercase italic">
                         YÖNETİM PANELİ
                     </h1>
-                    <p className="text-[#a1a1aa] text-[15px] font-medium font-bold">
+                    <p className="text-[var(--muted)] text-[15px] font-medium font-bold">
                         İşletmenizin anlık performans ve finansal analizi
                     </p>
                 </div>
-                <div className="bg-[#18181b] border border-[#27272a] rounded-full px-4 py-2 flex items-center gap-2 text-xs font-black text-[#eab308]">
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-full px-4 py-2 flex items-center gap-2 text-xs font-black text-[#eab308]">
                     <div className="w-2 h-2 rounded-full bg-[#eab308] animate-pulse"></div>
                     CANLI VERİ AKTİF
                 </div>
@@ -160,7 +160,7 @@ export default function SuperAdminDashboard() {
                     return (
                         <div
                             key={i}
-                            className="bg-[#18181b] rounded-[24px] p-6 border border-[#27272a]/50 flex flex-col gap-5 transition-transform hover:scale-[1.02] duration-300 shadow-lg relative overflow-hidden group"
+                            className="bg-[var(--card)] rounded-[24px] p-6 border border-[var(--border)]/50 flex flex-col gap-5 transition-transform hover:scale-[1.02] duration-300 shadow-lg relative overflow-hidden group"
                         >
                             <div className="flex items-start justify-between relative z-10">
                                 <div className="w-12 h-12 rounded-[16px] bg-[#eab308]/10 flex items-center justify-center group-hover:bg-[#eab308]/20 transition-colors">
@@ -173,15 +173,15 @@ export default function SuperAdminDashboard() {
                                 </div>
                             </div>
                             <div className="flex flex-col gap-1 relative z-10">
-                                <span className="text-[#71717a] text-[10px] font-black tracking-[0.2em] uppercase">
+                                <span className="text-[var(--muted)] text-[10px] font-black tracking-[0.2em] uppercase">
                                     {stat.title}
                                 </span>
-                                <span className="text-3xl font-black text-white italic">
+                                <span className="text-3xl font-black text-[var(--foreground)] italic">
                                     {stat.value}
                                 </span>
                             </div>
                             <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
-                                <Icon size={120} className="text-white" />
+                                <Icon size={120} className="text-[var(--foreground)]" />
                             </div>
                         </div>
                     );
@@ -190,22 +190,22 @@ export default function SuperAdminDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Chart Area */}
-                <div className="lg:col-span-2 bg-[#18181b] rounded-[32px] p-8 border border-[#27272a]/50 shadow-xl flex flex-col gap-8 relative overflow-hidden">
+                <div className="lg:col-span-2 bg-[var(--card)] rounded-[32px] p-8 border border-[var(--border)]/50 shadow-xl flex flex-col gap-8 relative overflow-hidden">
                     <div className="flex justify-between items-start relative z-10">
                         <div>
-                            <h2 className="text-2xl font-black text-white tracking-wide mb-1 uppercase italic">
+                            <h2 className="text-2xl font-black text-[var(--foreground)] tracking-wide mb-1 uppercase italic">
                                 CİRO AKIŞI
                             </h2>
-                            <p className="text-[#a1a1aa] text-sm font-bold">
+                            <p className="text-[var(--muted)] text-sm font-bold">
                                 {chartPeriod === 'week' ? 'Son 7 Günlük' : 'Son 30 Günlük'} gelir dağılımı
                             </p>
                         </div>
-                        <div className="flex gap-2 bg-[#0d0d0d] p-1 rounded-xl border border-[#27272a]">
+                        <div className="flex gap-2 bg-[var(--background)] p-1 rounded-xl border border-[var(--border)]">
                             <button
                                 onClick={() => setChartPeriod("week")}
                                 className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${chartPeriod === "week"
-                                    ? "bg-[#eab308] text-[#0d0d0d]"
-                                    : "text-[#71717a] hover:text-white"
+                                    ? "bg-[#eab308] text-[var(--background)]"
+                                    : "text-[var(--muted)] hover:text-[var(--foreground)]"
                                     }`}
                             >
                                 HAFTALIK
@@ -213,8 +213,8 @@ export default function SuperAdminDashboard() {
                             <button
                                 onClick={() => setChartPeriod("month")}
                                 className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${chartPeriod === "month"
-                                    ? "bg-[#eab308] text-[#0d0d0d]"
-                                    : "text-[#71717a] hover:text-white"
+                                    ? "bg-[#eab308] text-[var(--background)]"
+                                    : "text-[var(--muted)] hover:text-[var(--foreground)]"
                                     }`}
                             >
                                 AYLIK
@@ -232,9 +232,9 @@ export default function SuperAdminDashboard() {
                             </defs>
 
                             {/* Grid lines */}
-                            <line x1="0" y1="50" x2="800" y2="50" stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
-                            <line x1="0" y1="150" x2="800" y2="150" stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
-                            <line x1="0" y1="250" x2="800" y2="250" stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
+                            <line x1="0" y1="50" x2="800" y2="50" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
+                            <line x1="0" y1="150" x2="800" y2="150" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
+                            <line x1="0" y1="250" x2="800" y2="250" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
 
                             {chartData.length > 1 && (
                                 <>
@@ -258,59 +258,59 @@ export default function SuperAdminDashboard() {
                         {/* X-Axis labels */}
                         <div className="flex justify-between mt-4">
                             {chartData.filter((_, i) => i % (chartPeriod === 'week' ? 1 : 5) === 0).map((d, i) => (
-                                <span key={i} className="text-[10px] font-black text-[#71717a]">{d.label}</span>
+                                <span key={i} className="text-[10px] font-black text-[var(--muted)]">{d.label}</span>
                             ))}
                         </div>
                     </div>
                 </div>
 
                 {/* Profit & Loss Management */}
-                <div className="bg-[#18181b] rounded-[32px] p-8 border border-[#27272a]/50 shadow-xl flex flex-col gap-6">
-                    <h2 className="text-xl font-black text-white italic uppercase tracking-wider">
+                <div className="bg-[var(--card)] rounded-[32px] p-8 border border-[var(--border)]/50 shadow-xl flex flex-col gap-6">
+                    <h2 className="text-xl font-black text-[var(--foreground)] italic uppercase tracking-wider">
                         KÂR-ZARAR ANALİZİ
                     </h2>
 
                     <div className="flex flex-col gap-4">
-                        <div className="p-4 bg-[#0d0d0d] rounded-2xl border border-[#27272a] flex items-center justify-between">
+                        <div className="p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)] flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
                                     <Wallet size={20} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-[#71717a] uppercase mb-0.5">TOPLAM CİRO</p>
-                                    <p className="text-lg font-black text-white">₺{summary?.total_revenue.toLocaleString('tr-TR')}</p>
+                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">TOPLAM CİRO</p>
+                                    <p className="text-lg font-black text-[var(--foreground)]">₺{summary?.total_revenue.toLocaleString('tr-TR')}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-4 bg-[#0d0d0d] rounded-2xl border border-[#27272a] flex items-center justify-between">
+                        <div className="p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)] flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
                                     <Receipt size={20} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-[#71717a] uppercase mb-0.5">MALİYET (COGS)</p>
-                                    <p className="text-lg font-black text-white">₺{summary?.total_cogs.toLocaleString('tr-TR')}</p>
+                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">MALİYET (COGS)</p>
+                                    <p className="text-lg font-black text-[var(--foreground)]">₺{summary?.total_cogs.toLocaleString('tr-TR')}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-4 bg-[#0d0d0d] rounded-2xl border border-[#27272a] flex items-center justify-between">
+                        <div className="p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)] flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
                                     <Calculator size={20} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-[#71717a] uppercase mb-0.5">GİDERLER (EXPENSES)</p>
-                                    <p className="text-lg font-black text-white">₺{summary?.total_expenses.toLocaleString('tr-TR')}</p>
+                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">GİDERLER (EXPENSES)</p>
+                                    <p className="text-lg font-black text-[var(--foreground)]">₺{summary?.total_expenses.toLocaleString('tr-TR')}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className={`p-6 rounded-[24px] border border-[#27272a] mt-2 flex flex-col gap-2 ${(summary?.net_profit || 0) >= 0 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'
+                        <div className={`p-6 rounded-[24px] border border-[var(--border)] mt-2 flex flex-col gap-2 ${(summary?.net_profit || 0) >= 0 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'
                             }`}>
                             <div className="flex justify-between items-center">
-                                <p className="text-[12px] font-black text-[#a1a1aa] uppercase tracking-widest">NET KÂR / ZARAR</p>
+                                <p className="text-[12px] font-black text-[var(--muted)] uppercase tracking-widest">NET KÂR / ZARAR</p>
                                 <div className={`p-1.5 rounded-lg ${(summary?.net_profit || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                     <Percent size={18} />
                                 </div>
@@ -318,7 +318,7 @@ export default function SuperAdminDashboard() {
                             <p className={`text-4xl font-black italic ${(summary?.net_profit || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                 ₺{summary?.net_profit.toLocaleString('tr-TR')}
                             </p>
-                            <p className="text-[10px] font-bold text-[#71717a] mt-2">
+                            <p className="text-[10px] font-bold text-[var(--muted)] mt-2">
                                 * Veriler bugünkü tüm işlemleri kapsamaktadır.
                             </p>
                         </div>
@@ -329,9 +329,9 @@ export default function SuperAdminDashboard() {
             {/* Bottom Row - Extra Reports */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
                 {/* Top Products */}
-                <div className="bg-[#18181b] rounded-[32px] p-8 border border-[#27272a]/50 shadow-xl flex flex-col gap-6">
+                <div className="bg-[var(--card)] rounded-[32px] p-8 border border-[var(--border)]/50 shadow-xl flex flex-col gap-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-black text-white italic uppercase tracking-wider">
+                        <h2 className="text-xl font-black text-[var(--foreground)] italic uppercase tracking-wider">
                             EN ÇOK SATAN ÜRÜNLER (TOP 5)
                         </h2>
                         <ShoppingBag size={20} className="text-[#eab308]" />
@@ -339,16 +339,16 @@ export default function SuperAdminDashboard() {
 
                     <div className="flex flex-col gap-3">
                         {topProducts.length === 0 ? (
-                            <p className="text-[#71717a] font-bold text-center py-10">Bugün henüz satış yapılmadı.</p>
+                            <p className="text-[var(--muted)] font-bold text-center py-10">Bugün henüz satış yapılmadı.</p>
                         ) : topProducts.map((p, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 bg-[#0d0d0d] rounded-2xl border border-[#27272a] hover:border-[#eab308]/30 transition-all">
+                            <div key={i} className="flex items-center justify-between p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)] hover:border-[#eab308]/30 transition-all">
                                 <div className="flex items-center gap-4">
                                     <div className="w-8 h-8 rounded-lg bg-[#eab308]/10 flex items-center justify-center text-[#eab308] font-black text-xs">
                                         {i + 1}
                                     </div>
                                     <div>
-                                        <p className="text-white font-black text-sm uppercase">{p.name}</p>
-                                        <p className="text-[#a1a1aa] text-[10px] font-bold">{p.total_quantity} Adet Satıldı</p>
+                                        <p className="text-[var(--foreground)] font-black text-sm uppercase">{p.name}</p>
+                                        <p className="text-[var(--muted)] text-[10px] font-bold">{p.total_quantity} Adet Satıldı</p>
                                     </div>
                                 </div>
                                 <p className="text-[#eab308] font-black text-sm italic">₺{p.total_revenue.toLocaleString('tr-TR')}</p>
@@ -358,9 +358,9 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 {/* Staff Performance */}
-                <div className="bg-[#18181b] rounded-[32px] p-8 border border-[#27272a]/50 shadow-xl flex flex-col gap-6">
+                <div className="bg-[var(--card)] rounded-[32px] p-8 border border-[var(--border)]/50 shadow-xl flex flex-col gap-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-black text-white italic uppercase tracking-wider">
+                        <h2 className="text-xl font-black text-[var(--foreground)] italic uppercase tracking-wider">
                             PERSONEL SATIŞ PERFORMANSI
                         </h2>
                         <Users size={20} className="text-[#eab308]" />
@@ -368,21 +368,21 @@ export default function SuperAdminDashboard() {
 
                     <div className="flex flex-col gap-3">
                         {staffStats.length === 0 ? (
-                            <p className="text-[#71717a] font-bold text-center py-10">Personel verisi bulunamadı.</p>
+                            <p className="text-[var(--muted)] font-bold text-center py-10">Personel verisi bulunamadı.</p>
                         ) : staffStats.map((s, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 bg-[#0d0d0d] rounded-2xl border border-[#27272a] hover:border-[#eab308]/30 transition-all">
+                            <div key={i} className="flex items-center justify-between p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)] hover:border-[#eab308]/30 transition-all">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#27272a] to-[#0d0d0d] flex items-center justify-center text-white font-black text-sm border border-[#27272a]">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--background)] flex items-center justify-center text-[var(--foreground)] font-black text-sm border border-[var(--border)]">
                                         {s.waiter_name.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
-                                        <p className="text-white font-black text-sm uppercase">{s.waiter_name}</p>
-                                        <p className="text-[#71717a] text-[10px] font-bold uppercase">{s.order_count} SİPARİŞ TAMAMLANDI</p>
+                                        <p className="text-[var(--foreground)] font-black text-sm uppercase">{s.waiter_name}</p>
+                                        <p className="text-[var(--muted)] text-[10px] font-bold uppercase">{s.order_count} SİPARİŞ TAMAMLANDI</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-white font-black text-sm italic">₺{s.total_sales.toLocaleString('tr-TR')}</p>
-                                    <div className="w-20 h-1 bg-[#27272a] rounded-full mt-1 overflow-hidden">
+                                    <p className="text-[var(--foreground)] font-black text-sm italic">₺{s.total_sales.toLocaleString('tr-TR')}</p>
+                                    <div className="w-20 h-1 bg-[var(--border)] rounded-full mt-1 overflow-hidden">
                                         <div
                                             className="h-full bg-green-500 rounded-full"
                                             style={{ width: `${Math.min((s.total_sales / (summary?.total_revenue || 1)) * 100, 100)}%` }}

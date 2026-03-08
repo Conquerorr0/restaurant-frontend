@@ -197,34 +197,34 @@ export default function MenuManagement() {
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 sm:gap-0">
                 <div>
-                    <h1 className="text-[28px] font-black text-white tracking-widest uppercase mb-1 drop-shadow-md italic leading-tight">
+                    <h1 className="text-[28px] font-black text-[var(--foreground)] tracking-widest uppercase mb-1 drop-shadow-md italic leading-tight">
                         MENÜ YÖNETİMİ
                     </h1>
-                    <p className="text-[#808080] text-[14px] font-medium tracking-wide">
+                    <p className="text-[var(--muted)] text-[14px] font-medium tracking-wide">
                         Kategori ve ürünlerinizi yönetin
                     </p>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex bg-[#1c1c1c] p-1 rounded-[16px] shadow-sm border border-[#27272a]/30">
+                <div className="flex bg-[var(--card)] p-1 rounded-[16px] shadow-sm border border-[var(--border)]/30">
                     <button
                         onClick={() => handleTabChange("products")}
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-[12px] font-bold text-[13px] tracking-wide transition-all duration-300 ${activeTab === "products"
-                            ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_5px_15px_rgba(234,179,8,0.2)]"
-                            : "text-[#a1a1aa] hover:text-white"
+                            ? "bg-[#eab308] text-[var(--background)] shadow-[0_5px_15px_rgba(234,179,8,0.2)]"
+                            : "text-[var(--muted)] hover:text-[var(--foreground)]"
                             }`}
                     >
-                        <Package size={16} className={activeTab === "products" ? "text-black" : ""} />
+                        <Package size={16} className={activeTab === "products" ? "text-[var(--background)]" : ""} />
                         ÜRÜNLER
                     </button>
                     <button
                         onClick={() => handleTabChange("categories")}
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-[12px] font-bold text-[13px] tracking-wide transition-all duration-300 ${activeTab === "categories"
-                            ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_5px_15px_rgba(234,179,8,0.2)]"
-                            : "text-[#a1a1aa] hover:text-white"
+                            ? "bg-[#eab308] text-[var(--background)] shadow-[0_5px_15px_rgba(234,179,8,0.2)]"
+                            : "text-[var(--muted)] hover:text-[var(--foreground)]"
                             }`}
                     >
-                        <Layers size={16} className={activeTab === "categories" ? "text-black" : ""} />
+                        <Layers size={16} className={activeTab === "categories" ? "text-[var(--background)]" : ""} />
                         KATEGORİLER
                     </button>
                 </div>
@@ -234,7 +234,7 @@ export default function MenuManagement() {
             <div className="flex flex-col lg:flex-row gap-10 items-start">
 
                 {/* Left Form Section */}
-                <div className="w-full lg:w-[380px] flex-shrink-0 bg-[#141414] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group border border-[#27272a]/30">
+                <div className="w-full lg:w-[380px] flex-shrink-0 bg-[var(--card-alt)] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group border border-[var(--border)]/30">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#eab308]/5 rounded-full blur-3xl -mx-10 -my-10 pointer-events-none transition-all duration-500 group-hover:bg-[#eab308]/10" />
 
                     {error && (
@@ -248,7 +248,7 @@ export default function MenuManagement() {
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
                                     <Package size={22} className="text-[#eab308]" />
-                                    <h2 className="text-xl font-black text-white tracking-wide uppercase italic">
+                                    <h2 className="text-xl font-black text-[var(--foreground)] tracking-wide uppercase italic">
                                         {editingProduct ? "ÜRÜNÜ DÜZENLE" : "YENİ ÜRÜN EKLE"}
                                     </h2>
                                 </div>
@@ -256,7 +256,7 @@ export default function MenuManagement() {
                                     <button
                                         type="button"
                                         onClick={handleCancelProductEdit}
-                                        className="w-8 h-8 rounded-[8px] bg-[#27272a] text-[#a1a1aa] flex items-center justify-center hover:bg-[#3f3f46] hover:text-white transition-colors"
+                                        className="w-8 h-8 rounded-[8px] bg-[var(--border)] text-[var(--muted)] flex items-center justify-center hover:bg-[var(--border-alt)] hover:text-[var(--foreground)] transition-colors"
                                         title="İptal"
                                     >
                                         <X size={16} />
@@ -265,46 +265,46 @@ export default function MenuManagement() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em] ml-1">ÜRÜN ADI</label>
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">ÜRÜN ADI</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Örn: Adana Kebap"
                                     value={productName}
                                     onChange={(e) => setProductName(e.target.value)}
-                                    className="bg-[#0a0a0a] text-white placeholder-[#3f3f46] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-[#27272a]/30 hover:border-[#3f3f46]"
+                                    className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--border-alt)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
                                 />
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em] ml-1">KATEGORİ</label>
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">KATEGORİ</label>
                                 <div className="relative">
                                     <select
                                         required
                                         value={productCategoryId}
                                         onChange={(e) => setProductCategoryId(e.target.value)}
-                                        className="bg-[#0a0a0a] text-white px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-[#27272a]/30 hover:border-[#3f3f46]"
+                                        className="bg-[var(--background)] text-[var(--foreground)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
                                     >
-                                        <option value="" disabled className="text-[#3f3f46]">Kategori Seçin</option>
+                                        <option value="" disabled className="text-[var(--border-alt)]">Kategori Seçin</option>
                                         {categories.map((cat) => (
                                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}
                                     </select>
                                     <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
-                                        <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#a1a1aa]"></div>
+                                        <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[var(--muted)]"></div>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em] ml-1">FİYAT (₺)</label>
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">FİYAT (₺)</label>
                                 <input
                                     type="number"
                                     required
                                     placeholder="Örn: 250"
                                     value={productPrice}
                                     onChange={(e) => setProductPrice(e.target.value)}
-                                    className="bg-[#0a0a0a] text-white placeholder-[#3f3f46] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-[#27272a]/30 hover:border-[#3f3f46]"
+                                    className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--border-alt)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
                                 />
                             </div>
 
@@ -312,7 +312,7 @@ export default function MenuManagement() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="w-full bg-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 active:scale-95"
+                                    className="w-full bg-[#eab308] text-[var(--background)] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 active:scale-95"
                                 >
                                     {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (editingProduct ? "ÜRÜNÜ GÜNCELLE" : "ÜRÜNÜ KAYDET")}
                                 </button>
@@ -323,7 +323,7 @@ export default function MenuManagement() {
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
                                     <Layers size={22} className="text-[#eab308]" />
-                                    <h2 className="text-xl font-black text-white tracking-wide uppercase italic">
+                                    <h2 className="text-xl font-black text-[var(--foreground)] tracking-wide uppercase italic">
                                         {editingCategory ? "KATEGORİ DÜZENLE" : "YENİ KATEGORİ"}
                                     </h2>
                                 </div>
@@ -331,7 +331,7 @@ export default function MenuManagement() {
                                     <button
                                         type="button"
                                         onClick={handleCancelCategoryEdit}
-                                        className="w-8 h-8 rounded-[8px] bg-[#27272a] text-[#a1a1aa] flex items-center justify-center hover:bg-[#3f3f46] hover:text-white transition-colors"
+                                        className="w-8 h-8 rounded-[8px] bg-[var(--border)] text-[var(--muted)] flex items-center justify-center hover:bg-[var(--border-alt)] hover:text-[var(--foreground)] transition-colors"
                                         title="İptal"
                                     >
                                         <X size={16} />
@@ -340,14 +340,14 @@ export default function MenuManagement() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em] ml-1">KATEGORİ ADI</label>
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">KATEGORİ ADI</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Örn: Tatlılar"
                                     value={categoryName}
                                     onChange={(e) => setCategoryName(e.target.value)}
-                                    className="bg-[#0a0a0a] text-white placeholder-[#3f3f46] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-[#27272a]/30 hover:border-[#3f3f46]"
+                                    className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--border-alt)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
                                 />
                             </div>
 
@@ -355,7 +355,7 @@ export default function MenuManagement() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="w-full bg-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 active:scale-95"
+                                    className="w-full bg-[#eab308] text-[var(--background)] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 active:scale-95"
                                 >
                                     {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (editingCategory ? "KATEGORİYİ GÜNCELLE" : "KATEGORİYİ EKLE")}
                                 </button>
@@ -367,14 +367,14 @@ export default function MenuManagement() {
                 {/* Right Grid Section */}
                 <div className="flex-1 w-full flex flex-col gap-6">
                     {activeTab === "products" && (
-                        <div className="relative text-[#a1a1aa] focus-within:text-white transition-colors w-full">
+                        <div className="relative text-[var(--muted)] focus-within:text-[var(--foreground)] transition-colors w-full">
                             <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 placeholder="Ürünlerde ara..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-[#1c1c1c] border border-[#27272a]/30 text-white placeholder-[#52525b] py-4 pl-14 pr-5 rounded-[16px] focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold hover:border-[#3f3f46]"
+                                className="w-full bg-[var(--card)] border border-[var(--border)]/30 text-[var(--foreground)] placeholder-[var(--muted)] py-4 pl-14 pr-5 rounded-[16px] focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold hover:border-[var(--border-alt)]"
                             />
                         </div>
                     )}
@@ -382,7 +382,7 @@ export default function MenuManagement() {
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-24">
                             <Loader2 className="animate-spin text-[#eab308] mb-4" size={48} />
-                            <p className="text-[#a1a1aa] font-bold tracking-widest uppercase text-xs">Yükleniyor...</p>
+                            <p className="text-[var(--muted)] font-bold tracking-widest uppercase text-xs">Yükleniyor...</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -391,24 +391,24 @@ export default function MenuManagement() {
                                     filteredProducts.map((product) => (
                                         <div
                                             key={product.id}
-                                            className={`bg-[#1c1c1c] border rounded-[20px] p-4 flex items-center justify-between group transition-all duration-300 hover:shadow-[0_15px_30px_rgba(0,0,0,0.5)] ${editingProduct?.id === product.id
-                                                ? "border-[#eab308]/50 shadow-[0_0_15px_rgba(234,179,8,0.1)] bg-[#1c1c1c]"
-                                                : "border-[#27272a]/50 hover:border-[#eab308]/30"
+                                            className={`bg-[var(--card)] border rounded-[20px] p-4 flex items-center justify-between group transition-all duration-300 hover:shadow-[0_15px_30px_rgba(0,0,0,0.5)] ${editingProduct?.id === product.id
+                                                ? "border-[#eab308]/50 shadow-[0_0_15px_rgba(234,179,8,0.1)] bg-[var(--card)]"
+                                                : "border-[var(--border)]/50 hover:border-[#eab308]/30"
                                                 }`}
                                         >
                                             <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                <div className={`w-12 h-12 rounded-[14px] text-[#eab308] flex items-center justify-center font-bold text-lg shadow-inner flex-shrink-0 transition-colors ${editingProduct?.id === product.id ? "bg-[#eab308]/20" : "bg-[#27272a] group-hover:bg-[#eab308]/10"}`}>
+                                                <div className={`w-12 h-12 rounded-[14px] text-[#eab308] flex items-center justify-center font-bold text-lg shadow-inner flex-shrink-0 transition-colors ${editingProduct?.id === product.id ? "bg-[#eab308]/20" : "bg-[var(--border)] group-hover:bg-[#eab308]/10"}`}>
                                                     {product.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
-                                                    <h3 className={`font-bold text-[16px] leading-tight mb-1 transition-colors ${editingProduct?.id === product.id ? "text-[#eab308]" : "text-white group-hover:text-[#eab308]"}`}>
+                                                    <h3 className={`font-bold text-[16px] leading-tight mb-1 transition-colors ${editingProduct?.id === product.id ? "text-[#eab308]" : "text-[var(--foreground)] group-hover:text-[#eab308]"}`}>
                                                         {product.name}
                                                     </h3>
                                                     <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase opacity-60">
                                                         <span className="truncate max-w-[120px]">
                                                             {categories.find(c => c.id === product.category_id)?.name || "KATEGORİSİZ"}
                                                         </span>
-                                                        <span className="text-[#3f3f46]">•</span>
+                                                        <span className="text-[var(--border-alt)]">•</span>
                                                         <span className="text-[#eab308]">₺{product.price}</span>
                                                     </div>
                                                 </div>
@@ -417,15 +417,15 @@ export default function MenuManagement() {
                                                 <button
                                                     onClick={() => handleEditProduct(product)}
                                                     className={`w-9 h-9 rounded-[10px] flex items-center justify-center transition-all ${editingProduct?.id === product.id
-                                                        ? "bg-[#eab308] text-[#0d0d0d]"
-                                                        : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#3f3f46] hover:text-white"
+                                                        ? "bg-[#eab308] text-[var(--background)]"
+                                                        : "bg-[var(--border)] text-[var(--muted)] hover:bg-[var(--border-alt)] hover:text-[var(--foreground)]"
                                                         }`}
                                                 >
                                                     <Pencil size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteProduct(product.id)}
-                                                    className="w-9 h-9 rounded-[10px] bg-[#3f1515] text-[#ef4444] border border-[#ef4444]/10 flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all shadow-sm"
+                                                    className="w-9 h-9 rounded-[10px] bg-[#3f1515] text-[#ef4444] border border-[#ef4444]/10 flex items-center justify-center hover:bg-[#ef4444] hover:text-[var(--foreground)] transition-all shadow-sm"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
@@ -433,10 +433,10 @@ export default function MenuManagement() {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[#27272a] rounded-[32px] bg-[#1c1c1c]/30">
-                                        <Search size={48} className="text-[#27272a] mb-4" />
-                                        <h3 className="text-xl font-black text-white mb-2 uppercase italic">Ürün bulunamadı</h3>
-                                        <p className="text-[#a1a1aa] font-bold text-sm">Arama kriterlerinize uygun ürün bulunmuyor.</p>
+                                    <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[var(--border)] rounded-[32px] bg-[var(--card)]/30">
+                                        <Search size={48} className="text-[var(--border)] mb-4" />
+                                        <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">Ürün bulunamadı</h3>
+                                        <p className="text-[var(--muted)] font-bold text-sm">Arama kriterlerinize uygun ürün bulunmuyor.</p>
                                     </div>
                                 )
                             ) : (
@@ -446,20 +446,20 @@ export default function MenuManagement() {
                                         return (
                                             <div
                                                 key={category.id}
-                                                className={`bg-[#1c1c1c] border rounded-[20px] p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-[0_15px_30px_rgba(0,0,0,0.5)] ${editingCategory?.id === category.id
-                                                    ? "border-[#eab308]/50 shadow-[0_0_15px_rgba(234,179,8,0.1)] bg-[#1c1c1c]"
-                                                    : "border-[#27272a]/50 hover:border-[#eab308]/30"
+                                                className={`bg-[var(--card)] border rounded-[20px] p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-[0_15px_30px_rgba(0,0,0,0.5)] ${editingCategory?.id === category.id
+                                                    ? "border-[#eab308]/50 shadow-[0_0_15px_rgba(234,179,8,0.1)] bg-[var(--card)]"
+                                                    : "border-[var(--border)]/50 hover:border-[#eab308]/30"
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-5 flex-1 min-w-0">
-                                                    <div className={`w-12 h-12 rounded-[14px] text-[#eab308] flex items-center justify-center flex-shrink-0 shadow-inner transition-colors ${editingCategory?.id === category.id ? "bg-[#eab308]/20" : "bg-[#27272a] group-hover:bg-[#eab308]/10"}`}>
+                                                    <div className={`w-12 h-12 rounded-[14px] text-[#eab308] flex items-center justify-center flex-shrink-0 shadow-inner transition-colors ${editingCategory?.id === category.id ? "bg-[#eab308]/20" : "bg-[var(--border)] group-hover:bg-[#eab308]/10"}`}>
                                                         <Layers size={20} />
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
-                                                        <h3 className={`font-bold text-[17px] leading-tight mb-1 transition-colors ${editingCategory?.id === category.id ? "text-[#eab308]" : "text-white group-hover:text-[#eab308]"}`}>
+                                                        <h3 className={`font-bold text-[17px] leading-tight mb-1 transition-colors ${editingCategory?.id === category.id ? "text-[#eab308]" : "text-[var(--foreground)] group-hover:text-[#eab308]"}`}>
                                                             {category.name}
                                                         </h3>
-                                                        <p className="text-[11px] text-[#a1a1aa] font-bold tracking-widest uppercase opacity-60">
+                                                        <p className="text-[11px] text-[var(--muted)] font-bold tracking-widest uppercase opacity-60">
                                                             {prodCount} ÜRÜN
                                                         </p>
                                                     </div>
@@ -468,15 +468,15 @@ export default function MenuManagement() {
                                                     <button
                                                         onClick={() => handleEditCategory(category)}
                                                         className={`w-9 h-9 rounded-[10px] flex items-center justify-center transition-all ${editingCategory?.id === category.id
-                                                            ? "bg-[#eab308] text-[#0d0d0d]"
-                                                            : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#3f3f46] hover:text-white"
+                                                            ? "bg-[#eab308] text-[var(--background)]"
+                                                            : "bg-[var(--border)] text-[var(--muted)] hover:bg-[var(--border-alt)] hover:text-[var(--foreground)]"
                                                             }`}
                                                     >
                                                         <Pencil size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteCategory(category.id)}
-                                                        className="w-9 h-9 rounded-[10px] bg-[#3f1515] text-[#ef4444] border border-[#ef4444]/10 flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all shadow-sm"
+                                                        className="w-9 h-9 rounded-[10px] bg-[#3f1515] text-[#ef4444] border border-[#ef4444]/10 flex items-center justify-center hover:bg-[#ef4444] hover:text-[var(--foreground)] transition-all shadow-sm"
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
@@ -485,10 +485,10 @@ export default function MenuManagement() {
                                         );
                                     })
                                 ) : (
-                                    <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[#27272a] rounded-[32px] bg-[#1c1c1c]/30">
-                                        <Layers size={48} className="text-[#27272a] mb-4" />
-                                        <h3 className="text-xl font-black text-white mb-2 uppercase italic">Kategori bulunamadı</h3>
-                                        <p className="text-[#a1a1aa] font-bold text-sm">Henüz hiç kategori oluşturulmamış.</p>
+                                    <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[var(--border)] rounded-[32px] bg-[var(--card)]/30">
+                                        <Layers size={48} className="text-[var(--border)] mb-4" />
+                                        <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">Kategori bulunamadı</h3>
+                                        <p className="text-[var(--muted)] font-bold text-sm">Henüz hiç kategori oluşturulmamış.</p>
                                     </div>
                                 )
                             )}
