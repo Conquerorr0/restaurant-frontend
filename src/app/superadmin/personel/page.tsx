@@ -107,6 +107,17 @@ export default function PersonnelManagement() {
     };
 
     const handleDelete = async (id: string) => {
+        const personToDelete = people.find(p => p.id === id);
+
+        if (personToDelete?.role === "SUPER_ADMIN") {
+            const superAdminCount = people.filter(p => p.role === "SUPER_ADMIN").length;
+            if (superAdminCount <= 1) {
+                setError("Sistemde en az bir Süper Admin bulunmalıdır. Bu kullanıcıyı silemezsiniz!");
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+        }
+
         if (confirm("Bu personeli silmek istediğinize emin misiniz?")) {
             try {
                 const res = await userService.deleteUser(id, token!);
@@ -135,8 +146,9 @@ export default function PersonnelManagement() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#eab308]/5 rounded-full blur-3xl -mx-10 -my-10 pointer-events-none transition-all duration-500 group-hover:bg-[#eab308]/10" />
 
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-[16px] text-xs font-bold flex items-center gap-3 mb-4 relative z-20">
-                            <AlertCircle size={18} /> {error}
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-[20px] text-xs font-black flex items-start gap-3 mb-6 relative z-20 animate-in slide-in-from-top-2">
+                            <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+                            <span>{error}</span>
                         </div>
                     )}
 
@@ -261,48 +273,50 @@ export default function PersonnelManagement() {
                                 return (
                                     <div
                                         key={person.id}
-                                        className={`bg-[#1c1c1c] border rounded-[24px] p-5 flex items-center justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${editingUserId === person.id ? 'border-[#eab308]/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]' : 'border-transparent hover:border-[#eab308]/30'}`}
+                                        className={`bg-[#1c1c1c] border rounded-[32px] p-6 flex items-center justify-between transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)] ${editingUserId === person.id ? 'border-[#eab308]/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]' : 'border-transparent hover:border-[#eab308]/10'}`}
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <div className="w-14 h-14 bg-[#2a2a2a] rounded-[18px] flex items-center justify-center relative flex-shrink-0">
-                                                <User size={24} className="text-[#a1a1aa]" />
-                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#1c1c1c] rounded-full flex items-center justify-center">
-                                                    <Settings size={12} className="text-[#eab308]" />
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-[72px] h-[72px] bg-[#0d0d0d] rounded-[24px] flex items-center justify-center relative flex-shrink-0 border border-[#27272a]">
+                                                <User size={32} className="text-[#a1a1aa]" />
+                                                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#1c1c1c] rounded-lg flex items-center justify-center border border-[#27272a]">
+                                                    <Settings size={14} className="text-[#eab308]" />
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-lg font-black text-white uppercase italic">{person.name_surname}</span>
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-[8px] ${style.color} ${style.bg} border border-current opacity-60`}>
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">{person.name_surname}</span>
+                                                <div className="flex items-center gap-4">
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-[10px] border ${style.color} ${style.bg} border-current opacity-80 shadow-sm`}>
                                                         {style.label}
                                                     </span>
-                                                    <span className="text-[#a1a1aa] text-[13px] font-bold flex items-center gap-1.5">
-                                                        <span className="text-[#71717a]">@{person.username}</span>
+                                                    <span className="text-[#a1a1aa] text-[13px] font-bold flex items-center gap-2">
+                                                        <span className="text-[#71717a] opacity-60 italic">@{person.username}</span>
                                                         <span className="text-[#3f3f46]">•</span>
-                                                        <Lock size={14} className="text-[#71717a]" />
-                                                        {person.pin_code ? `PIN: ${person.pin_code}` : "Şifre Erişimi"}
+                                                        <div className="flex items-center gap-1.5 bg-[#0d0d0d] px-2 py-1 rounded-lg border border-[#27272a]">
+                                                            <Lock size={12} className="text-[#71717a]" />
+                                                            <span className="text-[11px] font-black tracking-widest">{person.pin_code ? `PIN: ${person.pin_code}` : "AUTH"}</span>
+                                                        </div>
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-3">
                                             <button
                                                 onClick={() => handleEditClick(person)}
-                                                className={`w-11 h-11 rounded-[14px] flex items-center justify-center transition-colors ${editingUserId === person.id
-                                                    ? "bg-[#eab308] text-[#0d0d0d]"
-                                                    : "bg-[#2a2a2a] text-[#a1a1aa] hover:bg-[#eab308] hover:text-[#0d0d0d]"
+                                                className={`w-12 h-12 rounded-[16px] flex items-center justify-center transition-all ${editingUserId === person.id
+                                                    ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_5px_15px_rgba(234,179,8,0.3)]Scale-105"
+                                                    : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#eab308] hover:text-[#0d0d0d] hover:scale-105"
                                                     }`}
                                                 title="Düzenle"
                                             >
-                                                <Edit2 size={18} />
+                                                <Edit2 size={20} />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(person.id)}
-                                                className="w-11 h-11 rounded-[14px] bg-[#3f1515] flex items-center justify-center text-[#ef4444] hover:bg-[#ef4444] hover:text-white transition-colors"
+                                                className="w-12 h-12 rounded-[16px] bg-[#3f1515] flex items-center justify-center text-[#ef4444] hover:bg-[#ef4444] hover:text-white hover:scale-105 transition-all shadow-sm"
                                                 title="Sil"
                                             >
-                                                <Trash2 size={18} />
+                                                <Trash2 size={20} />
                                             </button>
                                         </div>
                                     </div>

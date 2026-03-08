@@ -17,6 +17,8 @@ export default function TableManagement() {
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
+    const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
+
     useEffect(() => {
         if (token) fetchTables();
     }, [token]);
@@ -39,6 +41,12 @@ export default function TableManagement() {
         }
     };
 
+    // Filter tables by building the list of unique floors + "Tümü"
+    const floorOptions = ["Tümü", ...floors];
+    const filteredTables = selectedFloor === "Tümü"
+        ? tables
+        : tables.filter(t => t.floor === selectedFloor);
+
     const handleAddFloor = (e: React.FormEvent) => {
         e.preventDefault();
         const name = newFloorName.trim();
@@ -52,6 +60,7 @@ export default function TableManagement() {
         if (tableCount > 0 && !confirm(`"${floorName}" katında ${tableCount} masa var. Yine de bu katı kaldırmak istiyor musunuz?`)) return;
         setFloors((prev) => prev.filter((f) => f !== floorName));
         if (floor === floorName) setFloor("");
+        if (selectedFloor === floorName) setSelectedFloor("Tümü"); // Reset filter if current floor is removed
     };
 
     const handleAddTable = async (e: React.FormEvent | React.MouseEvent) => {
@@ -95,10 +104,10 @@ export default function TableManagement() {
     };
 
     return (
-        <div className="flex flex-col gap-10 w-full max-w-[1200px] mx-auto animate-in fade-in duration-500">
+        <div className="flex flex-col gap-10 w-full max-w-[1400px] mx-auto animate-in fade-in duration-500 px-4">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-1 drop-shadow-md">
+                <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-1 drop-shadow-md italic">
                     MASA YÖNETİMİ
                 </h1>
                 <p className="text-[#808080] text-[15px] font-medium tracking-wide">
@@ -106,9 +115,9 @@ export default function TableManagement() {
                 </p>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
+            <div className="flex flex-col xl:flex-row gap-8 items-start">
                 {/* Sol: Yeni Masa Ekle */}
-                <div className="w-full lg:w-[380px] flex-shrink-0 bg-[#1c1c1c] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
+                <div className="w-full xl:w-[380px] flex-shrink-0 bg-[#1c1c1c] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group border border-[#27272a]/50">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#eab308]/5 rounded-full blur-3xl -mx-10 -my-10 pointer-events-none transition-all duration-500 group-hover:bg-[#eab308]/10" />
                     <div className="relative z-10 flex flex-col gap-6">
                         <div className="flex items-center gap-3">
@@ -124,17 +133,18 @@ export default function TableManagement() {
                             </div>
                         )}
 
-                        <div className="flex flex-col gap-5">
+                        <form onSubmit={handleAddTable} className="flex flex-col gap-5">
                             <div className="flex flex-col gap-2">
                                 <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">
                                     MASA ADI
                                 </label>
                                 <input
                                     type="text"
+                                    required
                                     placeholder="Örn: Bahçe-1, Masa-2"
                                     value={tableName}
                                     onChange={(e) => setTableName(e.target.value)}
-                                    className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium border border-transparent hover:border-[#27272a]"
+                                    className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[#27272a]"
                                 />
                             </div>
 
@@ -145,11 +155,12 @@ export default function TableManagement() {
                                 <div className="relative">
                                     <input
                                         type="number"
+                                        required
                                         min={1}
                                         placeholder="Örn: 4"
                                         value={capacity}
                                         onChange={(e) => setCapacity(e.target.value)}
-                                        className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium border border-transparent hover:border-[#27272a]"
+                                        className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[#27272a]"
                                     />
                                     <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[#52525b]">
                                         <Users size={18} />
@@ -163,9 +174,10 @@ export default function TableManagement() {
                                 </label>
                                 <div className="relative">
                                     <select
+                                        required
                                         value={floor}
                                         onChange={(e) => setFloor(e.target.value)}
-                                        className="bg-[#0d0d0d] text-white px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium appearance-none border border-transparent hover:border-[#27272a]"
+                                        className="bg-[#0d0d0d] text-white px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-transparent hover:border-[#27272a]"
                                     >
                                         <option value="" disabled className="text-[#52525b]">
                                             Kat seçin
@@ -181,37 +193,38 @@ export default function TableManagement() {
                                     </div>
                                 </div>
                                 {/* Kat ekle / kaldır */}
-                                <div className="mt-3 pt-3 border-t border-[#27272a]">
-                                    <p className="text-[10px] text-[#71717a] font-bold uppercase tracking-wider mb-2">Kat ekle / kaldır</p>
-                                    <form onSubmit={handleAddFloor} className="flex gap-2 mb-3">
+                                <div className="mt-4 pt-4 border-t border-[#27272a]">
+                                    <p className="text-[10px] text-[#71717a] font-bold uppercase tracking-wider mb-2">Kat Listesi Yönetimi</p>
+                                    <div className="flex gap-2 mb-3">
                                         <input
                                             type="text"
-                                            placeholder="Yeni kat adı"
+                                            placeholder="Yeni kat"
                                             value={newFloorName}
                                             onChange={(e) => setNewFloorName(e.target.value)}
-                                            className="flex-1 bg-[#0d0d0d] text-white placeholder-[#52525b] px-3 py-2.5 rounded-[12px] text-[13px] focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 border border-transparent hover:border-[#27272a]"
+                                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFloor(e as any))}
+                                            className="flex-1 bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-2.5 rounded-[12px] text-[13px] font-bold focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 border border-transparent hover:border-[#27272a]"
                                         />
                                         <button
-                                            type="submit"
-                                            className="flex items-center gap-1.5 bg-[#27272a] text-[#eab308] hover:bg-[#eab308] hover:text-[#0d0d0d] px-3 py-2.5 rounded-[12px] text-[12px] font-bold transition-colors"
+                                            type="button"
+                                            onClick={handleAddFloor as any}
+                                            className="bg-[#eab308] text-[#0d0d0d] px-4 py-2.5 rounded-[12px] text-[12px] font-black transition-all hover:scale-105"
                                         >
-                                            <Plus size={14} /> Ekle
+                                            EKLE
                                         </button>
-                                    </form>
-                                    <ul className="flex flex-wrap gap-2">
+                                    </div>
+                                    <ul className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
                                         {floors.map((f) => (
                                             <li
                                                 key={f}
-                                                className="flex items-center gap-1.5 bg-[#0d0d0d] rounded-[10px] pl-2.5 pr-1.5 py-1.5 border border-[#27272a]"
+                                                className="flex items-center gap-1.5 bg-[#0d0d0d] rounded-[10px] pl-3 pr-1 py-1 border border-[#27272a]"
                                             >
-                                                <span className="text-[12px] font-medium text-white">{f}</span>
+                                                <span className="text-[11px] font-black text-white italic uppercase">{f}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveFloor(f)}
-                                                    className="w-7 h-7 rounded-[8px] flex items-center justify-center text-[#a1a1aa] hover:bg-[#3f1515] hover:text-[#ef4444] transition-colors"
-                                                    title="Katı kaldır"
+                                                    className="w-7 h-7 rounded-[8px] flex items-center justify-center text-[#71717a] hover:bg-[#3f1515] hover:text-[#ef4444] transition-colors"
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={13} />
                                                 </button>
                                             </li>
                                         ))}
@@ -220,63 +233,86 @@ export default function TableManagement() {
                             </div>
 
                             <button
-                                type="button"
+                                type="submit"
                                 disabled={submitting}
-                                onClick={handleAddTable}
-                                className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2 disabled:opacity-50"
+                                className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2 disabled:opacity-50 uppercase tracking-widest"
                             >
-                                {submitting ? <Loader2 className="animate-spin inline mr-2" /> : "MASA EKLE"}
+                                {submitting ? <Loader2 className="animate-spin inline mr-2" /> : "MASAYI OLUŞTUR"}
                             </button>
-                        </div>
+                        </form>
                     </div>
                 </div>
 
                 {/* Sağ: Masa kartları */}
                 <div className="flex-1 w-full flex flex-col gap-6">
+                    {/* Kat Filtreleme Chips */}
+                    <div className="flex flex-wrap items-center gap-3 bg-[#1c1c1c] p-3 rounded-[24px] border border-[#27272a]/50">
+                        <span className="text-[10px] font-black text-[#71717a] uppercase tracking-[0.2em] ml-2 mr-1">KAT FİLTRESİ:</span>
+                        {floorOptions.map((f) => (
+                            <button
+                                key={f}
+                                onClick={() => setSelectedFloor(f)}
+                                className={`px-5 py-2.5 rounded-[16px] text-[11px] font-black uppercase tracking-widest transition-all ${selectedFloor === f
+                                    ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_5px_15px_rgba(234,179,8,0.3)]"
+                                    : "bg-[#0d0d0d] text-[#a1a1aa] hover:text-white border border-[#27272a]"
+                                    }`}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+
                     {loading ? (
-                        <div className="w-full h-[300px] flex items-center justify-center">
+                        <div className="w-full h-[400px] flex items-center justify-center">
                             <Loader2 className="animate-spin text-[#eab308]" size={48} />
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {tables.map((table) => {
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {filteredTables.map((table) => {
                                 const isOccupied = table.status === "OCCUPIED";
                                 return (
                                     <div
                                         key={table.id}
-                                        className="bg-[#1c1c1c] border border-transparent hover:border-[#eab308]/30 rounded-[24px] p-5 flex flex-col gap-3 transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] relative group"
+                                        className={`bg-[#1c1c1c] border-2 rounded-[24px] p-5 flex flex-col gap-5 transition-all duration-300 hover:-translate-y-1 relative group ${isOccupied ? "border-[#ef4444]/60 shadow-[0_10px_30px_rgba(239,68,68,0.15)]" : "border-[#27272a] hover:border-[#eab308]/40"
+                                            }`}
                                     >
+                                        {/* Name and Floor Header */}
                                         <div className="flex items-start justify-between">
-                                            <span
-                                                className="text-xl font-black tracking-wide uppercase italic"
-                                                style={{ color: isOccupied ? "#ef4444" : "#22c55e" }}
-                                            >
-                                                {table.name}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">
+                                            <div className="flex flex-col">
+                                                <h3 className={`text-2xl font-black leading-none ${isOccupied ? "text-[#ef4444]" : "text-[#22c55e]"}`}>
+                                                    {table.name}
+                                                </h3>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 opacity-40">
+                                                <span className="text-[10px] font-black text-white uppercase tracking-[0.15em]">
                                                     {table.floor}
                                                 </span>
-                                                <button
-                                                    onClick={() => handleDeleteTable(table.id)}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-[#71717a] hover:text-red-500 transition-all"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
                                             </div>
                                         </div>
+
+                                        {/* Capacity Info */}
                                         <div className="flex items-center gap-2 text-[#a1a1aa]">
-                                            <Users size={14} />
-                                            <span className="text-[12px] font-black uppercase tracking-widest">
+                                            <Users size={15} />
+                                            <span className="text-[11px] font-bold uppercase tracking-widest whitespace-nowrap">
                                                 {table.capacity} KİŞİLİK
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <Banknote size={14} className="text-[#eab308]" />
-                                            <span className="text-[15px] font-black text-white italic">
+
+                                        {/* Status / Amount Display */}
+                                        <div className="flex items-center gap-3 mt-auto pt-3 border-t border-[#27272a]">
+                                            <Banknote size={18} className={isOccupied ? "text-white" : "text-[#71717a]"} />
+                                            <span className={`text-[17px] font-black tracking-tight ${isOccupied ? "text-white" : "text-[#71717a] opacity-50 uppercase"}`}>
                                                 {isOccupied ? `${table.current_remaining_amount || 0}₺` : "BOŞ"}
                                             </span>
                                         </div>
+
+                                        {/* Delete Action (Hidden by default, shown on hover) */}
+                                        <button
+                                            onClick={() => handleDeleteTable(table.id)}
+                                            className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 w-8 h-8 rounded-full bg-[#3f1515] text-[#ef4444] border border-[#ef4444]/20 flex items-center justify-center transition-all hover:scale-110 shadow-lg z-10"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </div>
                                 );
                             })}
