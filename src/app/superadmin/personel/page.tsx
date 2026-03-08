@@ -49,8 +49,17 @@ export default function PersonnelManagement() {
 
     const handleAddOrEditPerson = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name.trim() || !role || !username.trim()) {
+
+        const isWaiter = role === 'WAITER';
+        const needsUsername = role && role !== 'WAITER';
+
+        if (!name.trim() || !role || (needsUsername && !username.trim())) {
             setError("Lütfen gerekli tüm alanları doldurun.");
+            return;
+        }
+
+        if (isWaiter && !pin.trim()) {
+            setError("Lütfen garson için PİN kodu girin.");
             return;
         }
 
@@ -59,11 +68,11 @@ export default function PersonnelManagement() {
         try {
             const userData = {
                 name_surname: name.trim(),
-                name: name.trim(), // Both might be expected depending on API
-                username: username.trim(),
+                name: name.trim(),
+                username: isWaiter ? null : username.trim(),
                 role: role as RoleType,
-                pin_code: role === 'WAITER' ? pin.trim() : null,
-                ...(password ? { password } : (editingUserId ? {} : { password: "123456" })) // Default pass for new if empty
+                pin_code: isWaiter ? pin.trim() : null,
+                ...(isWaiter ? {} : (password ? { password } : (editingUserId ? {} : { password: "123456" })))
             };
 
             if (editingUserId) {
@@ -88,11 +97,11 @@ export default function PersonnelManagement() {
 
     const handleEditClick = (person: UserType) => {
         setEditingUserId(person.id);
-        setName(person.name_surname);
-        setUsername(person.username);
+        setName(person.name_surname || "");
+        setUsername(person.role === 'WAITER' ? "" : (person.username || ""));
         setRole(person.role);
         setPin(person.pin_code || "");
-        setPassword(""); // Don't show password
+        setPassword("");
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -105,6 +114,20 @@ export default function PersonnelManagement() {
         setPin("");
         setError("");
     };
+
+    const handleRoleChange = (newRole: RoleType | "") => {
+        setRole(newRole);
+        if (newRole === 'WAITER') {
+            setUsername("");
+        }
+    };
+
+    // Clear username when switching to WAITER
+    useEffect(() => {
+        if (role === 'WAITER') {
+            setUsername("");
+        }
+    }, [role]);
 
     const handleDelete = async (id: string) => {
         const personToDelete = people.find(p => p.id === id);
@@ -190,22 +213,24 @@ export default function PersonnelManagement() {
                                 />
                             </div>
 
-                            <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">
-                                    KULLANICI ADI
-                                </label>
-                                <div className="relative">
-                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#71717a] font-black">@</span>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="username"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        className="bg-[#0d0d0d] text-white placeholder-[#52525b] pl-10 pr-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[#27272a]"
-                                    />
+                            {role !== 'WAITER' && role !== "" && (
+                                <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-left-2">
+                                    <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">
+                                        KULLANICI ADI
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#71717a] font-black">@</span>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="username"
+                                            value={username || ""}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            className="bg-[#0d0d0d] text-white placeholder-[#52525b] pl-10 pr-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[#27272a]"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-2">
@@ -216,7 +241,7 @@ export default function PersonnelManagement() {
                                         <select
                                             required
                                             value={role}
-                                            onChange={(e) => setRole(e.target.value as RoleType)}
+                                            onChange={(e) => handleRoleChange(e.target.value as RoleType)}
                                             className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-transparent hover:border-[#27272a]"
                                         >
                                             <option value="" disabled className="text-[#52525b]">Seçiniz</option>
@@ -237,7 +262,7 @@ export default function PersonnelManagement() {
                                     <input
                                         type={role === 'WAITER' ? "text" : "password"}
                                         placeholder={role === 'WAITER' ? "1234" : (editingUserId ? "****" : "123456")}
-                                        value={role === 'WAITER' ? pin : password}
+                                        value={role === 'WAITER' ? (pin || "") : (password || "")}
                                         onChange={(e) => role === 'WAITER' ? setPin(e.target.value) : setPassword(e.target.value)}
                                         className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-transparent hover:border-[#27272a]"
                                     />
@@ -288,14 +313,16 @@ export default function PersonnelManagement() {
                                                     <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-[10px] border ${style.color} ${style.bg} border-current opacity-80 shadow-sm`}>
                                                         {style.label}
                                                     </span>
-                                                    <span className="text-[#a1a1aa] text-[13px] font-bold flex items-center gap-2">
-                                                        <span className="text-[#71717a] opacity-60 italic">@{person.username}</span>
-                                                        <span className="text-[#3f3f46]">•</span>
-                                                        <div className="flex items-center gap-1.5 bg-[#0d0d0d] px-2 py-1 rounded-lg border border-[#27272a]">
-                                                            <Lock size={12} className="text-[#71717a]" />
-                                                            <span className="text-[11px] font-black tracking-widest">{person.pin_code ? `PIN: ${person.pin_code}` : "AUTH"}</span>
-                                                        </div>
-                                                    </span>
+                                                    {person.role !== 'WAITER' && (
+                                                        <>
+                                                            <span className="text-[#71717a] opacity-60 italic text-[13px] font-bold">@{person.username}</span>
+                                                            <span className="text-[#3f3f46]">•</span>
+                                                        </>
+                                                    )}
+                                                    <div className="flex items-center gap-1.5 bg-[#0d0d0d] px-2 py-1 rounded-lg border border-[#27272a]">
+                                                        <Lock size={12} className="text-[#71717a]" />
+                                                        <span className="text-[11px] font-black tracking-widest">{person.pin_code ? `PIN: ${person.pin_code}` : "AUTH"}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -304,7 +331,7 @@ export default function PersonnelManagement() {
                                             <button
                                                 onClick={() => handleEditClick(person)}
                                                 className={`w-12 h-12 rounded-[16px] flex items-center justify-center transition-all ${editingUserId === person.id
-                                                    ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_5px_15px_rgba(234,179,8,0.3)]Scale-105"
+                                                    ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_5px_15px_rgba(234,179,8,0.3)] scale-105"
                                                     : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#eab308] hover:text-[#0d0d0d] hover:scale-105"
                                                     }`}
                                                 title="Düzenle"
