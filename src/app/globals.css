@@ -27,20 +27,38 @@
 
   --accent: #eab308;
   --accent-hover: #ca8a04;
+
+  /* Table Colors - Dark */
+  --table-empty-bg: linear-gradient(145deg, rgba(6, 38, 12, 0.85) 0%, rgba(4, 28, 10, 0.95) 100%);
+  --table-empty-border: rgba(34, 197, 94, 0.3);
+  --table-occupied-bg: linear-gradient(145deg, rgba(60, 10, 10, 0.85) 0%, rgba(40, 6, 6, 0.95) 100%);
+  --table-occupied-border: rgba(239, 68, 68, 0.35);
+  --table-text-empty: #4ade80;
+  --table-text-occupied: #fca5a5;
+  --table-amount: #fbbf24;
 }
 
 [data-theme="light"] {
   --background: #fdfaf6;
-  --foreground: #2d2a26;
+  --foreground: #1a1a1a;
   --card: #ffffff;
   --card-alt: #f5f0e6;
   --border: #e6dfd3;
   --border-alt: #d1c8b8;
   --input: #ffffff;
-  --muted: #857d72;
+  --muted: #4b5563;
 
   --accent: #eab308;
   --accent-hover: #ca8a04;
+
+  /* Table Colors - Light */
+  --table-empty-bg: linear-gradient(145deg, #e7f9ee 0%, #d1f2e0 100%);
+  --table-empty-border: rgba(34, 197, 94, 0.2);
+  --table-occupied-bg: linear-gradient(145deg, #fef2f2 0%, #fee2e2 100%);
+  --table-occupied-border: rgba(239, 68, 68, 0.2);
+  --table-text-empty: #166534;
+  --table-text-occupied: #991b1b;
+  --table-amount: #b45309;
 }
 
 body {

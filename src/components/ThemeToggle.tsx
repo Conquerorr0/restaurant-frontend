@@ -19,7 +19,7 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-[#111827] dark:text-[#f5f5f5]"
+            className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full transition-all duration-300"
             aria-label="Toggle Theme"
             title={theme === "dark" ? "Açık Temaya Geç" : "Koyu Temaya Geç"}
             style={{
@@ -28,7 +28,7 @@ export default function ThemeToggle() {
                 color: "var(--foreground)"
             }}
         >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            {theme === "dark" ? <Sun size={18} className="md:w-5 md:h-5" /> : <Moon size={18} className="md:w-5 md:h-5" />}
         </button>
     );
 }
