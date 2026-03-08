@@ -82,5 +82,26 @@ export const tableService = {
             token,
             body: JSON.stringify(data),
         });
+    },
+
+    /**
+     * Create a new table
+     */
+    createTable: async (data: Partial<Table>, token: string): Promise<ApiResponse<Table>> => {
+        return apiRequest<ApiResponse<Table>>('/tables', {
+            method: 'POST',
+            token,
+            body: JSON.stringify(data),
+        });
+    },
+
+    /**
+     * Delete a table
+     */
+    deleteTable: async (id: string, token: string): Promise<ApiResponse<void>> => {
+        return apiRequest<ApiResponse<void>>(`/tables/${id}`, {
+            method: 'DELETE',
+            token,
+        });
     }
 };

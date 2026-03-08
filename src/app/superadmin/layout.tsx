@@ -3,16 +3,19 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, UtensilsCrossed, LayoutGrid, Users, LogOut, ShieldCheck } from "lucide-react";
+import { BarChart3, UtensilsCrossed, LayoutGrid, Users, LogOut, ShieldCheck, Wallet } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const { logout } = useAuth();
 
     const navItems = [
         { name: "Dashboard", href: "/superadmin", icon: BarChart3 },
         { name: "Menü Yönetimi", href: "/superadmin/menu", icon: UtensilsCrossed },
         { name: "Masalar", href: "/superadmin/masalar", icon: LayoutGrid },
         { name: "Personel", href: "/superadmin/personel", icon: Users },
+        { name: "Giderler", href: "/superadmin/giderler", icon: Wallet },
     ];
 
     return (
@@ -39,8 +42,8 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                                     key={item.href}
                                     href={item.href}
                                     className={`flex items-center gap-4 px-5 py-4 rounded-[16px] transition-all duration-300 font-bold ${isActive
-                                            ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_4px_20px_rgba(234,179,8,0.2)]"
-                                            : "text-[#a1a1aa] hover:bg-[#1c1c1c] hover:text-white"
+                                        ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_4px_20px_rgba(234,179,8,0.2)]"
+                                        : "text-[#a1a1aa] hover:bg-[#1c1c1c] hover:text-white"
                                         }`}
                                 >
                                     <Icon size={20} className={isActive ? "text-[#0d0d0d]" : "text-[#eab308]"} />
@@ -53,7 +56,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 </div>
 
                 {/* Logout Button */}
-                <button className="flex items-center gap-3 text-[#ef4444] font-bold hover:text-red-400 transition-colors px-5 pt-8 mt-auto border-t border-[#1c1c1c]/50">
+                <button
+                    onClick={logout}
+                    className="flex items-center gap-3 text-[#ef4444] font-bold hover:text-red-400 transition-colors px-5 pt-8 mt-auto border-t border-[#1c1c1c]/50"
+                >
                     <LogOut size={20} />
                     <span className="text-[15px]">Güvenli Çıkış</span>
                 </button>
