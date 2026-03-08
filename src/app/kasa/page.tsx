@@ -8,6 +8,29 @@ import { orderService, Order } from "@/services/orderService";
 import { paymentService } from "@/services/paymentService";
 import { socketService } from "@/services/socketService";
 
+const playNotificationSound = (type: 'NEW_ORDER' | 'ADD_ITEM' | 'MOVE_MERGE') => {
+    try {
+        let url = "";
+        switch (type) {
+            case 'NEW_ORDER':
+                url = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
+                break;
+            case 'ADD_ITEM':
+                url = "https://assets.mixkit.co/active_storage/sfx/2868/2868-preview.mp3";
+                break;
+            case 'MOVE_MERGE':
+                url = "https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3";
+                break;
+        }
+        if (url) {
+            const audio = new Audio(url);
+            audio.play().catch(e => console.log("Audio play failed:", e));
+        }
+    } catch (e) {
+        console.log("Audio error:", e);
+    }
+};
+
 type TableStatus = "EMPTY" | "OCCUPIED";
 
 interface Product {
@@ -59,18 +82,28 @@ export default function KasaDashboard() {
             const currentSeen = saved ? JSON.parse(saved) : [];
 
             if (data.orderId && !currentSeen.includes(data.orderId)) {
-                try {
-                    const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
-                    audio.play().catch(e => console.log("Audio play failed:", e));
-                } catch (e) {
-                    console.log("Audio error:", e);
-                }
+                playNotificationSound('NEW_ORDER');
             }
         };
 
         const handleTableUpdate = (data: any) => {
             console.log("Table update received:", data);
             fetchTablesAndDetails();
+
+            if (data && data.type) {
+                if (data.type === 'ADD_ITEM') {
+                    playNotificationSound('ADD_ITEM');
+                    if (data.orderId) {
+                        setSeenOrderIds(prev => {
+                            const newSeen = prev.filter(id => id !== data.orderId);
+                            localStorage.setItem('seenOrderIds', JSON.stringify(newSeen));
+                            return newSeen;
+                        });
+                    }
+                } else if (data.type === 'MOVE' || data.type === 'MERGE') {
+                    playNotificationSound('MOVE_MERGE');
+                }
+            }
         };
 
         socketService.onNewOrder(handleNewOrder);
@@ -172,7 +205,7 @@ export default function KasaDashboard() {
 
     useEffect(() => {
         fetchTablesAndDetails();
-        const interval = setInterval(fetchTablesAndDetails, 30000);
+        const interval = setInterval(fetchTablesAndDetails, 60000);
         return () => clearInterval(interval);
     }, [token, selectedTableId, seenOrderIds]); // Added seenOrderIds to dependencies to re-evaluate unread status
 
@@ -617,6 +650,18 @@ export default function KasaDashboard() {
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Payment Processing Overlay */}
+            {processingPayment && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+                    <div style={{ width: "60px", height: "60px", border: "4px solid #3f3f46", borderTopColor: "#fbbf24", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    <h2 style={{ marginTop: "24px", color: "#fbbf24", fontSize: "24px", fontWeight: 800, letterSpacing: "1px" }}>Ödeme İşleniyor...</h2>
+                    <p style={{ marginTop: "8px", color: "#a1a1aa", fontSize: "14px" }}>Lütfen bekleyiniz, işlem tamamlanıyor</p>
+                    <style>{`
+                        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                    `}</style>
                 </div>
             )}
 
