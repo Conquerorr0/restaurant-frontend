@@ -564,10 +564,10 @@ export default function KasaDashboard() {
                                     borderRadius: "32px", cursor: "pointer", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", textAlign: "center", position: "relative",
                                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", aspectRatio: "1/1.05"
                                 }}>
-                                    {isOccupied && <div style={{ position: "absolute", top: "10px", right: "10px", width: "20px", height: "20px", borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }}><Check size={12} color="var(--foreground)" /></div>}
-                                    <span style={{ fontSize: "24px", fontWeight: 800, color: isOccupied ? "var(--table-text-occupied)" : "var(--table-text-empty)" }}>{table.name}</span>
-                                    <span style={{ fontSize: "10px", fontWeight: 800, color: "var(--muted)" }}>{table.duration !== "---" ? table.duration : (isOccupied ? "DOLU" : "BOŞ")}</span>
-                                    <span style={{ fontSize: "16px", fontWeight: 800, color: isOccupied ? "var(--table-amount)" : "var(--foreground)" }}>{isOccupied ? `₺${table.totalAmount}` : "-"}</span>
+                                    {isOccupied && <div style={{ position: "absolute", top: "10px", right: "10px", width: "20px", height: "20px", borderRadius: "50%", background: isSelected ? "var(--background)" : "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }}><Check size={12} color={isSelected ? "var(--accent)" : "var(--foreground)"} /></div>}
+                                    <span style={{ fontSize: "24px", fontWeight: 800, color: isSelected ? "var(--table-text-selected)" : (isOccupied ? "var(--table-text-occupied)" : "var(--table-text-empty)") }}>{table.name}</span>
+                                    <span style={{ fontSize: "10px", fontWeight: 800, color: isSelected ? "var(--table-text-selected)" : "var(--muted)", opacity: isSelected ? 0.7 : 1 }}>{table.duration !== "---" ? table.duration : (isOccupied ? "DOLU" : "BOŞ")}</span>
+                                    <span style={{ fontSize: "16px", fontWeight: 800, color: isSelected ? "var(--table-text-selected)" : (isOccupied ? "var(--table-amount)" : "var(--foreground)") }}>{isOccupied ? `₺${table.totalAmount}` : "-"}</span>
                                 </div>
                             );
                         })}
@@ -575,7 +575,7 @@ export default function KasaDashboard() {
                 </div>
 
                 {/* ── Right Side: Order Info ── */}
-                <div style={{ width: "420px", flexShrink: 0 }}>
+                <div style={{ width: "420px", flexShrink: 0, marginTop: "40px" }}>
                     {selectedTable ? (
                         <>
                             <div style={{ paddingBottom: "20px", borderBottom: "1px solid var(--border)" }}>
@@ -612,8 +612,8 @@ export default function KasaDashboard() {
                                 {selectedTable.items?.map(item => (
                                     <div key={item.id} style={{ background: "var(--card)", borderRadius: "16px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                         <div>
-                                            <div style={{ color: "#f4f4f5", fontWeight: 700 }}>{item.name}</div>
-                                            <div style={{ color: "var(--muted)", fontSize: "12px" }}>X{item.quantity} - ₺{item.unitPrice} / AD.</div>
+                                            <div style={{ color: "var(--foreground)", fontWeight: 700 }}>{item.name}</div>
+                                            <div style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 600 }}>X{item.quantity} - ₺{item.unitPrice} / AD.</div>
                                         </div>
                                         <div style={{ color: "#fbbf24", fontWeight: 900 }}>₺{item.totalPrice}</div>
                                     </div>

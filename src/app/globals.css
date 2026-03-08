@@ -35,18 +35,19 @@
   --table-occupied-border: rgba(239, 68, 68, 0.35);
   --table-text-empty: #4ade80;
   --table-text-occupied: #fca5a5;
+  --table-text-selected: #0d0d0d;
   --table-amount: #fbbf24;
 }
 
 [data-theme="light"] {
   --background: #fdfaf6;
-  --foreground: #1a1a1a;
+  --foreground: #000000;
   --card: #ffffff;
   --card-alt: #f5f0e6;
   --border: #e6dfd3;
   --border-alt: #d1c8b8;
   --input: #ffffff;
-  --muted: #4b5563;
+  --muted: #374151;
 
   --accent: #eab308;
   --accent-hover: #ca8a04;
@@ -58,6 +59,7 @@
   --table-occupied-border: rgba(239, 68, 68, 0.2);
   --table-text-empty: #166534;
   --table-text-occupied: #991b1b;
+  --table-text-selected: #0d0d0d;
   --table-amount: #b45309;
 }
 
