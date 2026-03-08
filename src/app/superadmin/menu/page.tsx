@@ -1,195 +1,91 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-    Plus, Search, Edit2, Trash2, X, Check,
-    Loader2, AlertCircle, Package, Layers, Pencil, Tag
-} from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { menuService, Category, Product } from "@/services/menuService";
+import React, { useState } from "react";
+import { Search, Pencil, Trash2, Package, Layers, X } from "lucide-react";
+
+// Mock Data
+const MOCK_CATEGORIES = [
+    { id: "1", name: "Başlangıçlar", productCount: 2 },
+    { id: "2", name: "Ana Yemekler", productCount: 2 },
+    { id: "3", name: "Tatlılar", productCount: 2 },
+    { id: "4", name: "İçecekler", productCount: 2 },
+];
+
+const MOCK_PRODUCTS = [
+    { id: "1", name: "Mercimek Çorbası", category: "BAŞLANGIÇLAR", categoryId: "1", price: 85, initial: "M" },
+    { id: "2", name: "Paçanga Böreği", category: "BAŞLANGIÇLAR", categoryId: "1", price: 120, initial: "P" },
+    { id: "3", name: "Adana Kebap", category: "ANA YEMEKLER", categoryId: "2", price: 340, initial: "A" },
+    { id: "4", name: "Kuzu Şiş", category: "ANA YEMEKLER", categoryId: "2", price: 420, initial: "K" },
+    { id: "5", name: "Sütlaç", category: "TATLILAR", categoryId: "3", price: 85, initial: "S" },
+    { id: "6", name: "Künefe", category: "TATLILAR", categoryId: "3", price: 150, initial: "K" },
+    { id: "7", name: "Ayran", category: "İÇECEKLER", categoryId: "4", price: 35, initial: "A" },
+    { id: "8", name: "Kola", category: "İÇECEKLER", categoryId: "4", price: 50, initial: "K" },
+];
+
+type Product = typeof MOCK_PRODUCTS[number];
+type Category = typeof MOCK_CATEGORIES[number];
 
 export default function MenuManagement() {
-    const { token } = useAuth();
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');
+    const [activeTab, setActiveTab] = useState<"products" | "categories">("products");
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Form states
+    // Product form state
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [productName, setProductName] = useState("");
+    const [productCategoryId, setProductCategoryId] = useState("");
+    const [productPrice, setProductPrice] = useState("");
+
+    // Category form state
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [categoryName, setCategoryName] = useState("");
 
-    const [productForm, setProductForm] = useState({
-        name: "",
-        price: 0,
-        cost_price: 0,
-        category_id: "",
-        description: "",
-        is_active: true
-    });
-
-    const [categoryForm, setCategoryForm] = useState({
-        name: "",
-        sort_order: 0,
-        is_active: true
-    });
-
-    const [error, setError] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-
-    useEffect(() => {
-        if (token) fetchData();
-    }, [token]);
-
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            const [catRes, prodRes] = await Promise.all([
-                menuService.getCategories(token!),
-                menuService.getProducts(token!)
-            ]);
-            if (catRes.success) {
-                setCategories(catRes.data);
-                if (catRes.data.length > 0 && !productForm.category_id) {
-                    setProductForm(prev => ({ ...prev, category_id: catRes.data[0].id }));
-                }
-            }
-            if (prodRes.success) setProducts(prodRes.data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const filteredProducts = MOCK_PRODUCTS.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const handleEditProduct = (product: Product) => {
         setEditingProduct(product);
-        setProductForm({
-            name: product.name,
-            price: product.price,
-            cost_price: (product as any).cost_price || 0,
-            category_id: product.category_id,
-            description: product.description || "",
-            is_active: product.is_active
-        });
-        setError("");
-        setActiveTab('products');
+        setProductName(product.name);
+        setProductCategoryId(product.categoryId);
+        setProductPrice(String(product.price));
+        setActiveTab("products");
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const handleCancelProductEdit = () => {
         setEditingProduct(null);
-        setProductForm({
-            name: "",
-            price: 0,
-            cost_price: 0,
-            category_id: categories[0]?.id || "",
-            description: "",
-            is_active: true
-        });
-        setError("");
+        setProductName("");
+        setProductCategoryId("");
+        setProductPrice("");
     };
 
     const handleEditCategory = (category: Category) => {
         setEditingCategory(category);
-        setCategoryForm({
-            name: category.name,
-            sort_order: category.sort_order,
-            is_active: category.is_active
-        });
-        setError("");
-        setActiveTab('categories');
+        setCategoryName(category.name);
+        setActiveTab("categories");
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const handleCancelCategoryEdit = () => {
         setEditingCategory(null);
-        setCategoryForm({ name: "", sort_order: categories.length + 1, is_active: true });
-        setError("");
+        setCategoryName("");
     };
 
-    const handleProductSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!productForm.name || !productForm.category_id) {
-            setError("Lütfen gerekli alanları doldurun.");
-            return;
-        }
-
-        setError("");
-        setSubmitting(true);
-        try {
-            if (editingProduct) {
-                await menuService.updateProduct(editingProduct.id, productForm, token!);
-            } else {
-                await menuService.createProduct(productForm, token!);
-            }
-            handleCancelProductEdit();
-            fetchData();
-        } catch (err: any) {
-            setError(err.message || "İşlem başarısız");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleCategorySubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!categoryForm.name) {
-            setError("Kategori adı gereklidir.");
-            return;
-        }
-
-        setError("");
-        setSubmitting(true);
-        try {
-            if (editingCategory) {
-                await menuService.updateCategory(editingCategory.id, categoryForm, token!);
-            } else {
-                await menuService.createCategory(categoryForm, token!);
-            }
+    const handleTabChange = (tab: "products" | "categories") => {
+        setActiveTab(tab);
+        if (tab === "products") {
             handleCancelCategoryEdit();
-            fetchData();
-        } catch (err: any) {
-            setError(err.message || "İşlem başarısız");
-        } finally {
-            setSubmitting(false);
+        } else {
+            handleCancelProductEdit();
         }
     };
-
-    const handleProductDelete = async (id: string) => {
-        if (!confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;
-        try {
-            const res = await menuService.deleteProduct(id, token!);
-            if (res.success) fetchData();
-        } catch (err: any) {
-            alert(err.message || "Silme işlemi başarısız");
-        }
-    };
-
-    const handleCategoryDelete = async (id: string) => {
-        if (!confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) return;
-        try {
-            const res = await menuService.deleteCategory(id, token!);
-            if (res.success) fetchData();
-        } catch (err: any) {
-            alert(err.message || "Silme işlemi başarısız");
-        }
-    };
-
-    const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const getInitial = (name: string) => name.charAt(0).toUpperCase();
-    const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || "Kategorisiz";
 
     return (
         <div className="flex flex-col gap-10 w-full max-w-[1200px] mx-auto animate-in fade-in duration-500">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6">
+            <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-1 drop-shadow-md italic">
+                    <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-1 drop-shadow-md">
                         MENÜ YÖNETİMİ
                     </h1>
                     <p className="text-[#808080] text-[15px] font-medium tracking-wide">
@@ -198,25 +94,25 @@ export default function MenuManagement() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex bg-[#1c1c1c] p-1.5 rounded-[20px] shadow-sm self-start md:self-auto border border-[#27272a]">
+                <div className="flex bg-[#1c1c1c] p-1.5 rounded-[16px] shadow-sm">
                     <button
-                        onClick={() => setActiveTab("products")}
-                        className={`flex items-center gap-2 px-8 py-3 rounded-[16px] font-black text-[12px] tracking-widest transition-all duration-300 ${activeTab === "products"
-                            ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_4px_20px_rgba(234,179,8,0.2)]"
+                        onClick={() => handleTabChange("products")}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-[12px] font-bold text-[13px] tracking-wide transition-all duration-300 ${activeTab === "products"
+                            ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_0_20px_rgba(234,179,8,0.2)]"
                             : "text-[#a1a1aa] hover:text-white"
                             }`}
                     >
-                        <Package size={16} />
+                        <Package size={16} className={activeTab === "products" ? "text-black" : ""} />
                         ÜRÜNLER
                     </button>
                     <button
-                        onClick={() => setActiveTab("categories")}
-                        className={`flex items-center gap-2 px-8 py-3 rounded-[16px] font-black text-[12px] tracking-widest transition-all duration-300 ${activeTab === "categories"
-                            ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_4px_20px_rgba(234,179,8,0.2)]"
+                        onClick={() => handleTabChange("categories")}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-[12px] font-bold text-[13px] tracking-wide transition-all duration-300 ${activeTab === "categories"
+                            ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_0_20px_rgba(234,179,8,0.2)]"
                             : "text-[#a1a1aa] hover:text-white"
                             }`}
                     >
-                        <Layers size={16} />
+                        <Layers size={16} className={activeTab === "categories" ? "text-black" : ""} />
                         KATEGORİLER
                     </button>
                 </div>
@@ -224,296 +120,256 @@ export default function MenuManagement() {
 
             {/* Main Content Area */}
             <div className="flex flex-col lg:flex-row gap-8 items-start">
+
                 {/* Left Form Section */}
-                <div className="w-full lg:w-[400px] flex-shrink-0 bg-[#1c1c1c] border border-[#27272a] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
+                <div className="w-full lg:w-[380px] flex-shrink-0 bg-[#1c1c1c] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
+                    {/* Subtle aesthetic gradient background */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#eab308]/5 rounded-full blur-3xl -mx-10 -my-10 pointer-events-none transition-all duration-500 group-hover:bg-[#eab308]/10" />
 
                     {activeTab === "products" ? (
-                        <form onSubmit={handleProductSubmit} className="relative z-10 flex flex-col gap-6">
+                        <div className="relative z-10 flex flex-col gap-6">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-[#eab308]/10 flex items-center justify-center text-[#eab308]">
-                                        <Package size={22} />
-                                    </div>
-                                    <h2 className="text-xl font-black text-white tracking-wide italic">
+                                    <Package size={24} className="text-[#eab308]" />
+                                    <h2 className="text-xl font-black text-white tracking-wide">
                                         {editingProduct ? "ÜRÜNÜ DÜZENLE" : "YENİ ÜRÜN EKLE"}
                                     </h2>
                                 </div>
                                 {editingProduct && (
                                     <button
-                                        type="button"
                                         onClick={handleCancelProductEdit}
-                                        className="w-8 h-8 rounded-full bg-[#27272a] text-[#a1a1aa] flex items-center justify-center hover:bg-[#3f3f46] hover:text-white transition-colors"
+                                        className="w-8 h-8 rounded-[8px] bg-[#27272a] text-[#a1a1aa] flex items-center justify-center hover:bg-[#3f3f46] hover:text-white transition-colors"
+                                        title="İptal"
                                     >
                                         <X size={16} />
                                     </button>
                                 )}
                             </div>
 
-                            {error && (
-                                <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-[16px] text-[12px] font-bold flex items-center gap-3">
-                                    <AlertCircle size={18} /> {error}
+                            {editingProduct && (
+                                <div className="bg-[#eab308]/10 border border-[#eab308]/20 rounded-[12px] px-4 py-2.5">
+                                    <p className="text-[#eab308] text-[11px] font-black uppercase tracking-widest">
+                                        Düzenleniyor: {editingProduct.name}
+                                    </p>
                                 </div>
                             )}
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#71717a] font-black uppercase tracking-[0.2em] ml-2">ÜRÜN ADI</label>
+                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">ÜRÜN ADI</label>
                                 <input
                                     type="text"
-                                    required
-                                    placeholder="Örn: Kebap, Çorba, Meze"
-                                    value={productForm.name}
-                                    onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                                    className="bg-[#0d0d0d] border border-[#27272a] text-white px-5 py-4 rounded-[18px] w-full focus:outline-none focus:border-[#eab308] transition-all font-bold"
+                                    placeholder="Örn: Adana Kebap"
+                                    value={productName}
+                                    onChange={(e) => setProductName(e.target.value)}
+                                    className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium border border-transparent hover:border-[#27272a]"
                                 />
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#71717a] font-black uppercase tracking-[0.2em] ml-2">KATEGORİ</label>
+                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">KATEGORİ</label>
                                 <div className="relative">
                                     <select
-                                        required
-                                        value={productForm.category_id}
-                                        onChange={(e) => setProductForm({ ...productForm, category_id: e.target.value })}
-                                        className="bg-[#0d0d0d] border border-[#27272a] text-white px-5 py-4 rounded-[18px] w-full focus:outline-none focus:border-[#eab308] appearance-none font-bold transition-all"
+                                        value={productCategoryId}
+                                        onChange={(e) => setProductCategoryId(e.target.value)}
+                                        className="bg-[#0d0d0d] text-white px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium appearance-none border border-transparent hover:border-[#27272a]"
                                     >
-                                        <option value="" disabled>Seçiniz</option>
-                                        {categories.map((cat) => (
+                                        <option value="" disabled className="text-[#52525b]">Kategori Seçin</option>
+                                        {MOCK_CATEGORIES.map((cat) => (
                                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}
                                     </select>
                                     <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
-                                        <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#71717a]"></div>
+                                        <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#a1a1aa]"></div>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] text-[#71717a] font-black uppercase tracking-[0.2em] ml-2">FİYAT (₺)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        placeholder="0.00"
-                                        value={productForm.price || ""}
-                                        onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) || 0 })}
-                                        className="bg-[#0d0d0d] border border-[#27272a] text-[#eab308] px-5 py-4 rounded-[18px] w-full focus:outline-none focus:border-[#eab308] font-black"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] text-[#71717a] font-black uppercase tracking-[0.2em] ml-2">MALİYET (₺)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        placeholder="0.00"
-                                        value={productForm.cost_price || ""}
-                                        onChange={(e) => setProductForm({ ...productForm, cost_price: parseFloat(e.target.value) || 0 })}
-                                        className="bg-[#0d0d0d] border border-red-500/20 text-red-500 px-5 py-4 rounded-[18px] w-full focus:outline-none focus:border-red-500/50 font-black"
-                                    />
                                 </div>
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#71717a] font-black uppercase tracking-[0.2em] ml-2">AÇIKLAMA</label>
-                                <textarea
-                                    placeholder="Ürün içeriği, hazırlanışı..."
-                                    value={productForm.description}
-                                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                                    className="bg-[#0d0d0d] border border-[#27272a] text-white px-5 py-4 rounded-[18px] w-full focus:outline-none focus:border-[#eab308] h-28 resize-none font-medium"
+                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">FİYAT (₺)</label>
+                                <input
+                                    type="number"
+                                    placeholder="Örn: 250"
+                                    value={productPrice}
+                                    onChange={(e) => setProductPrice(e.target.value)}
+                                    className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium border border-transparent hover:border-[#27272a]"
                                 />
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-5 rounded-[20px] shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-                            >
-                                {submitting ? <Loader2 className="animate-spin" size={24} /> : (editingProduct ? 'DEĞİŞİKLİKLERİ KAYDET' : 'ÜRÜNÜ MENÜYE EKLE')}
-                            </button>
-                        </form>
+                            <div className="flex flex-col gap-3 mt-4">
+                                <button className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300">
+                                    {editingProduct ? "DEĞİŞİKLİKLERİ KAYDET" : "ÜRÜNÜ KAYDET"}
+                                </button>
+                                {editingProduct && (
+                                    <button
+                                        onClick={handleCancelProductEdit}
+                                        className="w-full bg-[#27272a] text-[#a1a1aa] font-black py-3.5 rounded-[16px] hover:bg-[#3f3f46] hover:text-white transition-all duration-300"
+                                    >
+                                        İPTAL
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     ) : (
-                        <form onSubmit={handleCategorySubmit} className="relative z-10 flex flex-col gap-6">
+                        <div className="relative z-10 flex flex-col gap-6">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-[#eab308]/10 flex items-center justify-center text-[#eab308]">
-                                        <Layers size={22} />
-                                    </div>
-                                    <h2 className="text-xl font-black text-white tracking-wide italic">
-                                        {editingCategory ? "KATEGORİYİ DÜZENLE" : "YENİ KATEGORİ"}
+                                    <Layers size={24} className="text-[#eab308]" />
+                                    <h2 className="text-xl font-black text-white tracking-wide">
+                                        {editingCategory ? "KATEGORİ DÜZENLE" : "YENİ KATEGORİ"}
                                     </h2>
                                 </div>
                                 {editingCategory && (
                                     <button
-                                        type="button"
                                         onClick={handleCancelCategoryEdit}
-                                        className="w-8 h-8 rounded-full bg-[#27272a] text-[#a1a1aa] flex items-center justify-center hover:bg-[#3f3f46] hover:text-white transition-colors"
+                                        className="w-8 h-8 rounded-[8px] bg-[#27272a] text-[#a1a1aa] flex items-center justify-center hover:bg-[#3f3f46] hover:text-white transition-colors"
+                                        title="İptal"
                                     >
                                         <X size={16} />
                                     </button>
                                 )}
                             </div>
 
-                            {error && (
-                                <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-[16px] text-[12px] font-bold flex items-center gap-3">
-                                    <AlertCircle size={18} /> {error}
+                            {editingCategory && (
+                                <div className="bg-[#eab308]/10 border border-[#eab308]/20 rounded-[12px] px-4 py-2.5">
+                                    <p className="text-[#eab308] text-[11px] font-black uppercase tracking-widest">
+                                        Düzenleniyor: {editingCategory.name}
+                                    </p>
                                 </div>
                             )}
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#71717a] font-black uppercase tracking-[0.2em] ml-2">KATEGORİ ADI</label>
+                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">KATEGORİ ADI</label>
                                 <input
                                     type="text"
-                                    required
-                                    placeholder="Örn: Ana Yemekler, Tatlılar"
-                                    value={categoryForm.name}
-                                    onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                                    className="bg-[#0d0d0d] border border-[#27272a] text-white px-5 py-4 rounded-[18px] w-full focus:outline-none focus:border-[#eab308] transition-all font-bold"
+                                    placeholder="Örn: Tatlılar"
+                                    value={categoryName}
+                                    onChange={(e) => setCategoryName(e.target.value)}
+                                    className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium border border-transparent hover:border-[#27272a]"
                                 />
                             </div>
 
-                            <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#71717a] font-black uppercase tracking-[0.2em] ml-2">SIRALAMA</label>
-                                <input
-                                    type="number"
-                                    required
-                                    value={categoryForm.sort_order}
-                                    onChange={(e) => setCategoryForm({ ...categoryForm, sort_order: parseInt(e.target.value) || 0 })}
-                                    className="bg-[#0d0d0d] border border-[#27272a] text-white px-5 py-4 rounded-[18px] w-full focus:outline-none focus:border-[#eab308] font-black"
-                                />
+                            <div className="flex flex-col gap-3 mt-4">
+                                <button className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300">
+                                    {editingCategory ? "DEĞİŞİKLİKLERİ KAYDET" : "KATEGORİYİ EKLE"}
+                                </button>
+                                {editingCategory && (
+                                    <button
+                                        onClick={handleCancelCategoryEdit}
+                                        className="w-full bg-[#27272a] text-[#a1a1aa] font-black py-3.5 rounded-[16px] hover:bg-[#3f3f46] hover:text-white transition-all duration-300"
+                                    >
+                                        İPTAL
+                                    </button>
+                                )}
                             </div>
-
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-5 rounded-[20px] shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-                            >
-                                {submitting ? <Loader2 className="animate-spin" size={24} /> : (editingCategory ? 'DEĞİŞİKLİKLERİ KAYDET' : 'KATEGORİYİ EKLE')}
-                            </button>
-                        </form>
+                        </div>
                     )}
                 </div>
 
                 {/* Right Grid Section */}
-                <div className="flex-1 w-full flex flex-col gap-8">
+                <div className="flex-1 w-full flex flex-col gap-6">
                     {activeTab === "products" && (
-                        <div className="relative text-[#a1a1aa] focus-within:text-white transition-colors w-full group">
-                            <Search size={22} className="absolute left-6 top-1/2 -translate-y-1/2 group-focus-within:text-[#eab308]" />
+                        <div className="relative text-[#a1a1aa] focus-within:text-white transition-colors w-full">
+                            <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
-                                placeholder="Menüde ara..."
+                                placeholder="Ürünlerde ara..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-[#1c1c1c] border border-[#27272a] text-white placeholder-[#52525b] py-5 pl-16 pr-6 rounded-[24px] focus:outline-none focus:border-[#eab308] transition-all font-bold shadow-lg"
+                                className="w-full bg-[#1c1c1c] border border-transparent text-white placeholder-[#52525b] py-4 pl-14 pr-5 rounded-[16px] focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium hover:border-[#27272a]"
                             />
                         </div>
                     )}
 
-                    {loading ? (
-                        <div className="w-full h-[400px] flex items-center justify-center">
-                            <Loader2 className="animate-spin text-[#eab308]" size={40} />
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {activeTab === "products" ? (
-                                filteredProducts.map((product) => (
-                                    <div
-                                        key={product.id}
-                                        className={`bg-[#1c1c1c] border rounded-[28px] p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] ${editingProduct?.id === product.id
-                                            ? "border-[#eab308] shadow-[0_0_30px_rgba(234,179,8,0.1)]"
-                                            : "border-[#27272a] hover:border-[#eab308]/30"
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-5">
-                                            <div className={`w-14 h-14 rounded-[18px] text-[#eab308] flex items-center justify-center font-black text-xl shadow-inner transition-all ${editingProduct?.id === product.id ? "bg-[#eab308]/20" : "bg-[#27272a] group-hover:bg-[#eab308]/10"}`}>
-                                                {getInitial(product.name)}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <h3 className={`font-black text-lg leading-tight mb-1 transition-colors uppercase ${editingProduct?.id === product.id ? "text-[#eab308]" : "text-white group-hover:text-[#eab308]"}`}>
-                                                    {product.name}
-                                                </h3>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black tracking-widest uppercase text-[#71717a]">{getCategoryName(product.category_id)}</span>
-                                                    <span className="text-[#3f3f46]">•</span>
-                                                    <span className="text-[#eab308] font-black text-sm">₺{product.price}</span>
-                                                </div>
-                                            </div>
+                    {/* Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {activeTab === "products" ? (
+                            filteredProducts.map((product) => (
+                                <div
+                                    key={product.id}
+                                    className={`bg-[#1c1c1c] border rounded-[24px] p-4 flex items-center justify-between group transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${editingProduct?.id === product.id
+                                        ? "border-[#eab308]/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
+                                        : "border-transparent hover:border-[#eab308]/30"
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-[52px] h-[52px] rounded-[14px] text-[#eab308] flex items-center justify-center font-black text-lg shadow-inner transition-colors ${editingProduct?.id === product.id ? "bg-[#eab308]/20" : "bg-[#27272a] group-hover:bg-[#eab308]/10"}`}>
+                                            {product.initial}
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleEditProduct(product)}
-                                                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${editingProduct?.id === product.id
-                                                    ? "bg-[#eab308] text-[#0d0d0d]"
-                                                    : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#3f3f46] hover:text-white"
-                                                    }`}
-                                            >
-                                                <Pencil size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleProductDelete(product.id)}
-                                                className="w-10 h-10 rounded-xl bg-[#3f1515] text-[#ef4444] flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                                        <div className="flex flex-col">
+                                            <h3 className={`font-bold text-[15px] leading-tight mb-1 transition-colors ${editingProduct?.id === product.id ? "text-[#eab308]" : "text-white group-hover:text-[#eab308]"}`}>
+                                                {product.name}
+                                            </h3>
+                                            <div className="flex items-center gap-1.5 text-[10px] font-black tracking-wider uppercase">
+                                                <span className="text-[#a1a1aa]">{product.category}</span>
+                                                <span className="text-[#3f3f46]">•</span>
+                                                <span className="text-[#eab308]">₺{product.price}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                ))
-                            ) : (
-                                categories.map((category) => (
-                                    <div
-                                        key={category.id}
-                                        className={`bg-[#1c1c1c] border rounded-[28px] p-6 flex items-center justify-between group transition-all duration-300 hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] ${editingCategory?.id === category.id
-                                            ? "border-[#eab308] shadow-[0_0_30px_rgba(234,179,8,0.1)]"
-                                            : "border-[#27272a] hover:border-[#eab308]/30"
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-6">
-                                            <div className={`w-14 h-14 rounded-[18px] text-[#eab308] flex items-center justify-center shadow-inner transition-all ${editingCategory?.id === category.id ? "bg-[#eab308]/20" : "bg-[#27272a] group-hover:bg-[#eab308]/10"}`}>
-                                                <Layers size={26} />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <h3 className={`font-black text-lg leading-tight mb-1 transition-colors uppercase ${editingCategory?.id === category.id ? "text-[#eab308]" : "text-white group-hover:text-[#eab308]"}`}>
-                                                    {category.name}
-                                                </h3>
-                                                <div className="flex items-center gap-2">
-                                                    <Tag size={12} className="text-[#71717a]" />
-                                                    <p className="text-[11px] text-[#a1a1aa] font-black tracking-widest uppercase">
-                                                        Sıra: {category.sort_order}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleEditCategory(category)}
-                                                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${editingCategory?.id === category.id
-                                                    ? "bg-[#eab308] text-[#0d0d0d]"
-                                                    : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#3f3f46] hover:text-white"
-                                                    }`}
-                                            >
-                                                <Pencil size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleCategoryDelete(category.id)}
-                                                className="w-10 h-10 rounded-xl bg-[#3f1515] text-[#ef4444] flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
+                                    <div className="flex items-center gap-2 pr-1">
+                                        <button
+                                            onClick={() => handleEditProduct(product)}
+                                            className={`w-9 h-9 rounded-[10px] flex items-center justify-center transition-colors ${editingProduct?.id === product.id
+                                                ? "bg-[#eab308] text-[#0d0d0d]"
+                                                : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#3f3f46] hover:text-white"
+                                                }`}
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+                                        <button className="w-9 h-9 rounded-[10px] bg-[#3f1515] text-[#ef4444] border border-[#ef4444]/10 flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all shadow-sm">
+                                            <Trash2 size={16} />
+                                        </button>
                                     </div>
-                                ))
-                            )}
-
-                            {((activeTab === "products" && filteredProducts.length === 0) || (activeTab === "categories" && categories.length === 0)) && (
-                                <div className="col-span-1 md:col-span-2 xl:col-span-3 flex flex-col items-center justify-center py-20 text-center bg-[#18181b] rounded-[40px] border border-[#27272a] border-dashed">
-                                    <div className="w-20 h-20 bg-[#27272a] rounded-full flex items-center justify-center mb-6 opacity-40">
-                                        <Search size={32} className="text-[#a1a1aa]" />
-                                    </div>
-                                    <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest">Kayıt Bulunamadı</h3>
-                                    <p className="text-[#71717a] font-bold">Lütfen arama kriterlerinizi değiştirin veya yeni bir kayıt ekleyin.</p>
                                 </div>
-                            )}
-                        </div>
-                    )}
+                            ))
+                        ) : (
+                            MOCK_CATEGORIES.map((category) => (
+                                <div
+                                    key={category.id}
+                                    className={`bg-[#1c1c1c] border rounded-[24px] p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${editingCategory?.id === category.id
+                                        ? "border-[#eab308]/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
+                                        : "border-transparent hover:border-[#eab308]/30"
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-5">
+                                        <div className={`w-[52px] h-[52px] rounded-[14px] text-[#eab308] flex items-center justify-center shadow-inner transition-colors ${editingCategory?.id === category.id ? "bg-[#eab308]/20" : "bg-[#27272a] group-hover:bg-[#eab308]/10"}`}>
+                                            <Layers size={22} />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <h3 className={`font-bold text-[16px] leading-tight mb-1 transition-colors ${editingCategory?.id === category.id ? "text-[#eab308]" : "text-white group-hover:text-[#eab308]"}`}>
+                                                {category.name}
+                                            </h3>
+                                            <p className="text-[11px] text-[#a1a1aa] font-black tracking-widest uppercase mt-0.5">
+                                                {category.productCount} Ürün
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 pr-1">
+                                        <button
+                                            onClick={() => handleEditCategory(category)}
+                                            className={`w-9 h-9 rounded-[10px] flex items-center justify-center transition-colors ${editingCategory?.id === category.id
+                                                ? "bg-[#eab308] text-[#0d0d0d]"
+                                                : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#3f3f46] hover:text-white"
+                                                }`}
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+                                        <button className="w-9 h-9 rounded-[10px] bg-[#3f1515] text-[#ef4444] border border-[#ef4444]/10 flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all shadow-sm">
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+
+                        {(activeTab === "products" && filteredProducts.length === 0) && (
+                            <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-16 text-center">
+                                <Search size={48} className="text-[#27272a] mb-4" />
+                                <h3 className="text-xl font-bold text-white mb-2">Ürün bulunamadı</h3>
+                                <p className="text-[#a1a1aa]">Arama kriterlerinize uygun ürün bulunmuyor.</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

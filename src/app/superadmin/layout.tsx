@@ -8,14 +8,14 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { logout } = useAuth();
+    const { logout } = useAuth(); // Bizim çalışan logout fonksiyonumuz
 
     const navItems = [
         { name: "Dashboard", href: "/superadmin", icon: BarChart3 },
         { name: "Menü Yönetimi", href: "/superadmin/menu", icon: UtensilsCrossed },
         { name: "Masalar", href: "/superadmin/masalar", icon: LayoutGrid },
         { name: "Personel", href: "/superadmin/personel", icon: Users },
-        { name: "Giderler", href: "/superadmin/giderler", icon: Wallet },
+        { name: "Giderler", href: "/superadmin/giderler", icon: Wallet }, // Bizim eklediğimiz link
     ];
 
     return (
