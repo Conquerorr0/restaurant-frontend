@@ -93,13 +93,15 @@ export default function TableManagement() {
 
     const handleDeleteTable = async (id: string) => {
         if (!confirm("Bu masayı silmek istediğinize emin misiniz?")) return;
+        setError(""); // Clear previous errors
         try {
             const res = await tableService.deleteTable(id, token!);
             if (res.success) {
                 setTables(prev => prev.filter(t => t.id !== id));
             }
         } catch (err: any) {
-            alert(err.message || "Silme işlemi başarısız");
+            setError(err.message || "Silme işlemi başarısız");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 

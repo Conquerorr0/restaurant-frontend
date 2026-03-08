@@ -36,7 +36,6 @@ export const apiRequest = async <T>(endpoint: string, options: RequestOptions = 
 
         return result;
     } catch (error: any) {
-        console.error(`API Request Error [${endpoint}]:`, error.message);
         throw error;
     }
 };
