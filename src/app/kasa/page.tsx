@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Clock, Printer, ArrowRightLeft, X, Check, Search, CreditCard, Banknote, Ban, Gift, LogOut, GitMerge } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { tableService } from "@/services/tableService";
@@ -77,12 +77,16 @@ export default function KasaDashboard() {
             console.log("New order received:", data);
             fetchTablesAndDetails();
 
-            // Get latest seenOrderIds from localStorage to avoid stale closure
-            const saved = localStorage.getItem('seenOrderIds');
-            const currentSeen = saved ? JSON.parse(saved) : [];
-
-            if (data.orderId && !currentSeen.includes(data.orderId)) {
-                playNotificationSound('NEW_ORDER');
+            // Eğer yeni bir sipariş geldiyse, doğrudan orderId'yi seen tablosundan çıkaralım.
+            if (data.orderId) {
+                setSeenOrderIds(prev => {
+                    if (prev.includes(data.orderId)) {
+                        const newSeen = prev.filter(id => id !== data.orderId);
+                        localStorage.setItem('seenOrderIds', JSON.stringify(newSeen));
+                        return newSeen;
+                    }
+                    return prev;
+                });
             }
         };
 
@@ -90,17 +94,9 @@ export default function KasaDashboard() {
             console.log("Table update received:", data);
             fetchTablesAndDetails();
 
+            // Bazı payloadlarda type gelebiliyor.
             if (data && data.type) {
-                if (data.type === 'ADD_ITEM') {
-                    playNotificationSound('ADD_ITEM');
-                    if (data.orderId) {
-                        setSeenOrderIds(prev => {
-                            const newSeen = prev.filter(id => id !== data.orderId);
-                            localStorage.setItem('seenOrderIds', JSON.stringify(newSeen));
-                            return newSeen;
-                        });
-                    }
-                } else if (data.type === 'MOVE' || data.type === 'MERGE') {
+                if (data.type === 'MOVE' || data.type === 'MERGE') {
                     playNotificationSound('MOVE_MERGE');
                 }
             }
@@ -208,6 +204,35 @@ export default function KasaDashboard() {
         const interval = setInterval(fetchTablesAndDetails, 60000);
         return () => clearInterval(interval);
     }, [token, selectedTableId, seenOrderIds]); // Added seenOrderIds to dependencies to re-evaluate unread status
+
+    const prevTablesRef = useRef<TableData[]>([]);
+
+    useEffect(() => {
+        if (tables.length > 0 && prevTablesRef.current.length > 0) {
+            tables.forEach(table => {
+                const prevTable = prevTablesRef.current.find(t => t.id === table.id);
+                // Eğer masa önceden boştu şimdi doluysa, taze bir "Yeni Sipariş" demektir.
+                if (prevTable && prevTable.status === "EMPTY" && table.status === "OCCUPIED") {
+                    playNotificationSound('NEW_ORDER');
+                }
+                // Eğer masa doluysa ve total amount (hesap) artmışsa ek ürün eklenmiştir!
+                else if (prevTable && prevTable.status === "OCCUPIED" && table.status === "OCCUPIED") {
+                    if (table.totalAmount > prevTable.totalAmount) {
+                        playNotificationSound('ADD_ITEM');
+                        if (table.orderId) {
+                            setSeenOrderIds(prev => {
+                                if (!prev.includes(table.orderId as string)) return prev;
+                                const newSeen = prev.filter(id => id !== table.orderId);
+                                localStorage.setItem('seenOrderIds', JSON.stringify(newSeen));
+                                return newSeen;
+                            });
+                        }
+                    }
+                }
+            });
+        }
+        prevTablesRef.current = tables;
+    }, [tables]);
 
     // Initial table selection update
     useEffect(() => {
@@ -472,9 +497,16 @@ export default function KasaDashboard() {
                     50% { box-shadow: 0 0 20px 10px rgba(251, 191, 36, 0.1); transform: scale(1.02); }
                     100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); transform: scale(1); }
                 }
+                @keyframes spin { 
+                    0% { transform: rotate(0deg); } 
+                    100% { transform: rotate(360deg); } 
+                }
                 .pulse-new-order {
                     animation: pulse-gold 2s infinite ease-in-out;
                     border: 2px solid #fbbf24 !important;
+                }
+                .spinner-anim {
+                    animation: spin 1s linear infinite;
                 }
             `}</style>
             <div style={{ width: "100%", maxWidth: "1300px", margin: "0 auto", display: "flex", gap: "32px", alignItems: "flex-start" }}>
@@ -656,12 +688,9 @@ export default function KasaDashboard() {
             {/* Payment Processing Overlay */}
             {processingPayment && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
-                    <div style={{ width: "60px", height: "60px", border: "4px solid #3f3f46", borderTopColor: "#fbbf24", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    <div className="spinner-anim" style={{ width: "60px", height: "60px", border: "4px solid #3f3f46", borderTopColor: "#fbbf24", borderRadius: "50%" }} />
                     <h2 style={{ marginTop: "24px", color: "#fbbf24", fontSize: "24px", fontWeight: 800, letterSpacing: "1px" }}>Ödeme İşleniyor...</h2>
                     <p style={{ marginTop: "8px", color: "#a1a1aa", fontSize: "14px" }}>Lütfen bekleyiniz, işlem tamamlanıyor</p>
-                    <style>{`
-                        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-                    `}</style>
                 </div>
             )}
 
