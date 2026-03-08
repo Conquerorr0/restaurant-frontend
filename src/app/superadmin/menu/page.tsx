@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { Search, Pencil, Trash2, Package, Layers, X, Loader2, AlertCircle, Plus, Save } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 import { menuService, Category, Product } from "@/services/menuService";
 
 export default function MenuManagement() {
     const { token } = useAuth();
+    const { showAlert, showConfirm } = useModal();
     const [activeTab, setActiveTab] = useState<"products" | "categories">("products");
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
@@ -171,22 +173,22 @@ export default function MenuManagement() {
     };
 
     const handleDeleteProduct = async (id: string) => {
-        if (!confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;
+        if (!(await showConfirm("Bu ürünü silmek istediğinize emin misiniz?", "Ürün Silme Onayı"))) return;
         try {
             const res = await menuService.deleteProduct(id, token!);
             if (res.success) fetchData();
         } catch (err: any) {
-            alert(err.message || "Silme işlemi başarısız");
+            await showAlert(err.message || "Silme işlemi başarısız", "error");
         }
     };
 
     const handleDeleteCategory = async (id: string) => {
-        if (!confirm("Bu kategoriyi silmek istediğinize emin misiniz? Bu kategoriye ait ürünler category_id: null olabilir.")) return;
+        if (!(await showConfirm("Bu kategoriyi silmek istediğinize emin misiniz? Bu kategoriye ait ürünler category_id: null olabilir.", "Kategori Silme Onayı"))) return;
         try {
             const res = await menuService.deleteCategory(id, token!);
             if (res.success) fetchData();
         } catch (err: any) {
-            alert(err.message || "Silme işlemi başarısız");
+            await showAlert(err.message || "Silme işlemi başarısız", "error");
         }
     };
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { UserPlus, User, Lock, Edit2, Trash2, Settings, X, Save, Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 import { userService, User as UserType } from "@/services/userService";
 
 type RoleType = "SUPER_ADMIN" | "CASHIER" | "WAITER";
@@ -18,6 +19,7 @@ const getRoleDisplay = (role: RoleType) => {
 
 export default function PersonnelManagement() {
     const { token } = useAuth();
+    const { showAlert, showConfirm } = useModal();
     const [name, setName] = useState("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -141,12 +143,12 @@ export default function PersonnelManagement() {
             }
         }
 
-        if (confirm("Bu personeli silmek istediğinize emin misiniz?")) {
+        if (await showConfirm("Bu personeli silmek istediğinize emin misiniz?", "Personel Silme Onayı")) {
             try {
                 const res = await userService.deleteUser(id, token!);
                 if (res.success) fetchUsers();
             } catch (err: any) {
-                alert(err.message || "Silme işlemi başarısız");
+                await showAlert(err.message || "Silme işlemi başarısız", "error");
             }
         }
     };

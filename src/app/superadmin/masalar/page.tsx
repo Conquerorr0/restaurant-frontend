@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { LayoutGrid, Users, Banknote, Plus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 import { tableService, Table } from "@/services/tableService";
 
 export default function TableManagement() {
     const { token } = useAuth();
+    const { showAlert, showConfirm } = useModal();
     const [tableName, setTableName] = useState("");
     const [capacity, setCapacity] = useState("");
     const [floor, setFloor] = useState("");
@@ -55,9 +57,9 @@ export default function TableManagement() {
         setNewFloorName("");
     };
 
-    const handleRemoveFloor = (floorName: string) => {
+    const handleRemoveFloor = async (floorName: string) => {
         const tableCount = tables.filter((t) => t.floor === floorName).length;
-        if (tableCount > 0 && !confirm(`"${floorName}" katında ${tableCount} masa var. Yine de bu katı kaldırmak istiyor musunuz?`)) return;
+        if (tableCount > 0 && !(await showConfirm(`"${floorName}" katında ${tableCount} masa var. Yine de bu katı kaldırmak istiyor musunuz?`, "Kat Silme Onayı"))) return;
         setFloors((prev) => prev.filter((f) => f !== floorName));
         if (floor === floorName) setFloor("");
         if (selectedFloor === floorName) setSelectedFloor("Tümü"); // Reset filter if current floor is removed
@@ -92,7 +94,7 @@ export default function TableManagement() {
     };
 
     const handleDeleteTable = async (id: string) => {
-        if (!confirm("Bu masayı silmek istediğinize emin misiniz?")) return;
+        if (!(await showConfirm("Bu masayı silmek istediğinize emin misiniz?", "Masa Silme Onayı"))) return;
         setError(""); // Clear previous errors
         try {
             const res = await tableService.deleteTable(id, token!);
