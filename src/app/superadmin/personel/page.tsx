@@ -13,7 +13,7 @@ const getRoleDisplay = (role: RoleType) => {
         case "SUPER_ADMIN": return { label: "SÜPER ADMİN", color: "text-[#eab308]", bg: "bg-[#eab308]/10" };
         case "CASHIER": return { label: "KASİYER", color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10" };
         case "WAITER": return { label: "GARSON", color: "text-[#a855f7]", bg: "bg-[#a855f7]/10" };
-        default: return { label: role, color: "text-[#a1a1aa]", bg: "bg-[#a1a1aa]/10" };
+        default: return { label: role, color: "text-[var(--muted)]", bg: "bg-[var(--muted)]/10" };
     }
 };
 
@@ -157,17 +157,17 @@ export default function PersonnelManagement() {
         <div className="flex flex-col gap-10 w-full max-w-[1200px] mx-auto animate-in fade-in duration-500">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-1 drop-shadow-md italic">
+                <h1 className="text-3xl font-black text-[var(--foreground)] tracking-widest uppercase mb-1 drop-shadow-md italic">
                     PERSONEL YÖNETİMİ
                 </h1>
-                <p className="text-[#808080] text-[15px] font-medium tracking-wide">
+                <p className="text-[var(--muted)] text-[15px] font-medium tracking-wide">
                     Ekip üyelerini ve erişim yetkilerini düzenleyin
                 </p>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8 items-start">
                 {/* Sol: Yeni Personel Formu */}
-                <div className="w-full lg:w-[420px] flex-shrink-0 bg-[#1c1c1c] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
+                <div className="w-full lg:w-[420px] flex-shrink-0 bg-[var(--card)] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#eab308]/5 rounded-full blur-3xl -mx-10 -my-10 pointer-events-none transition-all duration-500 group-hover:bg-[#eab308]/10" />
 
                     {error && (
@@ -185,14 +185,14 @@ export default function PersonnelManagement() {
                                 ) : (
                                     <UserPlus size={24} className="text-[#eab308]" />
                                 )}
-                                <h2 className="text-xl font-black text-white tracking-wide uppercase italic">
+                                <h2 className="text-xl font-black text-[var(--foreground)] tracking-wide uppercase italic">
                                     {editingUserId ? "PERSONELİ DÜZENLE" : "YENİ PERSONEL"}
                                 </h2>
                             </div>
                             {editingUserId && (
                                 <button
                                     onClick={handleCancelEdit}
-                                    className="p-2 text-[#a1a1aa] hover:text-[#ef4444] transition-colors rounded-full hover:bg-[#3f1515]/50 flex items-center justify-center"
+                                    className="p-2 text-[var(--muted)] hover:text-[#ef4444] transition-colors rounded-full hover:bg-[#3f1515]/50 flex items-center justify-center"
                                     title="Düzenlemeyi İptal Et"
                                 >
                                     <X size={20} />
@@ -202,7 +202,7 @@ export default function PersonnelManagement() {
 
                         <form onSubmit={handleAddOrEditPerson} className="flex flex-col gap-5">
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
                                     AD SOYAD
                                 </label>
                                 <input
@@ -211,24 +211,24 @@ export default function PersonnelManagement() {
                                     placeholder="Örn: Ahmet Yılmaz"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[#27272a]"
+                                    className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[var(--border)]"
                                 />
                             </div>
 
                             {role !== 'WAITER' && role !== "" && (
                                 <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-left-2">
-                                    <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">
+                                    <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
                                         KULLANICI ADI
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#71717a] font-black">@</span>
+                                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--muted)] font-black">@</span>
                                         <input
                                             type="text"
                                             required
                                             placeholder="username"
                                             value={username || ""}
                                             onChange={(e) => setUsername(e.target.value)}
-                                            className="bg-[#0d0d0d] text-white placeholder-[#52525b] pl-10 pr-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[#27272a]"
+                                            className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] pl-10 pr-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[var(--border)]"
                                         />
                                     </div>
                                 </div>
@@ -236,7 +236,7 @@ export default function PersonnelManagement() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">
+                                    <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
                                         ROL
                                     </label>
                                     <div className="relative">
@@ -244,21 +244,21 @@ export default function PersonnelManagement() {
                                             required
                                             value={role}
                                             onChange={(e) => handleRoleChange(e.target.value as RoleType)}
-                                            className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-transparent hover:border-[#27272a]"
+                                            className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-transparent hover:border-[var(--border)]"
                                         >
-                                            <option value="" disabled className="text-[#52525b]">Seçiniz</option>
+                                            <option value="" disabled className="text-[var(--muted)]">Seçiniz</option>
                                             <option value="SUPER_ADMIN">Süper Admin</option>
                                             <option value="CASHIER">Kasiyer</option>
                                             <option value="WAITER">Garson</option>
                                         </select>
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                            <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#a1a1aa]" />
+                                            <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[var(--muted)]" />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em] leading-tight truncate">
+                                    <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] leading-tight truncate">
                                         {role === 'WAITER' ? 'PİN KODU' : 'YENİ ŞİFRE'}
                                     </label>
                                     <input
@@ -266,7 +266,7 @@ export default function PersonnelManagement() {
                                         placeholder={role === 'WAITER' ? "1234" : (editingUserId ? "****" : "123456")}
                                         value={role === 'WAITER' ? (pin || "") : (password || "")}
                                         onChange={(e) => role === 'WAITER' ? setPin(e.target.value) : setPassword(e.target.value)}
-                                        className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-transparent hover:border-[#27272a]"
+                                        className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-transparent hover:border-[var(--border)]"
                                     />
                                 </div>
                             </div>
@@ -274,7 +274,7 @@ export default function PersonnelManagement() {
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2 tracking-wide disabled:opacity-50"
+                                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#facc15] to-[#eab308] text-[var(--background)] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2 tracking-wide disabled:opacity-50"
                             >
                                 {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (
                                     <>
@@ -300,29 +300,29 @@ export default function PersonnelManagement() {
                                 return (
                                     <div
                                         key={person.id}
-                                        className={`bg-[#1c1c1c] border rounded-[32px] p-6 flex items-center justify-between transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)] ${editingUserId === person.id ? 'border-[#eab308]/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]' : 'border-transparent hover:border-[#eab308]/10'}`}
+                                        className={`bg-[var(--card)] border rounded-[32px] p-6 flex items-center justify-between transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)] ${editingUserId === person.id ? 'border-[#eab308]/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]' : 'border-transparent hover:border-[#eab308]/10'}`}
                                     >
                                         <div className="flex items-center gap-6">
-                                            <div className="w-[72px] h-[72px] bg-[#0d0d0d] rounded-[24px] flex items-center justify-center relative flex-shrink-0 border border-[#27272a]">
-                                                <User size={32} className="text-[#a1a1aa]" />
-                                                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#1c1c1c] rounded-lg flex items-center justify-center border border-[#27272a]">
+                                            <div className="w-[72px] h-[72px] bg-[var(--background)] rounded-[24px] flex items-center justify-center relative flex-shrink-0 border border-[var(--border)]">
+                                                <User size={32} className="text-[var(--muted)]" />
+                                                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--card)] rounded-lg flex items-center justify-center border border-[var(--border)]">
                                                     <Settings size={14} className="text-[#eab308]" />
                                                 </div>
                                             </div>
                                             <div className="flex flex-col gap-1.5">
-                                                <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">{person.name_surname}</span>
+                                                <span className="text-xl font-black text-[var(--foreground)] uppercase italic tracking-tighter leading-none">{person.name_surname}</span>
                                                 <div className="flex items-center gap-4">
                                                     <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-[10px] border ${style.color} ${style.bg} border-current opacity-80 shadow-sm`}>
                                                         {style.label}
                                                     </span>
                                                     {person.role !== 'WAITER' && (
                                                         <>
-                                                            <span className="text-[#71717a] opacity-60 italic text-[13px] font-bold">@{person.username}</span>
-                                                            <span className="text-[#3f3f46]">•</span>
+                                                            <span className="text-[var(--muted)] opacity-60 italic text-[13px] font-bold">@{person.username}</span>
+                                                            <span className="text-[var(--border-alt)]">•</span>
                                                         </>
                                                     )}
-                                                    <div className="flex items-center gap-1.5 bg-[#0d0d0d] px-2 py-1 rounded-lg border border-[#27272a]">
-                                                        <Lock size={12} className="text-[#71717a]" />
+                                                    <div className="flex items-center gap-1.5 bg-[var(--background)] px-2 py-1 rounded-lg border border-[var(--border)]">
+                                                        <Lock size={12} className="text-[var(--muted)]" />
                                                         <span className="text-[11px] font-black tracking-widest">{person.pin_code ? `PIN: ${person.pin_code}` : "AUTH"}</span>
                                                     </div>
                                                 </div>
@@ -333,8 +333,8 @@ export default function PersonnelManagement() {
                                             <button
                                                 onClick={() => handleEditClick(person)}
                                                 className={`w-12 h-12 rounded-[16px] flex items-center justify-center transition-all ${editingUserId === person.id
-                                                    ? "bg-[#eab308] text-[#0d0d0d] shadow-[0_5px_15px_rgba(234,179,8,0.3)] scale-105"
-                                                    : "bg-[#27272a] text-[#a1a1aa] hover:bg-[#eab308] hover:text-[#0d0d0d] hover:scale-105"
+                                                    ? "bg-[#eab308] text-[var(--background)] shadow-[0_5px_15px_rgba(234,179,8,0.3)] scale-105"
+                                                    : "bg-[var(--border)] text-[var(--muted)] hover:bg-[#eab308] hover:text-[var(--background)] hover:scale-105"
                                                     }`}
                                                 title="Düzenle"
                                             >
@@ -342,7 +342,7 @@ export default function PersonnelManagement() {
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(person.id)}
-                                                className="w-12 h-12 rounded-[16px] bg-[#3f1515] flex items-center justify-center text-[#ef4444] hover:bg-[#ef4444] hover:text-white hover:scale-105 transition-all shadow-sm"
+                                                className="w-12 h-12 rounded-[16px] bg-[#3f1515] flex items-center justify-center text-[#ef4444] hover:bg-[#ef4444] hover:text-[var(--foreground)] hover:scale-105 transition-all shadow-sm"
                                                 title="Sil"
                                             >
                                                 <Trash2 size={20} />
@@ -352,10 +352,10 @@ export default function PersonnelManagement() {
                                 );
                             })}
                             {people.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[#27272a] rounded-[32px]">
-                                    <UserPlus size={48} className="text-[#27272a] mb-4" />
-                                    <h3 className="text-xl font-black text-white mb-2 uppercase italic">Personel Bulunamadı</h3>
-                                    <p className="text-[#a1a1aa] font-bold">Lütfen yeni bir personel kaydı yapın.</p>
+                                <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[var(--border)] rounded-[32px]">
+                                    <UserPlus size={48} className="text-[var(--border)] mb-4" />
+                                    <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">Personel Bulunamadı</h3>
+                                    <p className="text-[var(--muted)] font-bold">Lütfen yeni bir personel kaydı yapın.</p>
                                 </div>
                             )}
                         </>

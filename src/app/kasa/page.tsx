@@ -492,7 +492,7 @@ export default function KasaDashboard() {
     };
 
     return (
-        <div className="min-h-screen font-sans p-6" style={{ background: "#0d0d0d" }}>
+        <div className="min-h-screen font-sans p-6" style={{ background: "var(--background)" }}>
             <style>{`
                 @keyframes pulse-gold {
                     0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); transform: scale(1); }
@@ -523,11 +523,11 @@ export default function KasaDashboard() {
                             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                     <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 10px rgba(34,197,94,0.4)" }} />
-                                    <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>BOŞ: {fEmptyCount}</span>
+                                    <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>BOŞ: {fEmptyCount}</span>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                     <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ef4444", boxShadow: "0 0 10px rgba(239,68,68,0.4)" }} />
-                                    <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>DOLU: {fOccupiedCount}</span>
+                                    <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>DOLU: {fOccupiedCount}</span>
                                 </div>
                             </div>
                         </div>
@@ -537,7 +537,7 @@ export default function KasaDashboard() {
                                 <button key={floor} onClick={() => setSelectedFloor(floor)} style={{
                                     padding: "8px 16px", borderRadius: "10px", fontSize: "13px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
                                     background: selectedFloor === floor ? "#fbbf24" : "transparent",
-                                    color: selectedFloor === floor ? "#000" : "#71717a", border: "none"
+                                    color: selectedFloor === floor ? "var(--background)" : "var(--muted)", border: "none"
                                 }}>{floor}</button>
                             ))}
                         </div>
@@ -559,15 +559,15 @@ export default function KasaDashboard() {
                             return (
                                 <div key={table.id} onClick={() => handleTableClick(table.id)} className={isUnread ? "pulse-new-order" : ""} style={{
                                     padding: "24px",
-                                    background: isSelected ? "linear-gradient(135deg, #fde047 0%, #ca8a04 100%)" : (isTargetForMove || isTargetForMerge) ? "rgba(251, 191, 36, 0.1)" : "#111113",
-                                    border: isSelected ? "none" : (isTargetForMove || isTargetForMerge) ? "2px dashed #fbbf24" : "1px solid #27272a",
+                                    background: isSelected ? "linear-gradient(135deg, #fde047 0%, #ca8a04 100%)" : (isTargetForMove || isTargetForMerge) ? "rgba(251, 191, 36, 0.1)" : "var(--card-alt)",
+                                    border: isSelected ? "none" : (isTargetForMove || isTargetForMerge) ? "2px dashed #fbbf24" : "1px solid var(--border)",
                                     borderRadius: "32px", cursor: "pointer", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", textAlign: "center", position: "relative",
                                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", aspectRatio: "1/1.05"
                                 }}>
-                                    {isOccupied && <div style={{ position: "absolute", top: "10px", right: "10px", width: "20px", height: "20px", borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }}><Check size={12} color="#fff" /></div>}
+                                    {isOccupied && <div style={{ position: "absolute", top: "10px", right: "10px", width: "20px", height: "20px", borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }}><Check size={12} color="var(--foreground)" /></div>}
                                     <span style={{ fontSize: "24px", fontWeight: 800, color: isOccupied ? "#ef4444" : "#22c55e" }}>{table.name}</span>
-                                    <span style={{ fontSize: "10px", fontWeight: 800, color: "#71717a" }}>{table.duration !== "---" ? table.duration : (isOccupied ? "DOLU" : "BOŞ")}</span>
-                                    <span style={{ fontSize: "16px", fontWeight: 800, color: "#fff" }}>{isOccupied ? `₺${table.totalAmount}` : "-"}</span>
+                                    <span style={{ fontSize: "10px", fontWeight: 800, color: "var(--muted)" }}>{table.duration !== "---" ? table.duration : (isOccupied ? "DOLU" : "BOŞ")}</span>
+                                    <span style={{ fontSize: "16px", fontWeight: 800, color: "var(--foreground)" }}>{isOccupied ? `₺${table.totalAmount}` : "-"}</span>
                                 </div>
                             );
                         })}
@@ -578,22 +578,22 @@ export default function KasaDashboard() {
                 <div style={{ width: "420px", flexShrink: 0 }}>
                     {selectedTable ? (
                         <>
-                            <div style={{ paddingBottom: "20px", borderBottom: "1px solid #27272a" }}>
+                            <div style={{ paddingBottom: "20px", borderBottom: "1px solid var(--border)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                     <div>
                                         <h2 style={{ color: "#fbbf24", fontSize: "36px", fontWeight: 900, margin: 0 }}>MASA {selectedTable.name}</h2>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", color: "#a1a1aa" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", color: "var(--muted)" }}>
                                             <Clock size={14} /> <span style={{ fontSize: "12px", fontWeight: 600 }}>{selectedTable.duration} süredir açık</span>
                                         </div>
                                     </div>
                                     <div style={{ display: "flex", gap: "8px" }}>
                                         <button title="Masa Birleştir" onClick={() => setSelectionMode(selectionMode === "MERGE" ? "VIEW" : "MERGE")} style={{
-                                            width: "40px", height: "40px", borderRadius: "12px", background: selectionMode === "MERGE" ? "#fbbf24" : "#18181b", border: "none",
-                                            display: "flex", alignItems: "center", justifyContent: "center", color: selectionMode === "MERGE" ? "#000" : "#a1a1aa", cursor: "pointer"
+                                            width: "40px", height: "40px", borderRadius: "12px", background: selectionMode === "MERGE" ? "#fbbf24" : "var(--card)", border: "none",
+                                            display: "flex", alignItems: "center", justifyContent: "center", color: selectionMode === "MERGE" ? "var(--background)" : "var(--muted)", cursor: "pointer"
                                         }}><GitMerge size={18} /></button>
                                         <button title="Masa Taşı" onClick={() => setSelectionMode(selectionMode === "MOVE" ? "VIEW" : "MOVE")} style={{
-                                            width: "40px", height: "40px", borderRadius: "12px", background: selectionMode === "MOVE" ? "#fbbf24" : "#18181b", border: "none",
-                                            display: "flex", alignItems: "center", justifyContent: "center", color: selectionMode === "MOVE" ? "#000" : "#a1a1aa", cursor: "pointer"
+                                            width: "40px", height: "40px", borderRadius: "12px", background: selectionMode === "MOVE" ? "#fbbf24" : "var(--card)", border: "none",
+                                            display: "flex", alignItems: "center", justifyContent: "center", color: selectionMode === "MOVE" ? "var(--background)" : "var(--muted)", cursor: "pointer"
                                         }}><ArrowRightLeft size={18} /></button>
                                         <button onClick={() => setSelectedTableId(null)} style={{
                                             width: "40px", height: "40px", borderRadius: "12px", background: "rgba(239, 68, 68, 0.1)", border: "none",
@@ -610,10 +610,10 @@ export default function KasaDashboard() {
 
                             <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "12px", maxHeight: "40vh", overflowY: "auto" }}>
                                 {selectedTable.items?.map(item => (
-                                    <div key={item.id} style={{ background: "#18181b", borderRadius: "16px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div key={item.id} style={{ background: "var(--card)", borderRadius: "16px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                         <div>
                                             <div style={{ color: "#f4f4f5", fontWeight: 700 }}>{item.name}</div>
-                                            <div style={{ color: "#71717a", fontSize: "12px" }}>X{item.quantity} - ₺{item.unitPrice} / AD.</div>
+                                            <div style={{ color: "var(--muted)", fontSize: "12px" }}>X{item.quantity} - ₺{item.unitPrice} / AD.</div>
                                         </div>
                                         <div style={{ color: "#fbbf24", fontWeight: 900 }}>₺{item.totalPrice}</div>
                                     </div>
@@ -621,25 +621,25 @@ export default function KasaDashboard() {
                                 {selectedTable.note && (
                                     <div style={{ marginTop: "12px", padding: "12px", background: "rgba(251, 191, 36, 0.05)", border: "1px dashed rgba(251, 191, 36, 0.3)", borderRadius: "12px" }}>
                                         <div style={{ fontSize: "10px", color: "#fbbf24", fontWeight: 800, letterSpacing: "0.1em", marginBottom: "4px" }}>GARSON NOTU</div>
-                                        <div style={{ color: "#a1a1aa", fontSize: "13px", lineHeight: "1.4" }}>{selectedTable.note}</div>
+                                        <div style={{ color: "var(--muted)", fontSize: "13px", lineHeight: "1.4" }}>{selectedTable.note}</div>
                                     </div>
                                 )}
                             </div>
 
-                            <div style={{ marginTop: "24px", padding: "24px", background: "#18181b", borderRadius: "20px", border: "1px solid #27272a" }}>
+                            <div style={{ marginTop: "24px", padding: "24px", background: "var(--card)", borderRadius: "20px", border: "1px solid var(--border)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-                                    <span style={{ color: "#a1a1aa", fontSize: "12px", fontWeight: 800 }}>TOPLAM</span>
+                                    <span style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 800 }}>TOPLAM</span>
                                     <span style={{ color: "#fbbf24", fontSize: "32px", fontWeight: 900 }}>₺{selectedTable.totalAmount}</span>
                                 </div>
                                 <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
-                                    <button onClick={() => handleFullPayment("CASH")} disabled={processingPayment} style={{ flex: 1, padding: "16px", borderRadius: "14px", background: "#27272a", border: "none", color: "#a1a1aa", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}><Banknote size={20} /><span>NAKİT</span></button>
-                                    <button onClick={() => handleFullPayment("CREDIT_CARD")} disabled={processingPayment} style={{ flex: 1, padding: "16px", borderRadius: "14px", background: "#27272a", border: "none", color: "#a1a1aa", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}><CreditCard size={20} /><span>KART</span></button>
+                                    <button onClick={() => handleFullPayment("CASH")} disabled={processingPayment} style={{ flex: 1, padding: "16px", borderRadius: "14px", background: "var(--border)", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}><Banknote size={20} /><span>NAKİT</span></button>
+                                    <button onClick={() => handleFullPayment("CREDIT_CARD")} disabled={processingPayment} style={{ flex: 1, padding: "16px", borderRadius: "14px", background: "var(--border)", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}><CreditCard size={20} /><span>KART</span></button>
                                 </div>
-                                <button onClick={() => { setSelectedQuantities({}); setIsPartialPaymentModalOpen(true); }} disabled={processingPayment} style={{ width: "100%", padding: "16px", borderRadius: "14px", background: "linear-gradient(135deg, #fde047 0%, #ca8a04 100%)", border: "none", color: "#000", fontSize: "15px", fontWeight: 900, cursor: "pointer" }}>PARÇALI ÖDEME / İPTAL / İKRAM</button>
+                                <button onClick={() => { setSelectedQuantities({}); setIsPartialPaymentModalOpen(true); }} disabled={processingPayment} style={{ width: "100%", padding: "16px", borderRadius: "14px", background: "linear-gradient(135deg, #fde047 0%, #ca8a04 100%)", border: "none", color: "var(--background)", fontSize: "15px", fontWeight: 900, cursor: "pointer" }}>PARÇALI ÖDEME / İPTAL / İKRAM</button>
                             </div>
                         </>
                     ) : (
-                        <div style={{ height: "400px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111113", borderRadius: "32px", border: "2px dashed #27272a", color: "#3f3f46" }}>
+                        <div style={{ height: "400px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--card-alt)", borderRadius: "32px", border: "2px dashed var(--border)", color: "var(--border-alt)" }}>
                             <Search size={48} style={{ marginBottom: "16px", opacity: 0.5 }} />
                             <p style={{ fontWeight: 600 }}>Lütfen detayları görmek için bir masa seçin</p>
                         </div>
@@ -650,35 +650,35 @@ export default function KasaDashboard() {
             {/* Partial Payment Modal */}
             {isPartialPaymentModalOpen && selectedTable && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-                    <div style={{ width: "100%", maxWidth: "500px", background: "#111113", border: "1px solid #27272a", borderRadius: "28px", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" }}>
-                        <div style={{ padding: "24px", borderBottom: "1px solid #27272a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ width: "100%", maxWidth: "500px", background: "var(--card-alt)", border: "1px solid var(--border)", borderRadius: "28px", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" }}>
+                        <div style={{ padding: "24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <h3 style={{ color: "#fbbf24", fontSize: "20px", fontWeight: 900 }}>PARÇALI İŞLEMLER</h3>
-                            <button onClick={() => setIsPartialPaymentModalOpen(false)} style={{ background: "none", border: "none", color: "#71717a", cursor: "pointer" }}><X size={24} /></button>
+                            <button onClick={() => setIsPartialPaymentModalOpen(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer" }}><X size={24} /></button>
                         </div>
                         <div style={{ padding: "24px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
                             {selectedTable.items?.map(item => {
                                 const selectedQty = selectedQuantities[item.id] || 0;
                                 return (
-                                    <div key={item.id} onClick={() => toggleItemSelection(item.id, item.quantity)} style={{ padding: "16px", background: "#18181b", borderRadius: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", border: selectedQty > 0 ? "1px solid #fbbf24" : "1px solid transparent" }}>
-                                        <div style={{ width: "20px", height: "20px", borderRadius: "6px", border: selectedQty > 0 ? "none" : "2px solid #3f3f46", background: selectedQty > 0 ? "#fbbf24" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>{selectedQty > 0 && <Check size={14} color="#000" strokeWidth={4} />}</div>
-                                        <div style={{ flex: 1 }}><div style={{ color: "#fff", fontWeight: 700 }}>{item.name}</div><div style={{ color: "#71717a", fontSize: "12px" }}>X{item.quantity} (Birim: ₺{item.unitPrice})</div></div>
+                                    <div key={item.id} onClick={() => toggleItemSelection(item.id, item.quantity)} style={{ padding: "16px", background: "var(--card)", borderRadius: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", border: selectedQty > 0 ? "1px solid #fbbf24" : "1px solid transparent" }}>
+                                        <div style={{ width: "20px", height: "20px", borderRadius: "6px", border: selectedQty > 0 ? "none" : "2px solid var(--border-alt)", background: selectedQty > 0 ? "#fbbf24" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>{selectedQty > 0 && <Check size={14} color="var(--background)" strokeWidth={4} />}</div>
+                                        <div style={{ flex: 1 }}><div style={{ color: "var(--foreground)", fontWeight: 700 }}>{item.name}</div><div style={{ color: "var(--muted)", fontSize: "12px" }}>X{item.quantity} (Birim: ₺{item.unitPrice})</div></div>
                                         {selectedQty > 0 && (
                                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={e => e.stopPropagation()}>
-                                                <button onClick={(e) => updateQuantity(item.id, -1, item.quantity, e)} style={{ width: "24px", height: "24px", borderRadius: "6px", background: "#27272a", border: "none", color: "#fff" }}>-</button>
-                                                <span style={{ color: "#fff", fontWeight: 800, minWidth: "20px", textAlign: "center" }}>{selectedQty}</span>
-                                                <button onClick={(e) => updateQuantity(item.id, 1, item.quantity, e)} style={{ width: "24px", height: "24px", borderRadius: "6px", background: "#27272a", border: "none", color: "#fff" }}>+</button>
+                                                <button onClick={(e) => updateQuantity(item.id, -1, item.quantity, e)} style={{ width: "24px", height: "24px", borderRadius: "6px", background: "var(--border)", border: "none", color: "var(--foreground)" }}>-</button>
+                                                <span style={{ color: "var(--foreground)", fontWeight: 800, minWidth: "20px", textAlign: "center" }}>{selectedQty}</span>
+                                                <button onClick={(e) => updateQuantity(item.id, 1, item.quantity, e)} style={{ width: "24px", height: "24px", borderRadius: "6px", background: "var(--border)", border: "none", color: "var(--foreground)" }}>+</button>
                                             </div>
                                         )}
-                                        <div style={{ color: "#fff", fontWeight: 800, minWidth: "60px", textAlign: "right" }}>₺{selectedQty > 0 ? selectedQty * item.unitPrice : item.totalPrice}</div>
+                                        <div style={{ color: "var(--foreground)", fontWeight: 800, minWidth: "60px", textAlign: "right" }}>₺{selectedQty > 0 ? selectedQty * item.unitPrice : item.totalPrice}</div>
                                     </div>
                                 );
                             })}
                         </div>
-                        <div style={{ padding: "24px", background: "#18181b", borderTop: "1px solid #27272a", display: "flex", flexDirection: "column", gap: "16px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ color: "#71717a", fontSize: "11px", fontWeight: 800 }}>SEÇİLEN TOPLAM</span><span style={{ color: "#fbbf24", fontSize: "24px", fontWeight: 900 }}>₺{calculateSelectedTotal()}</span></div>
+                        <div style={{ padding: "24px", background: "var(--card)", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ color: "var(--muted)", fontSize: "11px", fontWeight: 800 }}>SEÇİLEN TOPLAM</span><span style={{ color: "#fbbf24", fontSize: "24px", fontWeight: 900 }}>₺{calculateSelectedTotal()}</span></div>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                                <button onClick={() => handlePartialPayment("CASH")} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "#27272a", color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>NAKİT</button>
-                                <button onClick={() => handlePartialPayment("CREDIT_CARD")} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "#27272a", color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>KART</button>
+                                <button onClick={() => handlePartialPayment("CASH")} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "var(--border)", color: "var(--foreground)", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>NAKİT</button>
+                                <button onClick={() => handlePartialPayment("CREDIT_CARD")} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "var(--border)", color: "var(--foreground)", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>KART</button>
                                 <button onClick={handleCancel} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>İPTAL ET</button>
                                 <button onClick={handleTreat} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "rgba(34, 197, 94, 0.1)", color: "#22c55e", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>İKRAM ET</button>
                             </div>
@@ -690,15 +690,15 @@ export default function KasaDashboard() {
             {/* Payment Processing Overlay */}
             {processingPayment && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
-                    <div className="spinner-anim" style={{ width: "60px", height: "60px", border: "4px solid #3f3f46", borderTopColor: "#fbbf24", borderRadius: "50%" }} />
+                    <div className="spinner-anim" style={{ width: "60px", height: "60px", border: "4px solid var(--border-alt)", borderTopColor: "#fbbf24", borderRadius: "50%" }} />
                     <h2 style={{ marginTop: "24px", color: "#fbbf24", fontSize: "24px", fontWeight: 800, letterSpacing: "1px" }}>Ödeme İşleniyor...</h2>
-                    <p style={{ marginTop: "8px", color: "#a1a1aa", fontSize: "14px" }}>Lütfen bekleyiniz, işlem tamamlanıyor</p>
+                    <p style={{ marginTop: "8px", color: "var(--muted)", fontSize: "14px" }}>Lütfen bekleyiniz, işlem tamamlanıyor</p>
                 </div>
             )}
 
             {/* Success Popup */}
             {successPopup.isOpen && (
-                <div style={{ position: "fixed", top: "32px", right: "32px", background: "#22c55e", color: "#000", padding: "16px 24px", borderRadius: "16px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 10px 25px rgba(34, 197, 94, 0.4)", zIndex: 200 }}>
+                <div style={{ position: "fixed", top: "32px", right: "32px", background: "#22c55e", color: "var(--background)", padding: "16px 24px", borderRadius: "16px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 10px 25px rgba(34, 197, 94, 0.4)", zIndex: 200 }}>
                     <Check size={20} strokeWidth={3} />
                     <div><div style={{ fontSize: "16px", fontWeight: 800 }}>Başarılı</div><div style={{ fontSize: "13px", fontWeight: 600 }}>{successPopup.message}</div></div>
                     <button onClick={() => setSuccessPopup(prev => ({ ...prev, isOpen: false }))} style={{ background: "none", border: "none", opacity: 0.5, cursor: "pointer" }}><X size={18} /></button>

@@ -4,6 +4,9 @@ import "./globals.css";
 
 import { AuthProvider } from "@/context/AuthContext";
 import { ModalProvider } from "@/context/ModalContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import ThemeToggle from "@/components/ThemeToggle";
+import LanguageToggle from "@/components/LanguageToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +33,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <ModalProvider>
-            {children}
-          </ModalProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ModalProvider>
+              <div className="fixed top-4 right-4 z-[9999] flex items-center gap-3">
+                <LanguageToggle />
+                <ThemeToggle />
+              </div>
+              {children}
+            </ModalProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -88,12 +88,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex flex-col items-center justify-center p-4 font-sans text-gray-200">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4 font-sans text-gray-200">
 
       {/* Header / Logo */}
       <div className="flex flex-col items-center mb-8">
         <div className="w-16 h-16 bg-[#eab308] rounded-2xl flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(234,179,8,0.2)]">
-          <Utensils className="w-8 h-8 text-black" strokeWidth={2} />
+          <Utensils className="w-8 h-8 text-[var(--background)]" strokeWidth={2} />
         </div>
         <h1 className="text-[#eab308] text-2xl font-bold tracking-widest uppercase shadow-black drop-shadow-lg">
           Premium Resto
@@ -101,7 +101,7 @@ export default function LoginPage() {
       </div>
 
       {/* Role Toggle */}
-      <div className="bg-[#1c1c1c] p-1.5 rounded-full flex gap-1 mb-8 shadow-inner border border-white/5 w-[340px] z-10">
+      <div className="bg-[var(--card)] p-1.5 rounded-full flex gap-1 mb-8 shadow-inner border border-white/5 w-[340px] z-10">
         <button
           onClick={() => {
             setRole("GARSON");
@@ -109,8 +109,8 @@ export default function LoginPage() {
             setPin("");
           }}
           className={`relative flex items-center justify-center gap-2 flex-1 py-3 px-4 rounded-full text-sm font-semibold transition-all duration-300 ${role === "GARSON"
-            ? "bg-[#eab308] text-black shadow-md"
-            : "text-gray-400 hover:text-white"
+            ? "bg-[#eab308] text-[var(--background)] shadow-md"
+            : "text-gray-400 hover:text-[var(--foreground)]"
             }`}
         >
           <Key className="w-4 h-4" />
@@ -124,8 +124,8 @@ export default function LoginPage() {
             setPassword("");
           }}
           className={`relative flex items-center justify-center gap-2 flex-1 py-3 px-4 rounded-full text-sm font-semibold transition-all duration-300 ${role === "YONETIM"
-            ? "bg-[#eab308] text-black shadow-md"
-            : "text-gray-400 hover:text-white"
+            ? "bg-[#eab308] text-[var(--background)] shadow-md"
+            : "text-gray-400 hover:text-[var(--foreground)]"
             }`}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function LoginPage() {
       </div>
 
       {/* Form Container */}
-      <div className="bg-[#1c1c1c] w-full max-w-[400px] rounded-[32px] p-8 md:p-10 shadow-2xl border border-white/5 relative min-h-[460px] flex flex-col justify-center">
+      <div className="bg-[var(--card)] w-full max-w-[400px] rounded-[32px] p-8 md:p-10 shadow-2xl border border-white/5 relative min-h-[460px] flex flex-col justify-center">
 
         {role === "YONETIM" ? (
           /* Admin / Cashier Login Form */
@@ -155,7 +155,7 @@ export default function LoginPage() {
                       setUsername(e.target.value);
                       if (errorMsg) setErrorMsg(null);
                     }}
-                    className={`w-full bg-[#121212] border ${errorMsg ? 'border-red-500/50' : 'border-white/5'} text-white rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#eab308] transition-colors shadow-inner`}
+                    className={`w-full bg-[#121212] border ${errorMsg ? 'border-red-500/50' : 'border-white/5'} text-[var(--foreground)] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#eab308] transition-colors shadow-inner`}
                     disabled={isLoading}
                   />
                 </div>
@@ -173,7 +173,7 @@ export default function LoginPage() {
                       setPassword(e.target.value);
                       if (errorMsg) setErrorMsg(null);
                     }}
-                    className={`w-full bg-[#121212] border ${errorMsg ? 'border-red-500/50' : 'border-white/5'} text-white rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#eab308] transition-colors shadow-inner`}
+                    className={`w-full bg-[#121212] border ${errorMsg ? 'border-red-500/50' : 'border-white/5'} text-[var(--foreground)] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#eab308] transition-colors shadow-inner`}
                     disabled={isLoading}
                   />
                 </div>
@@ -188,7 +188,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#eab308] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#dca500] text-black font-bold py-4 rounded-2xl flex items-center justify-center gap-2 mt-2 transition-all shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+                className="w-full bg-[#eab308] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#dca500] text-[var(--background)] font-bold py-4 rounded-2xl flex items-center justify-center gap-2 mt-2 transition-all shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -210,7 +210,7 @@ export default function LoginPage() {
                 <div
                   key={index}
                   className={`w-14 h-16 rounded-xl border flex items-center justify-center text-2xl font-bold transition-all ${pin[index]
-                    ? 'border-[#eab308] bg-[#eab308]/10 text-white shadow-[0_0_10px_rgba(234,179,8,0.2)]'
+                    ? 'border-[#eab308] bg-[#eab308]/10 text-[var(--foreground)] shadow-[0_0_10px_rgba(234,179,8,0.2)]'
                     : errorMsg
                       ? 'border-red-500/50 bg-red-500/10 text-transparent'
                       : 'border-white/10 bg-[#121212] text-transparent'
@@ -234,7 +234,7 @@ export default function LoginPage() {
                   key={num}
                   onClick={() => handlePinInput(num)}
                   disabled={isLoading}
-                  className="bg-[#121212] disabled:opacity-50 hover:bg-[#202020] active:scale-95 text-xl font-semibold text-white aspect-square rounded-2xl flex items-center justify-center transition-all border border-white/5"
+                  className="bg-[#121212] disabled:opacity-50 hover:bg-[#202020] active:scale-95 text-xl font-semibold text-[var(--foreground)] aspect-square rounded-2xl flex items-center justify-center transition-all border border-white/5"
                 >
                   {num}
                 </button>
@@ -249,14 +249,14 @@ export default function LoginPage() {
               <button
                 onClick={() => handlePinInput(0)}
                 disabled={isLoading}
-                className="bg-[#121212] disabled:opacity-50 hover:bg-[#202020] active:scale-95 text-xl font-semibold text-white aspect-square rounded-2xl flex items-center justify-center transition-all border border-white/5"
+                className="bg-[#121212] disabled:opacity-50 hover:bg-[#202020] active:scale-95 text-xl font-semibold text-[var(--foreground)] aspect-square rounded-2xl flex items-center justify-center transition-all border border-white/5"
               >
                 0
               </button>
               <button
                 onClick={handlePinSubmit}
                 disabled={isLoading}
-                className="bg-[#eab308] disabled:opacity-50 hover:bg-[#dca500] active:scale-95 text-xl font-semibold text-black aspect-square rounded-2xl flex items-center justify-center transition-all border border-[#eab308]/50 shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+                className="bg-[#eab308] disabled:opacity-50 hover:bg-[#dca500] active:scale-95 text-xl font-semibold text-[var(--background)] aspect-square rounded-2xl flex items-center justify-center transition-all border border-[#eab308]/50 shadow-[0_0_15px_rgba(234,179,8,0.3)]"
               >
                 {isLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <ChevronRight className="w-8 h-8" />}
               </button>

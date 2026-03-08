@@ -216,7 +216,7 @@ export default function GarsonMasalarPage() {
     };
 
     return (
-        <div className="min-h-screen font-sans" style={{ background: "#0d0d0d" }}>
+        <div className="min-h-screen font-sans" style={{ background: "var(--background)" }}>
             <style>{`
                 @keyframes breathe {
                     0% { transform: scale(1); box-shadow: 0 4px 20px rgba(239,68,68,0.12); }
@@ -231,7 +231,7 @@ export default function GarsonMasalarPage() {
 
             {/* ── Header ── */}
             <header style={{
-                background: "linear-gradient(180deg, #111111 0%, #0d0d0d 100%)",
+                background: "linear-gradient(180deg, var(--card-alt) 0%, var(--background) 100%)",
                 borderBottom: "1px solid rgba(234,179,8,0.12)",
             }}>
                 <div style={{
@@ -252,13 +252,13 @@ export default function GarsonMasalarPage() {
                             display: "flex", alignItems: "center", justifyContent: "center",
                             flexShrink: 0,
                         }}>
-                            <Utensils size={20} color="#000" strokeWidth={2.5} />
+                            <Utensils size={20} color="var(--background)" strokeWidth={2.5} />
                         </div>
                         <div>
                             <div style={{ color: "#eab308", fontWeight: 800, fontSize: "16px", letterSpacing: "0.12em", textTransform: "uppercase" }}>
                                 Premium Resto
                             </div>
-                            <div style={{ color: "#6b7280", fontSize: "11px", letterSpacing: "0.06em", marginTop: "1px" }}>
+                            <div style={{ color: "var(--muted)", fontSize: "11px", letterSpacing: "0.06em", marginTop: "1px" }}>
                                 Garson Paneli
                             </div>
                         </div>
@@ -277,7 +277,7 @@ export default function GarsonMasalarPage() {
                                 background: selectionMode === "move" ? "#eab308" : "rgba(234,179,8,0.08)",
                                 border: "1px solid rgba(234,179,8,0.18)",
                                 borderRadius: "12px",
-                                color: selectionMode === "move" ? "#000" : "#eab308",
+                                color: selectionMode === "move" ? "var(--background)" : "#eab308",
                                 cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 transition: "all 0.2s",
@@ -296,7 +296,7 @@ export default function GarsonMasalarPage() {
                                 background: selectionMode === "merge" ? "#eab308" : "rgba(234,179,8,0.08)",
                                 border: "1px solid rgba(234,179,8,0.18)",
                                 borderRadius: "12px",
-                                color: selectionMode === "merge" ? "#000" : "#eab308",
+                                color: selectionMode === "merge" ? "var(--background)" : "#eab308",
                                 cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 transition: "all 0.2s",
@@ -352,7 +352,7 @@ export default function GarsonMasalarPage() {
                             border: "1px solid rgba(234,179,8,0.2)",
                         }}>
                             <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#eab308" }} />
-                            <span style={{ color: "#d1d5db", fontSize: "13px", fontWeight: 500 }}>
+                            <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 500 }}>
                                 <span style={{ color: "#eab308", fontWeight: 700 }}>{filteredTables.length}</span>
                                 {" "}Toplam Masa
                             </span>
@@ -365,7 +365,7 @@ export default function GarsonMasalarPage() {
                             border: "1px solid rgba(239,68,68,0.2)",
                         }}>
                             <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} />
-                            <span style={{ color: "#d1d5db", fontSize: "13px", fontWeight: 500 }}>
+                            <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 500 }}>
                                 <span style={{ color: "#f87171", fontWeight: 700 }}>{occupiedCount}</span>
                                 {" "}Dolu
                             </span>
@@ -378,7 +378,7 @@ export default function GarsonMasalarPage() {
                             border: "1px solid rgba(34,197,94,0.2)",
                         }}>
                             <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e" }} />
-                            <span style={{ color: "#d1d5db", fontSize: "13px", fontWeight: 500 }}>
+                            <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 500 }}>
                                 <span style={{ color: "#4ade80", fontWeight: 700 }}>{emptyCount}</span>
                                 {" "}Boş
                             </span>
@@ -387,7 +387,7 @@ export default function GarsonMasalarPage() {
 
                     {/* Floor Filter */}
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ color: "#6b7280", fontSize: "12px", fontWeight: 500, letterSpacing: "0.05em", whiteSpace: "nowrap" }}>
+                        <span style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 500, letterSpacing: "0.05em", whiteSpace: "nowrap" }}>
                             KAT:
                         </span>
                         <div style={{ display: "flex", gap: "6px" }}>
@@ -409,7 +409,7 @@ export default function GarsonMasalarPage() {
                                         background: selectedFloor === floor
                                             ? "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)"
                                             : "rgba(255,255,255,0.04)",
-                                        color: selectedFloor === floor ? "#000" : "#9ca3af",
+                                        color: selectedFloor === floor ? "var(--background)" : "var(--muted)",
                                         boxShadow: selectedFloor === floor ? "0 0 12px rgba(234,179,8,0.25)" : "none",
                                     }}
                                 >
@@ -578,7 +578,7 @@ export default function GarsonMasalarPage() {
 
                                     {/* Capacity */}
                                     <span style={{
-                                        color: "#6b7280",
+                                        color: "var(--muted)",
                                         fontSize: "10px",
                                         fontWeight: 600,
                                         letterSpacing: "0.06em",
@@ -634,7 +634,7 @@ export default function GarsonMasalarPage() {
             {/* Bottom Footer */}
             <div style={{
                 position: "fixed", bottom: 0, left: 0, right: 0,
-                background: "linear-gradient(0deg, #0d0d0d 60%, transparent 100%)",
+                background: "linear-gradient(0deg, var(--background) 60%, transparent 100%)",
                 padding: "20px 24px 14px",
                 display: "flex", justifyContent: "center",
                 pointerEvents: "none",
