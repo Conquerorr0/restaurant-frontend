@@ -1,42 +1,43 @@
 "use client";
 
-import React, { useState } from "react";
-import { LayoutGrid, Users, Banknote, Plus, Trash2 } from "lucide-react";
-
-// API ile uyumlu mock tipi (GET /tables, GET /tables/by-floor)
-type TableStatus = "EMPTY" | "OCCUPIED";
-
-interface MockTable {
-    id: string;
-    name: string;
-    status: TableStatus;
-    capacity: number;
-    floor: string;
-    current_remaining_amount: number;
-}
-
-// Başlangıç kat listesi (eklenip çıkarılabilir)
-const INITIAL_FLOORS = ["Kat 1", "Kat 2", "Bahçe"];
-
-// Mock masalar (API response formatında)
-const MOCK_TABLES: MockTable[] = [
-    { id: "1", name: "A1", status: "OCCUPIED", capacity: 4, floor: "Kat 1", current_remaining_amount: 580 },
-    { id: "2", name: "A2", status: "EMPTY", capacity: 2, floor: "Kat 1", current_remaining_amount: 0 },
-    { id: "3", name: "A3", status: "EMPTY", capacity: 2, floor: "Kat 1", current_remaining_amount: 0 },
-    { id: "4", name: "B1", status: "OCCUPIED", capacity: 6, floor: "Kat 1", current_remaining_amount: 1410 },
-    { id: "5", name: "B2", status: "EMPTY", capacity: 4, floor: "Kat 2", current_remaining_amount: 0 },
-    { id: "6", name: "B3", status: "EMPTY", capacity: 4, floor: "Kat 2", current_remaining_amount: 0 },
-    { id: "7", name: "T1", status: "EMPTY", capacity: 10, floor: "Bahçe", current_remaining_amount: 0 },
-    { id: "8", name: "T2", status: "OCCUPIED", capacity: 10, floor: "Bahçe", current_remaining_amount: 1000 },
-];
+import React, { useState, useEffect } from "react";
+import { LayoutGrid, Users, Banknote, Plus, Trash2, Loader2, AlertCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { tableService, Table } from "@/services/tableService";
 
 export default function TableManagement() {
+    const { token } = useAuth();
     const [tableName, setTableName] = useState("");
     const [capacity, setCapacity] = useState("");
     const [floor, setFloor] = useState("");
-    const [floors, setFloors] = useState<string[]>(INITIAL_FLOORS);
+    const [floors, setFloors] = useState<string[]>([]);
     const [newFloorName, setNewFloorName] = useState("");
-    const [tables, setTables] = useState<MockTable[]>(MOCK_TABLES);
+    const [tables, setTables] = useState<Table[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (token) fetchTables();
+    }, [token]);
+
+    const fetchTables = async () => {
+        setLoading(true);
+        try {
+            const res = await tableService.getTables(token!);
+            if (res.success) {
+                setTables(res.data);
+                // Extract floors from tables + existing UI floors logic
+                const existingFloors = Array.from(new Set(res.data.map(t => t.floor))).sort();
+                setFloors(existingFloors.length > 0 ? existingFloors : ["Zemin Kat"]);
+            }
+        } catch (err: any) {
+            console.error("Fetch tables error:", err);
+            setError("Masalar yüklenirken bir hata oluştu.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleAddFloor = (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,28 +54,45 @@ export default function TableManagement() {
         if (floor === floorName) setFloor("");
     };
 
-    const handleAddTable = (e: React.FormEvent | React.MouseEvent) => {
+    const handleAddTable = async (e: React.FormEvent | React.MouseEvent) => {
         e.preventDefault();
-        // Mock: sadece UI. Backend entegrasyonunda tableService/create çağrılacak.
         if (!tableName.trim() || !capacity.trim() || !floor) return;
-        const num = parseInt(capacity, 10);
-        if (Number.isNaN(num) || num < 1) return;
-        const newTable: MockTable = {
-            id: String(Date.now()),
-            name: tableName.trim(),
-            status: "EMPTY",
-            capacity: num,
-            floor,
-            current_remaining_amount: 0,
-        };
-        setTables((prev) => [...prev, newTable]);
-        setTableName("");
-        setCapacity("");
-        setFloor("");
+
+        setError("");
+        setSubmitting(true);
+        try {
+            const num = parseInt(capacity, 10);
+            const res = await tableService.createTable({
+                name: tableName.trim(),
+                capacity: num,
+                floor,
+                status: "EMPTY"
+            }, token!);
+
+            if (res.success) {
+                setTables(prev => [...prev, res.data]);
+                setTableName("");
+                setCapacity("");
+                setFloor("");
+            }
+        } catch (err: any) {
+            setError(err.message || "Masa eklenirken hata oluştu.");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
-    // İleride kat filtresi eklenecekse: tables.filter(t => t.floor === selectedFloor)
-    const displayedTables = tables;
+    const handleDeleteTable = async (id: string) => {
+        if (!confirm("Bu masayı silmek istediğinize emin misiniz?")) return;
+        try {
+            const res = await tableService.deleteTable(id, token!);
+            if (res.success) {
+                setTables(prev => prev.filter(t => t.id !== id));
+            }
+        } catch (err: any) {
+            alert(err.message || "Silme işlemi başarısız");
+        }
+    };
 
     return (
         <div className="flex flex-col gap-10 w-full max-w-[1200px] mx-auto animate-in fade-in duration-500">
@@ -95,8 +113,16 @@ export default function TableManagement() {
                     <div className="relative z-10 flex flex-col gap-6">
                         <div className="flex items-center gap-3">
                             <LayoutGrid size={24} className="text-[#eab308]" />
-                            <h2 className="text-xl font-black text-white tracking-wide">+ YENİ MASA EKLE</h2>
+                            <h2 className="text-xl font-black text-white tracking-wide uppercase italic">
+                                {submitting ? "MASA EKLENİYOR..." : "+ YENİ MASA EKLE"}
+                            </h2>
                         </div>
+
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-[16px] text-sm font-bold flex items-center gap-3">
+                                <AlertCircle size={18} /> {error}
+                            </div>
+                        )}
 
                         <div className="flex flex-col gap-5">
                             <div className="flex flex-col gap-2">
@@ -195,10 +221,11 @@ export default function TableManagement() {
 
                             <button
                                 type="button"
+                                disabled={submitting}
                                 onClick={handleAddTable}
-                                className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2"
+                                className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2 disabled:opacity-50"
                             >
-                                MASA EKLE
+                                {submitting ? <Loader2 className="animate-spin inline mr-2" /> : "MASA EKLE"}
                             </button>
                         </div>
                     </div>
@@ -206,41 +233,55 @@ export default function TableManagement() {
 
                 {/* Sağ: Masa kartları */}
                 <div className="flex-1 w-full flex flex-col gap-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {displayedTables.map((table) => {
-                            const isOccupied = table.status === "OCCUPIED";
-                            return (
-                                <div
-                                    key={table.id}
-                                    className="bg-[#1c1c1c] border border-transparent hover:border-[#eab308]/30 rounded-[24px] p-5 flex flex-col gap-3 transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <span
-                                            className="text-xl font-black tracking-wide"
-                                            style={{ color: isOccupied ? "#ef4444" : "#22c55e" }}
-                                        >
-                                            {table.name}
-                                        </span>
-                                        <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">
-                                            {table.floor}
-                                        </span>
+                    {loading ? (
+                        <div className="w-full h-[300px] flex items-center justify-center">
+                            <Loader2 className="animate-spin text-[#eab308]" size={48} />
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {tables.map((table) => {
+                                const isOccupied = table.status === "OCCUPIED";
+                                return (
+                                    <div
+                                        key={table.id}
+                                        className="bg-[#1c1c1c] border border-transparent hover:border-[#eab308]/30 rounded-[24px] p-5 flex flex-col gap-3 transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] relative group"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <span
+                                                className="text-xl font-black tracking-wide uppercase italic"
+                                                style={{ color: isOccupied ? "#ef4444" : "#22c55e" }}
+                                            >
+                                                {table.name}
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">
+                                                    {table.floor}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleDeleteTable(table.id)}
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-[#71717a] hover:text-red-500 transition-all"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[#a1a1aa]">
+                                            <Users size={14} />
+                                            <span className="text-[12px] font-black uppercase tracking-widest">
+                                                {table.capacity} KİŞİLİK
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <Banknote size={14} className="text-[#eab308]" />
+                                            <span className="text-[15px] font-black text-white italic">
+                                                {isOccupied ? `${table.current_remaining_amount || 0}₺` : "BOŞ"}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-[#a1a1aa]">
-                                        <Users size={14} />
-                                        <span className="text-[12px] font-bold uppercase tracking-wide">
-                                            {table.capacity} KİŞİLİK
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <Banknote size={14} className="text-[#71717a]" />
-                                        <span className="text-[15px] font-black text-white">
-                                            {isOccupied ? `${table.current_remaining_amount}₺` : "BOŞ"}
-                                        </span>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

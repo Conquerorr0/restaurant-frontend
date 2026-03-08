@@ -1,85 +1,119 @@
 "use client";
 
-import React, { useState } from "react";
-import { UserPlus, User, Lock, Edit2, Trash2, Settings, X, Save } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { UserPlus, User, Lock, Edit2, Trash2, Settings, X, Save, Loader2, AlertCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { userService, User as UserType } from "@/services/userService";
 
 type RoleType = "SUPER_ADMIN" | "CASHIER" | "WAITER";
 
-interface MockPerson {
-    id: string;
-    name: string;
-    role: RoleType;
-    pin: string | null;
-}
-
-const MOCK_PEOPLE: MockPerson[] = [
-    { id: "1", name: "Fatih Altuntaş", role: "SUPER_ADMIN", pin: null },
-    { id: "2", name: "Mehmet Kasa", role: "CASHIER", pin: null },
-    { id: "3", name: "Ali Garson", role: "WAITER", pin: "1234" },
-];
-
 const getRoleDisplay = (role: RoleType) => {
     switch (role) {
-        case "SUPER_ADMIN": return { label: "SUPER_ADMIN", color: "text-[#eab308]", bg: "bg-[#eab308]/10" };
-        case "CASHIER": return { label: "CASHIER", color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10" };
-        case "WAITER": return { label: "WAITER", color: "text-[#a855f7]", bg: "bg-[#a855f7]/10" };
+        case "SUPER_ADMIN": return { label: "SÜPER ADMİN", color: "text-[#eab308]", bg: "bg-[#eab308]/10" };
+        case "CASHIER": return { label: "KASİYER", color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10" };
+        case "WAITER": return { label: "GARSON", color: "text-[#a855f7]", bg: "bg-[#a855f7]/10" };
+        default: return { label: role, color: "text-[#a1a1aa]", bg: "bg-[#a1a1aa]/10" };
     }
 };
 
 export default function PersonnelManagement() {
+    const { token } = useAuth();
     const [name, setName] = useState("");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
     const [role, setRole] = useState<RoleType | "">("");
     const [pin, setPin] = useState("");
-    const [people, setPeople] = useState<MockPerson[]>(MOCK_PEOPLE);
-    const [editingId, setEditingId] = useState<string | null>(null);
 
-    const handleAddOrEditPerson = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!name.trim() || !role) return;
+    const [people, setPeople] = useState<UserType[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
-        if (editingId) {
-            setPeople(people.map(p => p.id === editingId ? {
-                ...p,
-                name: name.trim(),
-                role: role as RoleType,
-                pin: pin.trim() || null
-            } : p));
-            setEditingId(null);
-        } else {
-            const newPerson: MockPerson = {
-                id: String(Date.now()),
-                name: name.trim(),
-                role: role as RoleType,
-                pin: pin.trim() || null,
-            };
-            setPeople([...people, newPerson]);
+    useEffect(() => {
+        if (token) fetchUsers();
+    }, [token]);
+
+    const fetchUsers = async () => {
+        setLoading(true);
+        try {
+            const res = await userService.getUsers(token!);
+            if (res.success) setPeople(res.data);
+        } catch (err) {
+            console.error(err);
+            setError("Personel listesi yüklenirken hata oluştu.");
+        } finally {
+            setLoading(false);
         }
-
-        setName("");
-        setRole("");
-        setPin("");
     };
 
-    const handleEditClick = (person: MockPerson) => {
-        setEditingId(person.id);
-        setName(person.name);
-        setRole(person.role);
-        setPin(person.pin || "");
+    const handleAddOrEditPerson = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!name.trim() || !role || !username.trim()) {
+            setError("Lütfen gerekli tüm alanları doldurun.");
+            return;
+        }
 
-        // Form alanına yumuşak scroll (kullanıcı deneyimi için)
+        setSubmitting(true);
+        setError("");
+        try {
+            const userData = {
+                name_surname: name.trim(),
+                name: name.trim(), // Both might be expected depending on API
+                username: username.trim(),
+                role: role as RoleType,
+                pin_code: role === 'WAITER' ? pin.trim() : null,
+                ...(password ? { password } : (editingUserId ? {} : { password: "123456" })) // Default pass for new if empty
+            };
+
+            if (editingUserId) {
+                const res = await userService.updateUser(editingUserId, userData, token!);
+                if (res.success) {
+                    handleCancelEdit();
+                    fetchUsers();
+                }
+            } else {
+                const res = await userService.addUser(userData, token!);
+                if (res.success) {
+                    handleCancelEdit();
+                    fetchUsers();
+                }
+            }
+        } catch (err: any) {
+            setError(err.message || "İşlem başarısız");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleEditClick = (person: UserType) => {
+        setEditingUserId(person.id);
+        setName(person.name_surname);
+        setUsername(person.username);
+        setRole(person.role);
+        setPin(person.pin_code || "");
+        setPassword(""); // Don't show password
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleCancelEdit = () => {
-        setEditingId(null);
+        setEditingUserId(null);
         setName("");
+        setUsername("");
+        setPassword("");
         setRole("");
         setPin("");
+        setError("");
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (confirm("Bu personeli silmek istediğinize emin misiniz?")) {
-            setPeople(people.filter(p => p.id !== id));
+            try {
+                const res = await userService.deleteUser(id, token!);
+                if (res.success) fetchUsers();
+            } catch (err: any) {
+                alert(err.message || "Silme işlemi başarısız");
+            }
         }
     };
 
@@ -87,7 +121,7 @@ export default function PersonnelManagement() {
         <div className="flex flex-col gap-10 w-full max-w-[1200px] mx-auto animate-in fade-in duration-500">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-1 drop-shadow-md">
+                <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-1 drop-shadow-md italic">
                     PERSONEL YÖNETİMİ
                 </h1>
                 <p className="text-[#808080] text-[15px] font-medium tracking-wide">
@@ -100,22 +134,28 @@ export default function PersonnelManagement() {
                 <div className="w-full lg:w-[420px] flex-shrink-0 bg-[#1c1c1c] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#eab308]/5 rounded-full blur-3xl -mx-10 -my-10 pointer-events-none transition-all duration-500 group-hover:bg-[#eab308]/10" />
 
+                    {error && (
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-[16px] text-xs font-bold flex items-center gap-3 mb-4 relative z-20">
+                            <AlertCircle size={18} /> {error}
+                        </div>
+                    )}
+
                     <div className="relative z-10 flex flex-col gap-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                {editingId ? (
+                                {editingUserId ? (
                                     <Edit2 size={24} className="text-[#eab308]" />
                                 ) : (
                                     <UserPlus size={24} className="text-[#eab308]" />
                                 )}
-                                <h2 className="text-xl font-black text-white tracking-wide">
-                                    {editingId ? "PERSONELİ DÜZENLE" : "YENİ PERSONEL"}
+                                <h2 className="text-xl font-black text-white tracking-wide uppercase italic">
+                                    {editingUserId ? "PERSONELİ DÜZENLE" : "YENİ PERSONEL"}
                                 </h2>
                             </div>
-                            {editingId && (
+                            {editingUserId && (
                                 <button
                                     onClick={handleCancelEdit}
-                                    className="p-2 text-[#a1a1aa] hover:text-[#ef4444] transition-colors rounded-full hover:bg-[#3f1515]/50 flex items-center justify-center title='İptal Et'"
+                                    className="p-2 text-[#a1a1aa] hover:text-[#ef4444] transition-colors rounded-full hover:bg-[#3f1515]/50 flex items-center justify-center"
                                     title="Düzenlemeyi İptal Et"
                                 >
                                     <X size={20} />
@@ -130,11 +170,29 @@ export default function PersonnelManagement() {
                                 </label>
                                 <input
                                     type="text"
+                                    required
                                     placeholder="Örn: Ahmet Yılmaz"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium border border-transparent hover:border-[#27272a]"
+                                    className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[#27272a]"
                                 />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em]">
+                                    KULLANICI ADI
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#71717a] font-black">@</span>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="username"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        className="bg-[#0d0d0d] text-white placeholder-[#52525b] pl-10 pr-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[#27272a]"
+                                    />
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -144,9 +202,10 @@ export default function PersonnelManagement() {
                                     </label>
                                     <div className="relative">
                                         <select
+                                            required
                                             value={role}
                                             onChange={(e) => setRole(e.target.value as RoleType)}
-                                            className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium appearance-none border border-transparent hover:border-[#27272a]"
+                                            className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-transparent hover:border-[#27272a]"
                                         >
                                             <option value="" disabled className="text-[#52525b]">Seçiniz</option>
                                             <option value="SUPER_ADMIN">Süper Admin</option>
@@ -160,30 +219,29 @@ export default function PersonnelManagement() {
                                 </div>
 
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em] leading-tight truncate" title="GİRİŞ KODU (PİN/ŞİFRE)">
-                                        GİRİŞ KODU<br /><span className="text-[9px] text-[#52525b]">(PİN/ŞİFRE)</span>
+                                    <label className="text-[11px] text-[#808080] font-black uppercase tracking-[0.15em] leading-tight truncate">
+                                        {role === 'WAITER' ? 'PİN KODU' : 'YENİ ŞİFRE'}
                                     </label>
                                     <input
-                                        type="text"
-                                        placeholder="Örn: 1234"
-                                        value={pin}
-                                        onChange={(e) => setPin(e.target.value)}
-                                        className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-medium border border-transparent hover:border-[#27272a]"
+                                        type={role === 'WAITER' ? "text" : "password"}
+                                        placeholder={role === 'WAITER' ? "1234" : (editingUserId ? "****" : "123456")}
+                                        value={role === 'WAITER' ? pin : password}
+                                        onChange={(e) => role === 'WAITER' ? setPin(e.target.value) : setPassword(e.target.value)}
+                                        className="bg-[#0d0d0d] text-white placeholder-[#52525b] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-transparent hover:border-[#27272a]"
                                     />
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
-                                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2 tracking-wide"
+                                disabled={submitting}
+                                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#facc15] to-[#eab308] text-[#0d0d0d] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2 tracking-wide disabled:opacity-50"
                             >
-                                {editingId ? (
+                                {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (
                                     <>
-                                        <Save size={20} />
-                                        GÜNCELLE
+                                        {editingUserId ? <Save size={20} /> : <UserPlus size={20} />}
+                                        {editingUserId ? "GÜNCELLE" : "PERSONELİ KAYDET"}
                                     </>
-                                ) : (
-                                    <>PERSONELİ KAYDET</>
                                 )}
                             </button>
                         </form>
@@ -192,56 +250,73 @@ export default function PersonnelManagement() {
 
                 {/* Sağ: Personel Listesi */}
                 <div className="flex-1 w-full flex flex-col gap-4">
-                    {people.map((person) => {
-                        const style = getRoleDisplay(person.role);
-                        return (
-                            <div
-                                key={person.id}
-                                className="bg-[#1c1c1c] border border-transparent hover:border-[#eab308]/30 rounded-[24px] p-5 flex items-center justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
-                            >
-                                <div className="flex items-center gap-5">
-                                    <div className="w-14 h-14 bg-[#2a2a2a] rounded-[18px] flex items-center justify-center relative flex-shrink-0">
-                                        <User size={24} className="text-[#a1a1aa]" />
-                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#1c1c1c] rounded-full flex items-center justify-center">
-                                            <Settings size={12} className="text-[#eab308]" />
+                    {loading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <Loader2 className="animate-spin text-[#eab308]" size={40} />
+                        </div>
+                    ) : (
+                        <>
+                            {people.map((person) => {
+                                const style = getRoleDisplay(person.role as RoleType);
+                                return (
+                                    <div
+                                        key={person.id}
+                                        className={`bg-[#1c1c1c] border rounded-[24px] p-5 flex items-center justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${editingUserId === person.id ? 'border-[#eab308]/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]' : 'border-transparent hover:border-[#eab308]/30'}`}
+                                    >
+                                        <div className="flex items-center gap-5">
+                                            <div className="w-14 h-14 bg-[#2a2a2a] rounded-[18px] flex items-center justify-center relative flex-shrink-0">
+                                                <User size={24} className="text-[#a1a1aa]" />
+                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#1c1c1c] rounded-full flex items-center justify-center">
+                                                    <Settings size={12} className="text-[#eab308]" />
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-lg font-black text-white uppercase italic">{person.name_surname}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-[8px] ${style.color} ${style.bg} border border-current opacity-60`}>
+                                                        {style.label}
+                                                    </span>
+                                                    <span className="text-[#a1a1aa] text-[13px] font-bold flex items-center gap-1.5">
+                                                        <span className="text-[#71717a]">@{person.username}</span>
+                                                        <span className="text-[#3f3f46]">•</span>
+                                                        <Lock size={14} className="text-[#71717a]" />
+                                                        {person.pin_code ? `PIN: ${person.pin_code}` : "Şifre Erişimi"}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-lg font-black text-white">{person.name}</span>
-                                        <div className="flex items-center gap-3">
-                                            <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-[8px] ${style.color} ${style.bg}`}>
-                                                {style.label}
-                                            </span>
-                                            <span className="text-[#a1a1aa] text-[13px] font-medium flex items-center gap-1.5">
-                                                <Lock size={14} className="text-[#71717a]" />
-                                                {person.pin ? `PIN: ${person.pin}` : "Şifre Erişimi"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleEditClick(person)}
-                                        className={`w-11 h-11 rounded-[14px] flex items-center justify-center transition-colors ${editingId === person.id
-                                                ? "bg-[#eab308] text-[#0d0d0d]"
-                                                : "bg-[#2a2a2a] text-[#a1a1aa] hover:bg-[#eab308] hover:text-[#0d0d0d]"
-                                            }`}
-                                        title="Düzenle"
-                                    >
-                                        <Edit2 size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(person.id)}
-                                        className="w-11 h-11 rounded-[14px] bg-[#3f1515] flex items-center justify-center text-[#ef4444] hover:bg-[#ef4444] hover:text-white transition-colors"
-                                        title="Sil"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleEditClick(person)}
+                                                className={`w-11 h-11 rounded-[14px] flex items-center justify-center transition-colors ${editingUserId === person.id
+                                                    ? "bg-[#eab308] text-[#0d0d0d]"
+                                                    : "bg-[#2a2a2a] text-[#a1a1aa] hover:bg-[#eab308] hover:text-[#0d0d0d]"
+                                                    }`}
+                                                title="Düzenle"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(person.id)}
+                                                className="w-11 h-11 rounded-[14px] bg-[#3f1515] flex items-center justify-center text-[#ef4444] hover:bg-[#ef4444] hover:text-white transition-colors"
+                                                title="Sil"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {people.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[#27272a] rounded-[32px]">
+                                    <UserPlus size={48} className="text-[#27272a] mb-4" />
+                                    <h3 className="text-xl font-black text-white mb-2 uppercase italic">Personel Bulunamadı</h3>
+                                    <p className="text-[#a1a1aa] font-bold">Lütfen yeni bir personel kaydı yapın.</p>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </div>
