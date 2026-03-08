@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthResponse } from '../services/authService';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from '@/i18n/routing';
 
 interface AuthContextType {
     user: User | null;
@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         // Check for existing session on mount
@@ -62,33 +63,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Role-based protection logic
     useEffect(() => {
         if (!isLoading) {
-            const path = window.location.pathname;
             const authenticated = !!token;
 
-            if (!authenticated && path !== '/') {
+            // Simple checks using localized pathname
+            if (!authenticated && pathname !== '/') {
                 router.push('/');
             } else if (authenticated && user) {
                 // If logged in and at root, redirect to home page
-                if (path === '/') {
+                if (pathname === '/') {
                     if (user.role === 'WAITER') router.push('/garson');
                     else if (user.role === 'CASHIER') router.push('/kasa');
                     else if (user.role === 'SUPER_ADMIN') router.push('/superadmin');
                 }
 
-                // Prevent Waiters from accessing Kasa or SuperAdmin
-                if (user.role === 'WAITER' && (path.startsWith('/kasa') || path.startsWith('/superadmin'))) {
+                // Role restrictions
+                if (user.role === 'WAITER' && (pathname.startsWith('/kasa') || pathname.startsWith('/superadmin'))) {
                     router.push('/garson');
                 }
 
-                // Prevent Cashiers from accessing Garson or SuperAdmin
-                if (user.role === 'CASHIER' && (path.startsWith('/garson') || path.startsWith('/superadmin'))) {
+                if (user.role === 'CASHIER' && (pathname.startsWith('/garson') || pathname.startsWith('/superadmin'))) {
                     router.push('/kasa');
                 }
-
-                // Super Admin can theoretically access all, but usually stays in /superadmin
             }
         }
-    }, [token, user, isLoading, router]);
+    }, [token, user, isLoading, router, pathname]);
 
     return (
         <AuthContext.Provider value={{

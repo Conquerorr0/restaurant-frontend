@@ -5,8 +5,10 @@ import { Search, Pencil, Trash2, Package, Layers, X, Loader2, AlertCircle, Plus,
 import { useAuth } from "@/context/AuthContext";
 import { useModal } from "@/context/ModalContext";
 import { menuService, Category, Product } from "@/services/menuService";
+import { useTranslations } from "next-intl";
 
 export default function MenuManagement() {
+    const t = useTranslations("SuperAdmin");
     const { token } = useAuth();
     const { showAlert, showConfirm } = useModal();
     const [activeTab, setActiveTab] = useState<"products" | "categories">("products");
@@ -47,7 +49,7 @@ export default function MenuManagement() {
             if (prodRes.success) setProducts(prodRes.data);
         } catch (err) {
             console.error(err);
-            setError("Menü verileri yüklenirken bir hata oluştu.");
+            setError(t("error_general", { defaultValue: "Menü verileri yüklenirken bir hata oluştu." }));
         } finally {
             setLoading(false);
         }
@@ -101,7 +103,7 @@ export default function MenuManagement() {
     const handleSubmitProduct = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!productName || !productCategoryId || !productPrice) {
-            setError("Lütfen tüm alanları doldurun.");
+            setError(t("error_general", { defaultValue: "Lütfen tüm alanları doldurun." }));
             return;
         }
 
@@ -130,7 +132,7 @@ export default function MenuManagement() {
                 }
             }
         } catch (err: any) {
-            setError(err.message || "Ürün kaydedilirken hata oluştu.");
+            setError(err.message || t("error_general", { defaultValue: "Ürün kaydedilirken hata oluştu." }));
         } finally {
             setSubmitting(false);
         }
@@ -139,7 +141,7 @@ export default function MenuManagement() {
     const handleSubmitCategory = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!categoryName) {
-            setError("Lütfen kategori adını girin.");
+            setError(t("error_general", { defaultValue: "Lütfen kategori adını girin." }));
             return;
         }
 
@@ -166,14 +168,14 @@ export default function MenuManagement() {
                 }
             }
         } catch (err: any) {
-            setError(err.message || "Kategori kaydedilirken hata oluştu.");
+            setError(err.message || t("error_general", { defaultValue: "Kategori kaydedilirken hata oluştu." }));
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDeleteProduct = async (id: string) => {
-        if (!(await showConfirm("Bu ürünü silmek istediğinize emin misiniz?", "Ürün Silme Onayı"))) return;
+        if (!(await showConfirm(t("product_delete_confirm"), t("product_delete_title")))) return;
         try {
             const res = await menuService.deleteProduct(id, token!);
             if (res.success) fetchData();
@@ -183,7 +185,7 @@ export default function MenuManagement() {
     };
 
     const handleDeleteCategory = async (id: string) => {
-        if (!(await showConfirm("Bu kategoriyi silmek istediğinize emin misiniz? Bu kategoriye ait ürünler category_id: null olabilir.", "Kategori Silme Onayı"))) return;
+        if (!(await showConfirm(t("category_delete_confirm"), t("category_delete_title")))) return;
         try {
             const res = await menuService.deleteCategory(id, token!);
             if (res.success) fetchData();
@@ -198,10 +200,10 @@ export default function MenuManagement() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 sm:gap-0">
                 <div>
                     <h1 className="text-[28px] font-black text-[var(--foreground)] tracking-widest uppercase mb-1 drop-shadow-md italic leading-tight">
-                        MENÜ YÖNETİMİ
+                        {t("menu_management")}
                     </h1>
                     <p className="text-[var(--muted)] text-[14px] font-medium tracking-wide">
-                        Kategori ve ürünlerinizi yönetin
+                        {t("menu_subtitle")}
                     </p>
                 </div>
 
@@ -215,7 +217,7 @@ export default function MenuManagement() {
                             }`}
                     >
                         <Package size={16} className={activeTab === "products" ? "text-[var(--background)]" : ""} />
-                        ÜRÜNLER
+                        {t("products")}
                     </button>
                     <button
                         onClick={() => handleTabChange("categories")}
@@ -225,7 +227,7 @@ export default function MenuManagement() {
                             }`}
                     >
                         <Layers size={16} className={activeTab === "categories" ? "text-[var(--background)]" : ""} />
-                        KATEGORİLER
+                        {t("categories")}
                     </button>
                 </div>
             </div>
@@ -249,7 +251,7 @@ export default function MenuManagement() {
                                 <div className="flex items-center gap-3">
                                     <Package size={22} className="text-[#eab308]" />
                                     <h2 className="text-xl font-black text-[var(--foreground)] tracking-wide uppercase italic">
-                                        {editingProduct ? "ÜRÜNÜ DÜZENLE" : "YENİ ÜRÜN EKLE"}
+                                        {editingProduct ? t("edit_product") : t("add_new_product")}
                                     </h2>
                                 </div>
                                 {editingProduct && (
@@ -265,11 +267,11 @@ export default function MenuManagement() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">ÜRÜN ADI</label>
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">{t("product_name")}</label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Örn: Adana Kebap"
+                                    placeholder={t("product_name_placeholder")}
                                     value={productName}
                                     onChange={(e) => setProductName(e.target.value)}
                                     className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--border-alt)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
@@ -277,7 +279,7 @@ export default function MenuManagement() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">KATEGORİ</label>
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">{t("categories")}</label>
                                 <div className="relative">
                                     <select
                                         required
@@ -285,7 +287,7 @@ export default function MenuManagement() {
                                         onChange={(e) => setProductCategoryId(e.target.value)}
                                         className="bg-[var(--background)] text-[var(--foreground)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
                                     >
-                                        <option value="" disabled className="text-[var(--border-alt)]">Kategori Seçin</option>
+                                        <option value="" disabled className="text-[var(--border-alt)]">{t("select_category")}</option>
                                         {categories.map((cat) => (
                                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}
@@ -297,11 +299,11 @@ export default function MenuManagement() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">FİYAT (₺)</label>
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">{t("price_tl")}</label>
                                 <input
                                     type="number"
                                     required
-                                    placeholder="Örn: 250"
+                                    placeholder={t("price_placeholder")}
                                     value={productPrice}
                                     onChange={(e) => setProductPrice(e.target.value)}
                                     className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--border-alt)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
@@ -314,7 +316,7 @@ export default function MenuManagement() {
                                     disabled={submitting}
                                     className="w-full bg-[#eab308] text-[var(--background)] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 active:scale-95"
                                 >
-                                    {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (editingProduct ? "ÜRÜNÜ GÜNCELLE" : "ÜRÜNÜ KAYDET")}
+                                    {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (editingProduct ? t("update_product") : t("save_product"))}
                                 </button>
                             </div>
                         </form>
@@ -324,7 +326,7 @@ export default function MenuManagement() {
                                 <div className="flex items-center gap-3">
                                     <Layers size={22} className="text-[#eab308]" />
                                     <h2 className="text-xl font-black text-[var(--foreground)] tracking-wide uppercase italic">
-                                        {editingCategory ? "KATEGORİ DÜZENLE" : "YENİ KATEGORİ"}
+                                        {editingCategory ? t("edit_category") : t("add_new_category")}
                                     </h2>
                                 </div>
                                 {editingCategory && (
@@ -340,11 +342,11 @@ export default function MenuManagement() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">KATEGORİ ADI</label>
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">{t("category_name")}</label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Örn: Tatlılar"
+                                    placeholder={t("category_name_placeholder")}
                                     value={categoryName}
                                     onChange={(e) => setCategoryName(e.target.value)}
                                     className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--border-alt)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
@@ -357,7 +359,7 @@ export default function MenuManagement() {
                                     disabled={submitting}
                                     className="w-full bg-[#eab308] text-[var(--background)] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 active:scale-95"
                                 >
-                                    {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (editingCategory ? "KATEGORİYİ GÜNCELLE" : "KATEGORİYİ EKLE")}
+                                    {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (editingCategory ? t("update_category") : t("add_category"))}
                                 </button>
                             </div>
                         </form>
@@ -371,7 +373,7 @@ export default function MenuManagement() {
                             <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
-                                placeholder="Ürünlerde ara..."
+                                placeholder={t("search_products")}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full bg-[var(--card)] border border-[var(--border)]/30 text-[var(--foreground)] placeholder-[var(--muted)] py-4 pl-14 pr-5 rounded-[16px] focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold hover:border-[var(--border-alt)]"
@@ -382,7 +384,7 @@ export default function MenuManagement() {
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-24">
                             <Loader2 className="animate-spin text-[#eab308] mb-4" size={48} />
-                            <p className="text-[var(--muted)] font-bold tracking-widest uppercase text-xs">Yükleniyor...</p>
+                            <p className="text-[var(--muted)] font-bold tracking-widest uppercase text-xs">{t("loading")}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -406,10 +408,10 @@ export default function MenuManagement() {
                                                     </h3>
                                                     <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase opacity-60">
                                                         <span className="truncate max-w-[120px]">
-                                                            {categories.find(c => c.id === product.category_id)?.name || "KATEGORİSİZ"}
+                                                            {categories.find(c => c.id === product.category_id)?.name || t("uncategorized")}
                                                         </span>
                                                         <span className="text-[var(--border-alt)]">•</span>
-                                                        <span className="text-[#eab308]">₺{product.price}</span>
+                                                        <span className="text-[#eab308]">₺{product.price.toLocaleString('tr-TR')}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -435,8 +437,8 @@ export default function MenuManagement() {
                                 ) : (
                                     <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[var(--border)] rounded-[32px] bg-[var(--card)]/30">
                                         <Search size={48} className="text-[var(--border)] mb-4" />
-                                        <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">Ürün bulunamadı</h3>
-                                        <p className="text-[var(--muted)] font-bold text-sm">Arama kriterlerinize uygun ürün bulunmuyor.</p>
+                                        <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">{t("no_products_found")}</h3>
+                                        <p className="text-[var(--muted)] font-bold text-sm">{t("no_products_desc")}</p>
                                     </div>
                                 )
                             ) : (
@@ -460,7 +462,7 @@ export default function MenuManagement() {
                                                             {category.name}
                                                         </h3>
                                                         <p className="text-[11px] text-[var(--muted)] font-bold tracking-widest uppercase opacity-60">
-                                                            {prodCount} ÜRÜN
+                                                            {t("product_count", { count: prodCount })}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -487,8 +489,8 @@ export default function MenuManagement() {
                                 ) : (
                                     <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[var(--border)] rounded-[32px] bg-[var(--card)]/30">
                                         <Layers size={48} className="text-[var(--border)] mb-4" />
-                                        <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">Kategori bulunamadı</h3>
-                                        <p className="text-[var(--muted)] font-bold text-sm">Henüz hiç kategori oluşturulmamış.</p>
+                                        <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">{t("no_categories_found")}</h3>
+                                        <p className="text-[var(--muted)] font-bold text-sm">{t("no_categories_desc")}</p>
                                     </div>
                                 )
                             )}

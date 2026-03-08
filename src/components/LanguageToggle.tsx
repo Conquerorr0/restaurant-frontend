@@ -2,16 +2,20 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Globe, ChevronDown } from "lucide-react";
+import { useLocale } from "next-intl";
+import { useRouter, usePathname } from "@/i18n/routing";
 
 export default function LanguageToggle() {
+    const locale = useLocale();
+    const router = useRouter();
+    const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
-    const [lang, setLang] = useState("TR");
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const languages = [
-        { code: "TR", label: "Türkçe" },
-        { code: "EN", label: "English" },
-        { code: "AR", label: "العربية" }
+        { code: "tr", label: "Türkçe" },
+        { code: "en", label: "English" },
+        { code: "ar", label: "العربية" }
     ];
 
     useEffect(() => {
@@ -24,7 +28,8 @@ export default function LanguageToggle() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const selectedLabel = languages.find(l => l.code === lang)?.label || lang;
+    const selectedLang = languages.find(l => l.code === locale) || languages[0];
+    const displayCode = selectedLang.code.toUpperCase();
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -38,13 +43,13 @@ export default function LanguageToggle() {
                 }}
             >
                 <Globe size={16} className="md:w-[18px] md:h-[18px]" />
-                <span className="font-bold text-xs md:text-sm leading-none pt-0.5">{lang}</span>
+                <span className="font-bold text-xs md:text-sm leading-none pt-0.5">{displayCode}</span>
                 <ChevronDown size={12} className={`transition-transform duration-300 ml-0.5 md:ml-1 opacity-70 ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isOpen && (
                 <div
-                    className="absolute right-0 top-full mt-2 w-44 rounded-2xl overflow-hidden shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-300"
+                    className="absolute right-0 bottom-full mb-2 md:top-full md:mt-2 md:bottom-auto md:mb-0 w-44 rounded-2xl overflow-hidden shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 md:slide-in-from-top-2 duration-300"
                     style={{
                         background: "var(--card)",
                         border: "1px solid var(--border)",
@@ -53,12 +58,12 @@ export default function LanguageToggle() {
                 >
                     <div className="flex flex-col p-1">
                         {languages.map((l) => {
-                            const isSelected = lang === l.code;
+                            const isSelected = locale === l.code;
                             return (
                                 <button
                                     key={l.code}
                                     onClick={() => {
-                                        setLang(l.code);
+                                        router.replace(pathname, { locale: l.code });
                                         setIsOpen(false);
                                     }}
                                     className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all flex items-center justify-between group relative`}
@@ -69,7 +74,7 @@ export default function LanguageToggle() {
                                     onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                                 >
                                     <span className="relative z-10">{l.label}</span>
-                                    <span style={{ color: "var(--muted)" }} className="text-[10px] tracking-widest relative z-10 font-black opacity-80">{l.code}</span>
+                                    <span style={{ color: "var(--muted)" }} className="text-[10px] tracking-widest relative z-10 font-black opacity-80">{l.code.toUpperCase()}</span>
                                 </button>
                             );
                         })}

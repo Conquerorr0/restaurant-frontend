@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown, GitMerge } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useModal } from "@/context/ModalContext";
 import { tableService } from "@/services/tableService";
 import { socketService } from "@/services/socketService";
+import { useTranslations } from "next-intl";
 
 type TableStatus = "EMPTY" | "OCCUPIED";
 
@@ -45,12 +46,13 @@ interface TableData {
 // Mock function removed as we now use real api service
 
 export default function GarsonMasalarPage() {
+    const t = useTranslations("Garson");
     const router = useRouter();
     const { token, logout } = useAuth();
     const { showAlert, showConfirm } = useModal();
     const [tables, setTables] = useState<TableData[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
+    const [selectedFloor, setSelectedFloor] = useState<string>(t("all"));
     const [selectionMode, setSelectionMode] = useState<"view" | "move" | "merge">("view");
     const [selectedTables, setSelectedTables] = useState<string[]>([]);
     const [seenOrderIds, setSeenOrderIds] = useState<string[]>([]);
@@ -93,8 +95,8 @@ export default function GarsonMasalarPage() {
 
     const floors = React.useMemo(() => {
         const uniqueFloors = Array.from(new Set(tables.map(t => t.floor))).sort();
-        return ["Tümü", ...uniqueFloors];
-    }, [tables]);
+        return [t("all"), ...uniqueFloors];
+    }, [tables, t]);
 
     const loadTables = React.useCallback(async () => {
         if (!token) return;
@@ -125,7 +127,7 @@ export default function GarsonMasalarPage() {
         return () => clearInterval(interval);
     }, [loadTables]);
 
-    const filteredTables = selectedFloor === "Tümü"
+    const filteredTables = selectedFloor === t("all")
         ? tables
         : tables.filter(t => t.floor === selectedFloor);
 
@@ -145,7 +147,7 @@ export default function GarsonMasalarPage() {
         if (selectionMode === "move") {
             if (selectedTables.length === 0) {
                 if (table.status !== "OCCUPIED") {
-                    await showAlert("Taşımak istediğiniz masa dolu olmalıdır!", "warning");
+                    await showAlert(t("move_warning_occupied"), "warning");
                     return;
                 }
                 setSelectedTables([tableId]);
@@ -156,11 +158,11 @@ export default function GarsonMasalarPage() {
                     return;
                 }
                 if (table.status !== "EMPTY") {
-                    await showAlert("Hedef masa boş olmalıdır!", "warning");
+                    await showAlert(t("move_warning_empty"), "warning");
                     return;
                 }
 
-                if (await showConfirm(`${tables.find(t => t.id === sourceId)?.name} masasını ${table.name} masasına taşımak istediğinize emin misiniz?`)) {
+                if (await showConfirm(t("move_confirm", { source: tables.find(t => t.id === sourceId)?.name || "", target: table.name || "" }))) {
                     const res = await tableService.moveTable(sourceId, tableId, token!);
                     if (res.success) {
                         setSelectionMode("view");
@@ -172,7 +174,7 @@ export default function GarsonMasalarPage() {
                             active_order_id: t.active_order_id, current_total_amount: t.total_order_amount, floor: t.floor
                         })));
                     } else {
-                        await showAlert("Hata: " + res.message, "error");
+                        await showAlert(t("error") + ": " + res.message, "error");
                     }
                 }
             }
@@ -180,7 +182,7 @@ export default function GarsonMasalarPage() {
 
         if (selectionMode === "merge") {
             if (table.status !== "OCCUPIED") {
-                await showAlert("Birleştirmek istediğiniz masalar dolu olmalıdır!", "warning");
+                await showAlert(t("merge_warning_occupied"), "warning");
                 return;
             }
             if (selectedTables.includes(tableId)) {
@@ -190,7 +192,7 @@ export default function GarsonMasalarPage() {
                     const newSelection = [...selectedTables, tableId];
                     if (newSelection.length === 2) {
                         const [sId, tId] = newSelection;
-                        if (await showConfirm(`${tables.find(t => t.id === sId)?.name} ve ${tables.find(t => t.id === tId)?.name} masalarını birleştirmek istediğinize emin misiniz?`)) {
+                        if (await showConfirm(t("merge_confirm", { source: tables.find(t => t.id === sId)?.name || "", target: tables.find(t => t.id === tId)?.name || "" }))) {
                             const res = await tableService.mergeTable(sId, tId, token!);
                             if (res.success) {
                                 setSelectionMode("view");
@@ -202,7 +204,7 @@ export default function GarsonMasalarPage() {
                                     active_order_id: t.active_order_id, current_total_amount: t.total_order_amount, floor: t.floor
                                 })));
                             } else {
-                                await showAlert("Hata: " + res.message, "error");
+                                await showAlert(t("error") + ": " + res.message, "error");
                             }
                         } else {
                             setSelectedTables(newSelection);
@@ -259,7 +261,7 @@ export default function GarsonMasalarPage() {
                                 Premium Resto
                             </div>
                             <div style={{ color: "var(--muted)", fontSize: "11px", letterSpacing: "0.06em", marginTop: "1px" }}>
-                                Garson Paneli
+                                {t("panel_title")}
                             </div>
                         </div>
                     </div>
@@ -267,7 +269,7 @@ export default function GarsonMasalarPage() {
                     {/* Action Buttons */}
                     <div style={{ display: "flex", gap: "8px" }}>
                         <button
-                            title="Masa Taşı"
+                            title={t("move_table")}
                             onClick={() => {
                                 setSelectionMode(selectionMode === "move" ? "view" : "move");
                                 setSelectedTables([]);
@@ -286,7 +288,7 @@ export default function GarsonMasalarPage() {
                             <ArrowRightLeft size={17} />
                         </button>
                         <button
-                            title="Masa Birleştir"
+                            title={t("merge_table")}
                             onClick={() => {
                                 setSelectionMode(selectionMode === "merge" ? "view" : "merge");
                                 setSelectedTables([]);
@@ -305,7 +307,7 @@ export default function GarsonMasalarPage() {
                             <GitMerge size={17} />
                         </button>
                         <button
-                            title="Çıkış"
+                            title={t("logout")}
                             onClick={logout}
                             style={{
                                 padding: "10px",
@@ -354,7 +356,7 @@ export default function GarsonMasalarPage() {
                             <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#eab308" }} />
                             <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 500 }}>
                                 <span style={{ color: "#eab308", fontWeight: 700 }}>{filteredTables.length}</span>
-                                {" "}Toplam Masa
+                                {" "}{t("total_tables")}
                             </span>
                         </div>
                         <div style={{
@@ -367,7 +369,7 @@ export default function GarsonMasalarPage() {
                             <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} />
                             <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 500 }}>
                                 <span style={{ color: "#f87171", fontWeight: 700 }}>{occupiedCount}</span>
-                                {" "}Dolu
+                                {" "}{t("occupied")}
                             </span>
                         </div>
                         <div style={{
@@ -380,7 +382,7 @@ export default function GarsonMasalarPage() {
                             <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e" }} />
                             <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 500 }}>
                                 <span style={{ color: "#4ade80", fontWeight: 700 }}>{emptyCount}</span>
-                                {" "}Boş
+                                {" "}{t("empty")}
                             </span>
                         </div>
                     </div>
@@ -388,7 +390,7 @@ export default function GarsonMasalarPage() {
                     {/* Floor Filter */}
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <span style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 500, letterSpacing: "0.05em", whiteSpace: "nowrap" }}>
-                            KAT:
+                            {t("floor")}:
                         </span>
                         <div style={{ display: "flex", gap: "6px" }}>
                             {floors.map(floor => (
@@ -437,7 +439,7 @@ export default function GarsonMasalarPage() {
                         letterSpacing: "0.18em",
                         textTransform: "uppercase",
                     }}>
-                        {selectedFloor === "Tümü" ? "Tüm Masalar" : selectedFloor}
+                        {selectedFloor === t("all") ? t("all_tables") : selectedFloor}
                     </span>
                     <div style={{
                         height: "2px", flex: 1,
@@ -585,7 +587,7 @@ export default function GarsonMasalarPage() {
                                         textTransform: "uppercase",
                                         zIndex: 1,
                                     }}>
-                                        {table.capacity} kişi
+                                        {table.capacity} {t("person")}
                                     </span>
 
                                     {/* Status / Amount */}
@@ -608,7 +610,7 @@ export default function GarsonMasalarPage() {
                                             textTransform: "uppercase",
                                             zIndex: 1,
                                         }}>
-                                            Boş
+                                            {t("empty")}
                                         </span>
                                     )}
                                 </button>
@@ -625,7 +627,7 @@ export default function GarsonMasalarPage() {
                         color: "#4b5563",
                     }}>
                         <Utensils size={48} style={{ margin: "0 auto 16px", opacity: 0.3 }} />
-                        <p style={{ fontSize: "16px", fontWeight: 500 }}>Bu katta masa bulunamadı.</p>
+                        <p style={{ fontSize: "16px", fontWeight: 500 }}>{t("no_tables_found")}</p>
                     </div>
                 )}
 

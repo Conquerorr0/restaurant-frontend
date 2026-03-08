@@ -8,6 +8,7 @@ import { tableService } from "@/services/tableService";
 import { orderService, Order } from "@/services/orderService";
 import { paymentService } from "@/services/paymentService";
 import { socketService } from "@/services/socketService";
+import { useTranslations } from "next-intl";
 
 const playNotificationSound = (type: 'NEW_ORDER' | 'ADD_ITEM' | 'MOVE_MERGE') => {
     try {
@@ -57,12 +58,13 @@ interface TableData {
 }
 
 export default function KasaDashboard() {
+    const t = useTranslations("Kasa");
     const { token, logout } = useAuth();
     const { showAlert, showConfirm } = useModal();
     const [tables, setTables] = useState<TableData[]>([]);
     const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
     const [selectionMode, setSelectionMode] = useState<"VIEW" | "MOVE" | "MERGE">("VIEW");
-    const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
+    const [selectedFloor, setSelectedFloor] = useState<string>(t("all"));
     const [isPartialPaymentModalOpen, setIsPartialPaymentModalOpen] = useState(false);
     const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
     const [processingPayment, setProcessingPayment] = useState(false);
@@ -135,27 +137,27 @@ export default function KasaDashboard() {
 
     const floors = useMemo(() => {
         const floorSet = new Set<string>();
-        tables.forEach(t => { if (t.floor) floorSet.add(t.floor); });
-        return ["Tümü", ...Array.from(floorSet).sort()];
-    }, [tables]);
+        tables.forEach(tbl => { if (tbl.floor) floorSet.add(tbl.floor); });
+        return [t("all"), ...Array.from(floorSet).sort()];
+    }, [tables, t]);
 
     const fetchTablesAndDetails = async () => {
         if (!token) return;
         try {
             const tableRes = await tableService.getTables(token);
             if (tableRes.success) {
-                const mappedTables: TableData[] = await Promise.all(tableRes.data.map(async (t) => {
+                const mappedTables: TableData[] = await Promise.all(tableRes.data.map(async (tbl) => {
                     let items: Product[] = [];
                     let duration = "---";
                     let orderId = undefined;
                     let note = undefined;
-                    if (t.status === "OCCUPIED") {
+                    if (tbl.status === "OCCUPIED") {
                         try {
-                            const orderRes = await orderService.getActiveOrder(t.id, token);
+                            const orderRes = await orderService.getActiveOrder(tbl.id, token);
                             if (orderRes.success && orderRes.data) {
                                 orderId = orderRes.data.id;
                                 note = orderRes.data.note;
-                                if (t.id === selectedTableId) {
+                                if (tbl.id === selectedTableId) {
                                     items = orderRes.data.items.map(item => ({
                                         id: item.id,
                                         name: item.product_name,
@@ -171,21 +173,21 @@ export default function KasaDashboard() {
                                     const now = Date.now();
                                     const diffMs = now - start;
                                     const diffMins = Math.floor(diffMs / 60000);
-                                    if (diffMins < 60) duration = `${diffMins} dk`;
-                                    else duration = `${Math.floor(diffMins / 60)} sa ${diffMins % 60} dk`;
+                                    if (diffMins < 60) duration = `${diffMins} ${t("minute_short")}`;
+                                    else duration = `${Math.floor(diffMins / 60)} ${t("hour_short")} ${diffMins % 60} ${t("minute_short")}`;
                                 }
                             }
                         } catch (e) {
-                            console.error("Error fetching order for table", t.id, e);
+                            console.error("Error fetching order for table", tbl.id, e);
                         }
                     }
                     return {
-                        id: t.id,
-                        name: t.name,
-                        status: t.status,
-                        totalAmount: t.current_remaining_amount,
+                        id: tbl.id,
+                        name: tbl.name,
+                        status: tbl.status,
+                        totalAmount: tbl.current_remaining_amount,
                         items: items,
-                        floor: t.floor,
+                        floor: tbl.floor,
                         time: "---",
                         duration: duration,
                         orderId,
@@ -249,30 +251,30 @@ export default function KasaDashboard() {
     const selectedTable = tables.find(t => t.id === selectedTableId);
 
     const filteredTables = useMemo(() => {
-        return selectedFloor === "Tümü"
+        return selectedFloor === t("all")
             ? tables
             : tables.filter(t => t.floor === selectedFloor);
-    }, [tables, selectedFloor]);
+    }, [tables, selectedFloor, t]);
 
     const fEmptyCount = filteredTables.filter(t => t.status === "EMPTY").length;
     const fOccupiedCount = filteredTables.filter(t => t.status === "OCCUPIED").length;
 
     const handleTableClick = async (id: string) => {
-        const t = tables.find(tbl => tbl.id === id);
-        if (!t) return;
+        const tbl = tables.find(t_item => t_item.id === id);
+        if (!tbl) return;
 
-        if (t.orderId) markAsSeen(t.orderId);
+        if (tbl.orderId) markAsSeen(tbl.orderId);
 
         if (selectionMode === "MOVE" && selectedTableId) {
-            if (t.status === "OCCUPIED") {
-                await showAlert("Hedef masa dolu olamaz!", "warning");
+            if (tbl.status === "OCCUPIED") {
+                await showAlert(t("error_target_occupied"), "warning");
                 return;
             }
-            if (await showConfirm(`${selectedTable?.name} masasını ${t.name} masasına taşımak istediğinize emin misiniz?`)) {
+            if (await showConfirm(t("move_confirm", { source: selectedTable?.name || "", target: tbl.name || "" }))) {
                 try {
                     const res = await tableService.moveTable(selectedTableId, id, token!);
                     if (res.success) {
-                        setSuccessPopup({ isOpen: true, message: "Masa başarıyla taşındı." });
+                        setSuccessPopup({ isOpen: true, message: t("move_success") });
                         setSelectedTableId(id);
                         setSelectionMode("VIEW");
                         await fetchTablesAndDetails();
@@ -284,15 +286,15 @@ export default function KasaDashboard() {
 
         if (selectionMode === "MERGE" && selectedTableId) {
             if (id === selectedTableId) return;
-            if (t.status === "EMPTY") {
-                await showAlert("Sadece dolu masalar birleştirilebilir!", "warning");
+            if (tbl.status === "EMPTY") {
+                await showAlert(t("error_only_occupied_merge"), "warning");
                 return;
             }
-            if (await showConfirm(`${selectedTable?.name} masasını ${t.name} masası ile birleştirmek istediğinize emin misiniz?`)) {
+            if (await showConfirm(t("merge_confirm", { source: selectedTable?.name || "", target: tbl.name || "" }))) {
                 try {
                     const res = await tableService.mergeTable(selectedTableId, id, token!);
                     if (res.success) {
-                        setSuccessPopup({ isOpen: true, message: "Masalar başarıyla birleştirildi." });
+                        setSuccessPopup({ isOpen: true, message: t("merge_success") });
                         setSelectedTableId(id);
                         setSelectionMode("VIEW");
                         await fetchTablesAndDetails();
@@ -302,7 +304,7 @@ export default function KasaDashboard() {
             return;
         }
 
-        if (t.status === "OCCUPIED") {
+        if (tbl.status === "OCCUPIED") {
             setSelectedTableId(id);
             setSelectionMode("VIEW");
         } else {
@@ -352,7 +354,7 @@ export default function KasaDashboard() {
         setProcessingPayment(true);
         try {
             const orderRes = await orderService.getActiveOrder(selectedTable.id, token);
-            if (!orderRes.success || !orderRes.data) throw new Error("Aktif sipariş bulunamadı.");
+            if (!orderRes.success || !orderRes.data) throw new Error(t("error_no_active_order"));
 
             const fullAmount = Number(orderRes.data.total_amount);
             const allItems = orderRes.data.items.map((item: any) => ({
@@ -368,13 +370,13 @@ export default function KasaDashboard() {
             }, token);
 
             if (response.success) {
-                setSuccessPopup({ isOpen: true, message: `Masa ${selectedTable.name} ödemesi başarıyla alındı!` });
+                setSuccessPopup({ isOpen: true, message: t("payment_received", { name: selectedTable.name }) });
                 setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
                 setSelectedTableId(null);
                 await fetchTablesAndDetails();
             }
         } catch (error: any) {
-            await showAlert("Ödeme hatası: " + (error.message || "Bilinmeyen hata"), "error");
+            await showAlert(t("payment_error") + ": " + (error.message || t("error_general", { defaultValue: "Bilinmeyen hata" })), "error");
         } finally {
             setProcessingPayment(false);
         }
@@ -387,7 +389,7 @@ export default function KasaDashboard() {
 
         try {
             const orderRes = await orderService.getActiveOrder(selectedTable.id, token);
-            if (!orderRes.success || !orderRes.data) throw new Error("Aktif sipariş bulunamadı.");
+            if (!orderRes.success || !orderRes.data) throw new Error(t("error_no_active_order"));
 
             const itemsToPay = Object.keys(selectedQuantities).map(id => ({
                 orderItemId: id,
@@ -406,14 +408,14 @@ export default function KasaDashboard() {
                 if (response.data.isFullyPaid) {
                     setIsPartialPaymentModalOpen(false);
                     setSelectedTableId(null);
-                    setSuccessPopup({ isOpen: true, message: "Ödeme başarıyla alındı, masa kapatıldı." });
+                    setSuccessPopup({ isOpen: true, message: t("table_closed_with_payment") });
                 } else {
-                    setSuccessPopup({ isOpen: true, message: "Parçalı ödeme başarıyla kaydedildi." });
+                    setSuccessPopup({ isOpen: true, message: t("partial_payment_saved") });
                 }
                 await fetchTablesAndDetails();
             }
         } catch (error: any) {
-            await showAlert("Ödeme hatası: " + (error.message || "Bilinmeyen hata"), "error");
+            await showAlert(t("payment_error") + ": " + (error.message || t("error_general", { defaultValue: "Bilinmeyen hata" })), "error");
         } finally {
             setProcessingPayment(false);
         }
@@ -421,10 +423,10 @@ export default function KasaDashboard() {
 
     const handleTreat = async () => {
         if (!selectedTable || Object.keys(selectedQuantities).length === 0 || !token) {
-            await showAlert("Lütfen ikram edilecek ürünleri adet seçerek işaretleyin!", "warning");
+            await showAlert(t("error_select_items_treat"), "warning");
             return;
         }
-        if (await showConfirm("Seçili ürünleri ikram etmek istediğinize emin misiniz?")) {
+        if (await showConfirm(t("confirm_treat"))) {
             setProcessingPayment(true);
             try {
                 let orderClosed = false;
@@ -441,9 +443,9 @@ export default function KasaDashboard() {
                 if (orderClosed) {
                     setIsPartialPaymentModalOpen(false);
                     setSelectedTableId(null);
-                    setSuccessPopup({ isOpen: true, message: "İkramlar sonrası masa hesabı kapandı." });
+                    setSuccessPopup({ isOpen: true, message: t("table_closed_with_treat") });
                 } else {
-                    setSuccessPopup({ isOpen: true, message: "İkram işlemi başarıyla tamamlandı." });
+                    setSuccessPopup({ isOpen: true, message: t("treat_success") });
                 }
 
                 setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
@@ -457,10 +459,10 @@ export default function KasaDashboard() {
 
     const handleCancel = async () => {
         if (!selectedTable || Object.keys(selectedQuantities).length === 0 || !token) {
-            await showAlert("Lütfen iptal edilecek ürünleri adet seçerek işaretleyin!", "warning");
+            await showAlert(t("error_select_items_cancel"), "warning");
             return;
         }
-        if (await showConfirm("Seçili ürünleri iptal etmek istediğinize emin misiniz?")) {
+        if (await showConfirm(t("confirm_cancel"))) {
             setProcessingPayment(true);
             try {
                 let orderClosed = false;
@@ -477,9 +479,9 @@ export default function KasaDashboard() {
                 if (orderClosed) {
                     setIsPartialPaymentModalOpen(false);
                     setSelectedTableId(null);
-                    setSuccessPopup({ isOpen: true, message: "İptaller sonrası masa hesabı kapandı." });
+                    setSuccessPopup({ isOpen: true, message: t("table_closed_with_cancel") });
                 } else {
-                    setSuccessPopup({ isOpen: true, message: "İptal işlemi başarıyla tamamlandı." });
+                    setSuccessPopup({ isOpen: true, message: t("cancel_success") });
                 }
 
                 setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
@@ -518,16 +520,16 @@ export default function KasaDashboard() {
                     <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                         <div>
                             <h1 style={{ color: "#fbbf24", fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em", margin: 0 }}>
-                                KASA DASHBOARD
+                                {t("dashboard_title")}
                             </h1>
                             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                     <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "var(--table-text-empty)", boxShadow: "0 0 10px rgba(34,197,94,0.4)" }} />
-                                    <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>BOŞ: {fEmptyCount}</span>
+                                    <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>{t("empty")}: {fEmptyCount}</span>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                     <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "var(--table-text-occupied)", boxShadow: "0 0 10px rgba(239,68,68,0.4)" }} />
-                                    <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>DOLU: {fOccupiedCount}</span>
+                                    <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em" }}>{t("occupied")}: {fOccupiedCount}</span>
                                 </div>
                             </div>
                         </div>
@@ -545,7 +547,7 @@ export default function KasaDashboard() {
                         <button onClick={logout} style={{
                             padding: "10px 16px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.15)", borderRadius: "12px",
                             color: "#ef4444", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 800
-                        }}><LogOut size={16} /> ÇIKIŞ</button>
+                        }}><LogOut size={16} /> {t("logout")}</button>
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px" }}>
@@ -566,8 +568,8 @@ export default function KasaDashboard() {
                                 }}>
                                     {isOccupied && <div style={{ position: "absolute", top: "10px", right: "10px", width: "20px", height: "20px", borderRadius: "50%", background: isSelected ? "var(--background)" : "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }}><Check size={12} color={isSelected ? "var(--accent)" : "var(--foreground)"} /></div>}
                                     <span style={{ fontSize: "24px", fontWeight: 800, color: isSelected ? "var(--table-text-selected)" : (isOccupied ? "var(--table-text-occupied)" : "var(--table-text-empty)") }}>{table.name}</span>
-                                    <span style={{ fontSize: "10px", fontWeight: 800, color: isSelected ? "var(--table-text-selected)" : "var(--muted)", opacity: isSelected ? 0.7 : 1 }}>{table.duration !== "---" ? table.duration : (isOccupied ? "DOLU" : "BOŞ")}</span>
-                                    <span style={{ fontSize: "16px", fontWeight: 800, color: isSelected ? "var(--table-text-selected)" : (isOccupied ? "var(--table-amount)" : "var(--foreground)") }}>{isOccupied ? `₺${table.totalAmount}` : "-"}</span>
+                                    <span style={{ fontSize: "10px", fontWeight: 800, color: isSelected ? "var(--table-text-selected)" : "var(--muted)", opacity: isSelected ? 0.7 : 1 }}>{table.duration !== "---" ? table.duration : (isOccupied ? t("occupied") : t("empty"))}</span>
+                                    <span style={{ fontSize: "16px", fontWeight: 800, color: isSelected ? "var(--table-text-selected)" : (isOccupied ? "var(--table-amount)" : "var(--foreground)") }}>{isOccupied ? `₺${table.totalAmount.toLocaleString('tr-TR')}` : "-"}</span>
                                 </div>
                             );
                         })}
@@ -581,17 +583,17 @@ export default function KasaDashboard() {
                             <div style={{ paddingBottom: "20px", borderBottom: "1px solid var(--border)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                     <div>
-                                        <h2 style={{ color: "#fbbf24", fontSize: "36px", fontWeight: 900, margin: 0 }}>MASA {selectedTable.name}</h2>
+                                        <h2 style={{ color: "#fbbf24", fontSize: "36px", fontWeight: 900, margin: 0 }}>{t("table_prefix")} {selectedTable.name}</h2>
                                         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", color: "var(--muted)" }}>
-                                            <Clock size={14} /> <span style={{ fontSize: "12px", fontWeight: 600 }}>{selectedTable.duration} süredir açık</span>
+                                            <Clock size={14} /> <span style={{ fontSize: "12px", fontWeight: 600 }}>{selectedTable.duration} {t("open_for")}</span>
                                         </div>
                                     </div>
                                     <div style={{ display: "flex", gap: "8px" }}>
-                                        <button title="Masa Birleştir" onClick={() => setSelectionMode(selectionMode === "MERGE" ? "VIEW" : "MERGE")} style={{
+                                        <button title={t("merge_table_title")} onClick={() => setSelectionMode(selectionMode === "MERGE" ? "VIEW" : "MERGE")} style={{
                                             width: "40px", height: "40px", borderRadius: "12px", background: selectionMode === "MERGE" ? "#fbbf24" : "var(--card)", border: "none",
                                             display: "flex", alignItems: "center", justifyContent: "center", color: selectionMode === "MERGE" ? "var(--background)" : "var(--muted)", cursor: "pointer"
                                         }}><GitMerge size={18} /></button>
-                                        <button title="Masa Taşı" onClick={() => setSelectionMode(selectionMode === "MOVE" ? "VIEW" : "MOVE")} style={{
+                                        <button title={t("move_table_title")} onClick={() => setSelectionMode(selectionMode === "MOVE" ? "VIEW" : "MOVE")} style={{
                                             width: "40px", height: "40px", borderRadius: "12px", background: selectionMode === "MOVE" ? "#fbbf24" : "var(--card)", border: "none",
                                             display: "flex", alignItems: "center", justifyContent: "center", color: selectionMode === "MOVE" ? "var(--background)" : "var(--muted)", cursor: "pointer"
                                         }}><ArrowRightLeft size={18} /></button>
@@ -603,7 +605,7 @@ export default function KasaDashboard() {
                                 </div>
                                 {selectionMode !== "VIEW" && (
                                     <div style={{ marginTop: "12px", padding: "8px 12px", background: "rgba(251, 191, 36, 0.1)", border: "1px solid rgba(251, 191, 36, 0.2)", borderRadius: "8px", color: "#fbbf24", fontSize: "12px", fontWeight: 600 }}>
-                                        {selectionMode === "MOVE" ? "Lütfen taşımak istediğiniz BOŞ masayı seçin." : "Lütfen birleştirmek istediğiniz DOLU masayı seçin."}
+                                        {selectionMode === "MOVE" ? t("move_hint") : t("merge_hint")}
                                     </div>
                                 )}
                             </div>
@@ -613,14 +615,14 @@ export default function KasaDashboard() {
                                     <div key={item.id} style={{ background: "var(--card)", borderRadius: "16px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                         <div>
                                             <div style={{ color: "var(--foreground)", fontWeight: 700 }}>{item.name}</div>
-                                            <div style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 600 }}>X{item.quantity} - ₺{item.unitPrice} / AD.</div>
+                                            <div style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 600 }}>X{item.quantity} - ₺{item.unitPrice} / {t("unit_short")}</div>
                                         </div>
-                                        <div style={{ color: "#fbbf24", fontWeight: 900 }}>₺{item.totalPrice}</div>
+                                        <div style={{ color: "#fbbf24", fontWeight: 900 }}>₺{item.totalPrice.toLocaleString('tr-TR')}</div>
                                     </div>
                                 ))}
                                 {selectedTable.note && (
                                     <div style={{ marginTop: "12px", padding: "12px", background: "rgba(251, 191, 36, 0.05)", border: "1px dashed rgba(251, 191, 36, 0.3)", borderRadius: "12px" }}>
-                                        <div style={{ fontSize: "10px", color: "#fbbf24", fontWeight: 800, letterSpacing: "0.1em", marginBottom: "4px" }}>GARSON NOTU</div>
+                                        <div style={{ fontSize: "10px", color: "#fbbf24", fontWeight: 800, letterSpacing: "0.1em", marginBottom: "4px" }}>{t("waiter_note")}</div>
                                         <div style={{ color: "var(--muted)", fontSize: "13px", lineHeight: "1.4" }}>{selectedTable.note}</div>
                                     </div>
                                 )}
@@ -628,20 +630,20 @@ export default function KasaDashboard() {
 
                             <div style={{ marginTop: "24px", padding: "24px", background: "var(--card)", borderRadius: "20px", border: "1px solid var(--border)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-                                    <span style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 800 }}>TOPLAM</span>
-                                    <span style={{ color: "#fbbf24", fontSize: "32px", fontWeight: 900 }}>₺{selectedTable.totalAmount}</span>
+                                    <span style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 800 }}>{t("total")}</span>
+                                    <span style={{ color: "#fbbf24", fontSize: "32px", fontWeight: 900 }}>₺{selectedTable.totalAmount.toLocaleString('tr-TR')}</span>
                                 </div>
                                 <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
-                                    <button onClick={() => handleFullPayment("CASH")} disabled={processingPayment} style={{ flex: 1, padding: "16px", borderRadius: "14px", background: "var(--border)", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}><Banknote size={20} /><span>NAKİT</span></button>
-                                    <button onClick={() => handleFullPayment("CREDIT_CARD")} disabled={processingPayment} style={{ flex: 1, padding: "16px", borderRadius: "14px", background: "var(--border)", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}><CreditCard size={20} /><span>KART</span></button>
+                                    <button onClick={() => handleFullPayment("CASH")} disabled={processingPayment} style={{ flex: 1, padding: "16px", borderRadius: "14px", background: "var(--border)", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}><Banknote size={20} /><span>{t("cash")}</span></button>
+                                    <button onClick={() => handleFullPayment("CREDIT_CARD")} disabled={processingPayment} style={{ flex: 1, padding: "16px", borderRadius: "14px", background: "var(--border)", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}><CreditCard size={20} /><span>{t("card")}</span></button>
                                 </div>
-                                <button onClick={() => { setSelectedQuantities({}); setIsPartialPaymentModalOpen(true); }} disabled={processingPayment} style={{ width: "100%", padding: "16px", borderRadius: "14px", background: "linear-gradient(135deg, #fde047 0%, #ca8a04 100%)", border: "none", color: "var(--background)", fontSize: "15px", fontWeight: 900, cursor: "pointer" }}>PARÇALI ÖDEME / İPTAL / İKRAM</button>
+                                <button onClick={() => { setSelectedQuantities({}); setIsPartialPaymentModalOpen(true); }} disabled={processingPayment} style={{ width: "100%", padding: "16px", borderRadius: "14px", background: "linear-gradient(135deg, #fde047 0%, #ca8a04 100%)", border: "none", color: "var(--background)", fontSize: "15px", fontWeight: 900, cursor: "pointer" }}>{t("partial_entry")}</button>
                             </div>
                         </>
                     ) : (
                         <div style={{ height: "400px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--card-alt)", borderRadius: "32px", border: "2px dashed var(--border)", color: "var(--border-alt)" }}>
                             <Search size={48} style={{ marginBottom: "16px", opacity: 0.5 }} />
-                            <p style={{ fontWeight: 600 }}>Lütfen detayları görmek için bir masa seçin</p>
+                            <p style={{ fontWeight: 600 }}>{t("select_table_hint")}</p>
                         </div>
                     )}
                 </div>
@@ -652,7 +654,7 @@ export default function KasaDashboard() {
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
                     <div style={{ width: "100%", maxWidth: "500px", background: "var(--card-alt)", border: "1px solid var(--border)", borderRadius: "28px", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" }}>
                         <div style={{ padding: "24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <h3 style={{ color: "#fbbf24", fontSize: "20px", fontWeight: 900 }}>PARÇALI İŞLEMLER</h3>
+                            <h3 style={{ color: "#fbbf24", fontSize: "20px", fontWeight: 900 }}>{t("partial_actions_title")}</h3>
                             <button onClick={() => setIsPartialPaymentModalOpen(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer" }}><X size={24} /></button>
                         </div>
                         <div style={{ padding: "24px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -661,7 +663,7 @@ export default function KasaDashboard() {
                                 return (
                                     <div key={item.id} onClick={() => toggleItemSelection(item.id, item.quantity)} style={{ padding: "16px", background: "var(--card)", borderRadius: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", border: selectedQty > 0 ? "1px solid #fbbf24" : "1px solid transparent" }}>
                                         <div style={{ width: "20px", height: "20px", borderRadius: "6px", border: selectedQty > 0 ? "none" : "2px solid var(--border-alt)", background: selectedQty > 0 ? "#fbbf24" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>{selectedQty > 0 && <Check size={14} color="var(--background)" strokeWidth={4} />}</div>
-                                        <div style={{ flex: 1 }}><div style={{ color: "var(--foreground)", fontWeight: 700 }}>{item.name}</div><div style={{ color: "var(--muted)", fontSize: "12px" }}>X{item.quantity} (Birim: ₺{item.unitPrice})</div></div>
+                                        <div style={{ flex: 1 }}><div style={{ color: "var(--foreground)", fontWeight: 700 }}>{item.name}</div><div style={{ color: "var(--muted)", fontSize: "12px" }}>X{item.quantity} ({t("unit_price_label")}: ₺{item.unitPrice})</div></div>
                                         {selectedQty > 0 && (
                                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={e => e.stopPropagation()}>
                                                 <button onClick={(e) => updateQuantity(item.id, -1, item.quantity, e)} style={{ width: "24px", height: "24px", borderRadius: "6px", background: "var(--border)", border: "none", color: "var(--foreground)" }}>-</button>
@@ -669,18 +671,18 @@ export default function KasaDashboard() {
                                                 <button onClick={(e) => updateQuantity(item.id, 1, item.quantity, e)} style={{ width: "24px", height: "24px", borderRadius: "6px", background: "var(--border)", border: "none", color: "var(--foreground)" }}>+</button>
                                             </div>
                                         )}
-                                        <div style={{ color: "var(--foreground)", fontWeight: 800, minWidth: "60px", textAlign: "right" }}>₺{selectedQty > 0 ? selectedQty * item.unitPrice : item.totalPrice}</div>
+                                        <div style={{ color: "var(--foreground)", fontWeight: 800, minWidth: "60px", textAlign: "right" }}>₺{(selectedQty > 0 ? selectedQty * item.unitPrice : item.totalPrice).toLocaleString('tr-TR')}</div>
                                     </div>
                                 );
                             })}
                         </div>
                         <div style={{ padding: "24px", background: "var(--card)", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "16px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ color: "var(--muted)", fontSize: "11px", fontWeight: 800 }}>SEÇİLEN TOPLAM</span><span style={{ color: "#fbbf24", fontSize: "24px", fontWeight: 900 }}>₺{calculateSelectedTotal()}</span></div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ color: "var(--muted)", fontSize: "11px", fontWeight: 800 }}>{t("selected_total")}</span><span style={{ color: "#fbbf24", fontSize: "24px", fontWeight: 900 }}>₺{calculateSelectedTotal().toLocaleString('tr-TR')}</span></div>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                                <button onClick={() => handlePartialPayment("CASH")} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "var(--border)", color: "var(--foreground)", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>NAKİT</button>
-                                <button onClick={() => handlePartialPayment("CREDIT_CARD")} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "var(--border)", color: "var(--foreground)", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>KART</button>
-                                <button onClick={handleCancel} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>İPTAL ET</button>
-                                <button onClick={handleTreat} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "rgba(34, 197, 94, 0.1)", color: "#22c55e", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>İKRAM ET</button>
+                                <button onClick={() => handlePartialPayment("CASH")} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "var(--border)", color: "var(--foreground)", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>{t("cash")}</button>
+                                <button onClick={() => handlePartialPayment("CREDIT_CARD")} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "var(--border)", color: "var(--foreground)", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>{t("card")}</button>
+                                <button onClick={handleCancel} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>{t("cancel_item")}</button>
+                                <button onClick={handleTreat} disabled={Object.keys(selectedQuantities).length === 0} style={{ padding: "12px", background: "rgba(34, 197, 94, 0.1)", color: "#22c55e", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer" }}>{t("treat_item")}</button>
                             </div>
                         </div>
                     </div>
@@ -691,8 +693,8 @@ export default function KasaDashboard() {
             {processingPayment && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
                     <div className="spinner-anim" style={{ width: "60px", height: "60px", border: "4px solid var(--border-alt)", borderTopColor: "#fbbf24", borderRadius: "50%" }} />
-                    <h2 style={{ marginTop: "24px", color: "#fbbf24", fontSize: "24px", fontWeight: 800, letterSpacing: "1px" }}>Ödeme İşleniyor...</h2>
-                    <p style={{ marginTop: "8px", color: "var(--muted)", fontSize: "14px" }}>Lütfen bekleyiniz, işlem tamamlanıyor</p>
+                    <h2 style={{ marginTop: "24px", color: "#fbbf24", fontSize: "24px", fontWeight: 800, letterSpacing: "1px" }}>{t("processing_payment")}</h2>
+                    <p style={{ marginTop: "8px", color: "var(--muted)", fontSize: "14px" }}>{t("please_wait")}</p>
                 </div>
             )}
 
@@ -700,7 +702,7 @@ export default function KasaDashboard() {
             {successPopup.isOpen && (
                 <div style={{ position: "fixed", top: "32px", right: "32px", background: "#22c55e", color: "var(--background)", padding: "16px 24px", borderRadius: "16px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 10px 25px rgba(34, 197, 94, 0.4)", zIndex: 200 }}>
                     <Check size={20} strokeWidth={3} />
-                    <div><div style={{ fontSize: "16px", fontWeight: 800 }}>Başarılı</div><div style={{ fontSize: "13px", fontWeight: 600 }}>{successPopup.message}</div></div>
+                    <div><div style={{ fontSize: "16px", fontWeight: 800 }}>{t("success")}</div><div style={{ fontSize: "13px", fontWeight: 600 }}>{successPopup.message}</div></div>
                     <button onClick={() => setSuccessPopup(prev => ({ ...prev, isOpen: false }))} style={{ background: "none", border: "none", opacity: 0.5, cursor: "pointer" }}><X size={18} /></button>
                 </div>
             )}

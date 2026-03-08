@@ -8,8 +8,11 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useModal } from "@/context/ModalContext";
 import { expenseService, Expense } from "@/services/expenseService";
+import { useTranslations, useLocale } from "next-intl";
 
 export default function ExpenseManagement() {
+    const t = useTranslations("SuperAdmin");
+    const locale = useLocale();
     const { token } = useAuth();
     const { showAlert, showConfirm } = useModal();
     const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -61,19 +64,19 @@ export default function ExpenseManagement() {
                 });
             }
         } catch (err: any) {
-            setError(err.message || "Gider kaydedilemedi");
+            setError(err.message || t("error_general", { defaultValue: "Gider kaydedilemedi" }));
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!(await showConfirm("Bu gider kaydını silmek istediğinize emin misiniz?", "Gider Silme Onayı"))) return;
+        if (!(await showConfirm(t("expense_delete_confirm"), t("expense_delete_title")))) return;
         try {
             const res = await expenseService.deleteExpense(id, token!);
             if (res.success) fetchExpenses();
         } catch (err: any) {
-            await showAlert(err.message || "Silme işlemi başarısız", "error");
+            await showAlert(err.message || t("error_general", { defaultValue: "Silme işlemi başarısız" }), "error");
         }
     };
 
@@ -84,14 +87,14 @@ export default function ExpenseManagement() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-[var(--foreground)] tracking-wide mb-1 uppercase italic">GİDER YÖNETİMİ</h1>
-                    <p className="text-[var(--muted)] text-[15px] font-bold">İşletme masraflarını takip edin</p>
+                    <h1 className="text-3xl font-black text-[var(--foreground)] tracking-wide mb-1 uppercase italic">{t("expense_management")}</h1>
+                    <p className="text-[var(--muted)] text-[15px] font-bold">{t("expense_subtitle")}</p>
                 </div>
                 <button
                     onClick={() => setShowModal(true)}
                     className="bg-[#ef4444] text-[var(--foreground)] px-6 py-3 rounded-[16px] font-black flex items-center gap-2 hover:scale-[1.05] transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
                 >
-                    <Plus size={20} /> GİDER EKLE
+                    <Plus size={20} /> {t("add_expense")}
                 </button>
             </div>
 
@@ -101,7 +104,7 @@ export default function ExpenseManagement() {
                     <CreditCard size={32} />
                 </div>
                 <div>
-                    <p className="text-[var(--muted)] text-xs font-black tracking-widest leading-none mb-2">TOPLAM HARCAMA</p>
+                    <p className="text-[var(--muted)] text-xs font-black tracking-widest leading-none mb-2">{t("total_expense")}</p>
                     <p className="text-4xl font-black text-[var(--foreground)] italic">₺{totalAmount.toLocaleString('tr-TR')}</p>
                 </div>
             </div>
@@ -111,11 +114,11 @@ export default function ExpenseManagement() {
                 <table className="w-full text-left">
                     <thead>
                         <tr className="border-b border-[var(--border)] bg-[var(--card-alt)]">
-                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">TARİH</th>
-                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">BAŞLIK</th>
-                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">KATEGORİ</th>
-                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">TUTAR</th>
-                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">İŞLEM</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">{t("date")}</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">{t("title_label")}</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">{t("category")}</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">{t("amount")}</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">{t("action")}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--border)]">
@@ -128,7 +131,7 @@ export default function ExpenseManagement() {
                         ) : expenses.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="px-6 py-20 text-center text-[var(--muted)] font-bold">
-                                    Henüz gider kaydı bulunmuyor.
+                                    {t("no_expenses")}
                                 </td>
                             </tr>
                         ) : expenses.map(expense => (
@@ -145,7 +148,7 @@ export default function ExpenseManagement() {
                                 </td>
                                 <td className="px-6 py-5">
                                     <span className="px-3 py-1 rounded-full bg-[var(--border)] text-[var(--muted)] text-[10px] font-black">
-                                        {expense.category}
+                                        {t(`category_${expense.category.toLowerCase()}`, { defaultValue: expense.category })}
                                     </span>
                                 </td>
                                 <td className="px-6 py-5">
@@ -170,7 +173,7 @@ export default function ExpenseManagement() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--background)]/80 backdrop-blur-sm">
                     <div className="bg-[var(--card)] border border-[var(--border)] w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in duration-300 text-[var(--foreground)]">
                         <div className="p-8 pb-4 flex items-center justify-between">
-                            <h2 className="text-2xl font-black italic uppercase">YENİ GİDER EKLE</h2>
+                            <h2 className="text-2xl font-black italic uppercase">{t("new_expense_title")}</h2>
                             <button onClick={() => setShowModal(false)} className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
                                 <X size={24} />
                             </button>
@@ -184,12 +187,12 @@ export default function ExpenseManagement() {
                             )}
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">GİDER BAŞLIĞI</label>
+                                <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">{t("title_label")}</label>
                                 <input
                                     required
                                     type="text"
                                     className="w-full bg-[var(--background)] border border-[var(--border)] rounded-[16px] py-3 px-4 font-bold focus:border-red-500 outline-none"
-                                    placeholder="Örn: Kira, Elektrik, Personel Maaş"
+                                    placeholder={t("expense_title_placeholder")}
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                 />
@@ -197,7 +200,7 @@ export default function ExpenseManagement() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">TUTAR (₺)</label>
+                                    <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">{t("amount")}</label>
                                     <input
                                         required
                                         type="number"
@@ -208,7 +211,7 @@ export default function ExpenseManagement() {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">TARİH</label>
+                                    <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">{t("date")}</label>
                                     <input
                                         required
                                         type="date"
@@ -220,25 +223,25 @@ export default function ExpenseManagement() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">KATEGORİ</label>
+                                <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">{t("category")}</label>
                                 <select
                                     className="w-full bg-[var(--background)] border border-[var(--border)] rounded-[16px] py-3 px-4 font-bold focus:border-red-500 outline-none appearance-none"
                                     value={formData.category}
                                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                 >
-                                    <option value="GENERAL">GENEL</option>
-                                    <option value="RENT">KİRA</option>
-                                    <option value="UTILITY">FATURA</option>
-                                    <option value="SALARY">MAAŞ</option>
-                                    <option value="SUPPLY">MALZEME</option>
+                                    <option value="GENERAL">{t("category_general")}</option>
+                                    <option value="RENT">{t("category_rent")}</option>
+                                    <option value="UTILITY">{t("category_utility")}</option>
+                                    <option value="SALARY">{t("category_salary")}</option>
+                                    <option value="SUPPLY">{t("category_supply")}</option>
                                 </select>
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">AÇIKLAMA</label>
+                                <label className="text-[11px] font-black text-[var(--muted)] tracking-widest uppercase">{t("description")}</label>
                                 <textarea
                                     className="w-full bg-[var(--background)] border border-[var(--border)] rounded-[16px] py-3 px-4 font-bold focus:border-red-500 outline-none h-24 resize-none"
-                                    placeholder="Gider detayları..."
+                                    placeholder={t("expense_desc_placeholder")}
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 />
@@ -249,7 +252,7 @@ export default function ExpenseManagement() {
                                 disabled={submitting}
                                 className="w-full bg-[#ef4444] py-4 rounded-[18px] text-[var(--foreground)] font-black text-lg mt-4 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-lg shadow-red-500/20"
                             >
-                                {submitting ? <Loader2 className="animate-spin" size={24} /> : <><Check size={24} /> GİDERİ KAYDET</>}
+                                {submitting ? <Loader2 className="animate-spin" size={24} /> : <><Check size={24} /> {t("save_expense")}</>}
                             </button>
                         </form>
                     </div>

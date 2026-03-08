@@ -8,8 +8,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { reportService, DashboardStats, ChartDataPoint, DailySummary } from "@/services/reportService";
+import { useTranslations } from "next-intl";
 
 export default function SuperAdminDashboard() {
+    const t = useTranslations("SuperAdmin");
     const { token } = useAuth();
     const [chartPeriod, setChartPeriod] = useState<"week" | "month">("week");
     const [loading, setLoading] = useState(true);
@@ -81,7 +83,7 @@ export default function SuperAdminDashboard() {
 
     const dashboardCards = [
         {
-            title: "BUGÜNKÜ CİRO",
+            title: t("today_revenue"),
             value: stats ? `₺${stats.today.revenue.toLocaleString('tr-TR')}` : "₺0",
             icon: TrendingUp,
             badge: stats ? `${stats.today.revenue_change >= 0 ? '+' : ''}${stats.today.revenue_change}%` : "0%",
@@ -90,16 +92,16 @@ export default function SuperAdminDashboard() {
             trend: stats && stats.today.revenue_change >= 0 ? "up" : "down"
         },
         {
-            title: "AKTİF PERSONEL",
+            title: t("active_personnel"),
             value: stats ? stats.personnel_count.toString() : "0",
             icon: Users,
-            badge: "Stabil",
+            badge: t("stable"),
             badgeColor: "text-blue-500",
             badgeBg: "bg-blue-500/10",
             trend: "none"
         },
         {
-            title: "BUGÜNKÜ SİPARİŞ",
+            title: t("today_orders"),
             value: stats ? stats.today.order_count.toString() : "0",
             icon: ShoppingBag,
             badge: stats ? `${stats.today.count_change >= 0 ? '+' : ''}${stats.today.count_change}%` : "0%",
@@ -108,10 +110,10 @@ export default function SuperAdminDashboard() {
             trend: stats && stats.today.count_change >= 0 ? "up" : "down"
         },
         {
-            title: "MASA DOLULUK",
+            title: t("occupancy_rate"),
             value: stats ? `%${stats.occupancy_rate}` : "%0",
             icon: Home,
-            badge: stats && stats.occupancy_rate > 50 ? "Yüksek" : "Normal",
+            badge: stats && stats.occupancy_rate > 50 ? t("high") : t("normal"),
             badgeColor: stats && stats.occupancy_rate > 50 ? "text-orange-500" : "text-blue-500",
             badgeBg: stats && stats.occupancy_rate > 50 ? "bg-orange-500/10" : "bg-blue-500/10",
             trend: "none"
@@ -122,7 +124,7 @@ export default function SuperAdminDashboard() {
         return (
             <div className="w-full h-[60vh] flex flex-col items-center justify-center gap-4 text-[var(--muted)]">
                 <Loader2 className="animate-spin" size={40} />
-                <p className="font-bold">Veriler yükleniyor...</p>
+                <p className="font-bold">{t("loading")}</p>
             </div>
         );
     }
@@ -141,15 +143,15 @@ export default function SuperAdminDashboard() {
             <div className="flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-black text-[var(--foreground)] tracking-wide mb-1 uppercase italic">
-                        YÖNETİM PANELİ
+                        {t("dashboard_title")}
                     </h1>
                     <p className="text-[var(--muted)] text-[15px] font-medium font-bold">
-                        İşletmenizin anlık performans ve finansal analizi
+                        {t("subtitle")}
                     </p>
                 </div>
                 <div className="bg-[var(--card)] border border-[var(--border)] rounded-full px-4 py-2 flex items-center gap-2 text-xs font-black text-[#eab308]">
                     <div className="w-2 h-2 rounded-full bg-[#eab308] animate-pulse"></div>
-                    CANLI VERİ AKTİF
+                    {t("live_data_badge")}
                 </div>
             </div>
 
@@ -194,10 +196,10 @@ export default function SuperAdminDashboard() {
                     <div className="flex justify-between items-start relative z-10">
                         <div>
                             <h2 className="text-2xl font-black text-[var(--foreground)] tracking-wide mb-1 uppercase italic">
-                                CİRO AKIŞI
+                                {t("revenue_flow")}
                             </h2>
                             <p className="text-[var(--muted)] text-sm font-bold">
-                                {chartPeriod === 'week' ? 'Son 7 Günlük' : 'Son 30 Günlük'} gelir dağılımı
+                                {chartPeriod === 'week' ? t("last_7_days") : t("last_30_days")} {t("revenue_flow").toLowerCase()}
                             </p>
                         </div>
                         <div className="flex gap-2 bg-[var(--background)] p-1 rounded-xl border border-[var(--border)]">
@@ -208,7 +210,7 @@ export default function SuperAdminDashboard() {
                                     : "text-[var(--muted)] hover:text-[var(--foreground)]"
                                     }`}
                             >
-                                HAFTALIK
+                                {t("weekly_short")}
                             </button>
                             <button
                                 onClick={() => setChartPeriod("month")}
@@ -217,7 +219,7 @@ export default function SuperAdminDashboard() {
                                     : "text-[var(--muted)] hover:text-[var(--foreground)]"
                                     }`}
                             >
-                                AYLIK
+                                {t("monthly_short")}
                             </button>
                         </div>
                     </div>
@@ -267,7 +269,7 @@ export default function SuperAdminDashboard() {
                 {/* Profit & Loss Management */}
                 <div className="bg-[var(--card)] rounded-[32px] p-8 border border-[var(--border)]/50 shadow-xl flex flex-col gap-6">
                     <h2 className="text-xl font-black text-[var(--foreground)] italic uppercase tracking-wider">
-                        KÂR-ZARAR ANALİZİ
+                        {t("profit_loss_analysis")}
                     </h2>
 
                     <div className="flex flex-col gap-4">
@@ -277,7 +279,7 @@ export default function SuperAdminDashboard() {
                                     <Wallet size={20} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">TOPLAM CİRO</p>
+                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">{t("total_revenue")}</p>
                                     <p className="text-lg font-black text-[var(--foreground)]">₺{summary?.total_revenue.toLocaleString('tr-TR')}</p>
                                 </div>
                             </div>
@@ -289,7 +291,7 @@ export default function SuperAdminDashboard() {
                                     <Receipt size={20} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">MALİYET (COGS)</p>
+                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">{t("total_cogs")}</p>
                                     <p className="text-lg font-black text-[var(--foreground)]">₺{summary?.total_cogs.toLocaleString('tr-TR')}</p>
                                 </div>
                             </div>
@@ -301,7 +303,7 @@ export default function SuperAdminDashboard() {
                                     <Calculator size={20} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">GİDERLER (EXPENSES)</p>
+                                    <p className="text-[10px] font-black text-[var(--muted)] uppercase mb-0.5">{t("total_expenses")}</p>
                                     <p className="text-lg font-black text-[var(--foreground)]">₺{summary?.total_expenses.toLocaleString('tr-TR')}</p>
                                 </div>
                             </div>
@@ -310,7 +312,7 @@ export default function SuperAdminDashboard() {
                         <div className={`p-6 rounded-[24px] border border-[var(--border)] mt-2 flex flex-col gap-2 ${(summary?.net_profit || 0) >= 0 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'
                             }`}>
                             <div className="flex justify-between items-center">
-                                <p className="text-[12px] font-black text-[var(--muted)] uppercase tracking-widest">NET KÂR / ZARAR</p>
+                                <p className="text-[12px] font-black text-[var(--muted)] uppercase tracking-widest">{t("net_profit_loss")}</p>
                                 <div className={`p-1.5 rounded-lg ${(summary?.net_profit || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                     <Percent size={18} />
                                 </div>
@@ -319,7 +321,7 @@ export default function SuperAdminDashboard() {
                                 ₺{summary?.net_profit.toLocaleString('tr-TR')}
                             </p>
                             <p className="text-[10px] font-bold text-[var(--muted)] mt-2">
-                                * Veriler bugünkü tüm işlemleri kapsamaktadır.
+                                {t("data_disclaimer")}
                             </p>
                         </div>
                     </div>
@@ -332,14 +334,14 @@ export default function SuperAdminDashboard() {
                 <div className="bg-[var(--card)] rounded-[32px] p-8 border border-[var(--border)]/50 shadow-xl flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-black text-[var(--foreground)] italic uppercase tracking-wider">
-                            EN ÇOK SATAN ÜRÜNLER (TOP 5)
+                            {t("top_products")}
                         </h2>
                         <ShoppingBag size={20} className="text-[#eab308]" />
                     </div>
 
                     <div className="flex flex-col gap-3">
                         {topProducts.length === 0 ? (
-                            <p className="text-[var(--muted)] font-bold text-center py-10">Bugün henüz satış yapılmadı.</p>
+                            <p className="text-[var(--muted)] font-bold text-center py-10">{t("no_sales_today")}</p>
                         ) : topProducts.map((p, i) => (
                             <div key={i} className="flex items-center justify-between p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)] hover:border-[#eab308]/30 transition-all">
                                 <div className="flex items-center gap-4">
@@ -348,7 +350,7 @@ export default function SuperAdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-[var(--foreground)] font-black text-sm uppercase">{p.name}</p>
-                                        <p className="text-[var(--muted)] text-[10px] font-bold">{p.total_quantity} Adet Satıldı</p>
+                                        <p className="text-[var(--muted)] text-[10px] font-bold">{p.total_quantity} {t("units_sold")}</p>
                                     </div>
                                 </div>
                                 <p className="text-[#eab308] font-black text-sm italic">₺{p.total_revenue.toLocaleString('tr-TR')}</p>
@@ -361,14 +363,14 @@ export default function SuperAdminDashboard() {
                 <div className="bg-[var(--card)] rounded-[32px] p-8 border border-[var(--border)]/50 shadow-xl flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-black text-[var(--foreground)] italic uppercase tracking-wider">
-                            PERSONEL SATIŞ PERFORMANSI
+                            {t("staff_performance")}
                         </h2>
                         <Users size={20} className="text-[#eab308]" />
                     </div>
 
                     <div className="flex flex-col gap-3">
                         {staffStats.length === 0 ? (
-                            <p className="text-[var(--muted)] font-bold text-center py-10">Personel verisi bulunamadı.</p>
+                            <p className="text-[var(--muted)] font-bold text-center py-10">{t("no_staff_data")}</p>
                         ) : staffStats.map((s, i) => (
                             <div key={i} className="flex items-center justify-between p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)] hover:border-[#eab308]/30 transition-all">
                                 <div className="flex items-center gap-4">
@@ -377,7 +379,7 @@ export default function SuperAdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-[var(--foreground)] font-black text-sm uppercase">{s.waiter_name}</p>
-                                        <p className="text-[var(--muted)] text-[10px] font-bold uppercase">{s.order_count} SİPARİŞ TAMAMLANDI</p>
+                                        <p className="text-[var(--muted)] text-[10px] font-bold uppercase">{s.order_count} {t("orders_completed")}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
