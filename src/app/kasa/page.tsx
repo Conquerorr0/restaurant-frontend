@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Clock, Printer, ArrowRightLeft, X, Check, Search, CreditCard, Banknote, Ban, Gift, LogOut, GitMerge } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 import { tableService } from "@/services/tableService";
 import { orderService, Order } from "@/services/orderService";
 import { paymentService } from "@/services/paymentService";
@@ -57,6 +58,7 @@ interface TableData {
 
 export default function KasaDashboard() {
     const { token, logout } = useAuth();
+    const { showAlert, showConfirm } = useModal();
     const [tables, setTables] = useState<TableData[]>([]);
     const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
     const [selectionMode, setSelectionMode] = useState<"VIEW" | "MOVE" | "MERGE">("VIEW");
@@ -263,10 +265,10 @@ export default function KasaDashboard() {
 
         if (selectionMode === "MOVE" && selectedTableId) {
             if (t.status === "OCCUPIED") {
-                alert("Hedef masa dolu olamaz!");
+                await showAlert("Hedef masa dolu olamaz!", "warning");
                 return;
             }
-            if (confirm(`${selectedTable?.name} masasını ${t.name} masasına taşımak istediğinize emin misiniz?`)) {
+            if (await showConfirm(`${selectedTable?.name} masasını ${t.name} masasına taşımak istediğinize emin misiniz?`)) {
                 try {
                     const res = await tableService.moveTable(selectedTableId, id, token!);
                     if (res.success) {
@@ -275,7 +277,7 @@ export default function KasaDashboard() {
                         setSelectionMode("VIEW");
                         await fetchTablesAndDetails();
                     }
-                } catch (e: any) { alert(e.message); }
+                } catch (e: any) { await showAlert(e.message, "error"); }
             }
             return;
         }
@@ -283,10 +285,10 @@ export default function KasaDashboard() {
         if (selectionMode === "MERGE" && selectedTableId) {
             if (id === selectedTableId) return;
             if (t.status === "EMPTY") {
-                alert("Sadece dolu masalar birleştirilebilir!");
+                await showAlert("Sadece dolu masalar birleştirilebilir!", "warning");
                 return;
             }
-            if (confirm(`${selectedTable?.name} masasını ${t.name} masası ile birleştirmek istediğinize emin misiniz?`)) {
+            if (await showConfirm(`${selectedTable?.name} masasını ${t.name} masası ile birleştirmek istediğinize emin misiniz?`)) {
                 try {
                     const res = await tableService.mergeTable(selectedTableId, id, token!);
                     if (res.success) {
@@ -295,7 +297,7 @@ export default function KasaDashboard() {
                         setSelectionMode("VIEW");
                         await fetchTablesAndDetails();
                     }
-                } catch (e: any) { alert(e.message); }
+                } catch (e: any) { await showAlert(e.message, "error"); }
             }
             return;
         }
@@ -372,7 +374,7 @@ export default function KasaDashboard() {
                 await fetchTablesAndDetails();
             }
         } catch (error: any) {
-            alert("Ödeme hatası: " + (error.message || "Bilinmeyen hata"));
+            await showAlert("Ödeme hatası: " + (error.message || "Bilinmeyen hata"), "error");
         } finally {
             setProcessingPayment(false);
         }
@@ -411,7 +413,7 @@ export default function KasaDashboard() {
                 await fetchTablesAndDetails();
             }
         } catch (error: any) {
-            alert("Ödeme hatası: " + (error.message || "Bilinmeyen hata"));
+            await showAlert("Ödeme hatası: " + (error.message || "Bilinmeyen hata"), "error");
         } finally {
             setProcessingPayment(false);
         }
@@ -419,10 +421,10 @@ export default function KasaDashboard() {
 
     const handleTreat = async () => {
         if (!selectedTable || Object.keys(selectedQuantities).length === 0 || !token) {
-            alert("Lütfen ikram edilecek ürünleri adet seçerek işaretleyin!");
+            await showAlert("Lütfen ikram edilecek ürünleri adet seçerek işaretleyin!", "warning");
             return;
         }
-        if (confirm("Seçili ürünleri ikram etmek istediğinize emin misiniz?")) {
+        if (await showConfirm("Seçili ürünleri ikram etmek istediğinize emin misiniz?")) {
             setProcessingPayment(true);
             try {
                 let orderClosed = false;
@@ -446,7 +448,7 @@ export default function KasaDashboard() {
 
                 setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
             } catch (error: any) {
-                alert(error.message);
+                await showAlert(error.message, "error");
             } finally {
                 setProcessingPayment(false);
             }
@@ -455,10 +457,10 @@ export default function KasaDashboard() {
 
     const handleCancel = async () => {
         if (!selectedTable || Object.keys(selectedQuantities).length === 0 || !token) {
-            alert("Lütfen iptal edilecek ürünleri adet seçerek işaretleyin!");
+            await showAlert("Lütfen iptal edilecek ürünleri adet seçerek işaretleyin!", "warning");
             return;
         }
-        if (confirm("Seçili ürünleri iptal etmek istediğinize emin misiniz?")) {
+        if (await showConfirm("Seçili ürünleri iptal etmek istediğinize emin misiniz?")) {
             setProcessingPayment(true);
             try {
                 let orderClosed = false;
@@ -482,7 +484,7 @@ export default function KasaDashboard() {
 
                 setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
             } catch (error: any) {
-                alert(error.message);
+                await showAlert(error.message, "error");
             } finally {
                 setProcessingPayment(false);
             }

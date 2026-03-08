@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRightLeft, Users, Utensils, LogOut, ChevronDown, GitMerge } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 import { tableService } from "@/services/tableService";
 import { socketService } from "@/services/socketService";
 
@@ -46,6 +47,7 @@ interface TableData {
 export default function GarsonMasalarPage() {
     const router = useRouter();
     const { token, logout } = useAuth();
+    const { showAlert, showConfirm } = useModal();
     const [tables, setTables] = useState<TableData[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
@@ -143,7 +145,7 @@ export default function GarsonMasalarPage() {
         if (selectionMode === "move") {
             if (selectedTables.length === 0) {
                 if (table.status !== "OCCUPIED") {
-                    alert("Taşımak istediğiniz masa dolu olmalıdır!");
+                    await showAlert("Taşımak istediğiniz masa dolu olmalıdır!", "warning");
                     return;
                 }
                 setSelectedTables([tableId]);
@@ -154,11 +156,11 @@ export default function GarsonMasalarPage() {
                     return;
                 }
                 if (table.status !== "EMPTY") {
-                    alert("Hedef masa boş olmalıdır!");
+                    await showAlert("Hedef masa boş olmalıdır!", "warning");
                     return;
                 }
 
-                if (confirm(`${tables.find(t => t.id === sourceId)?.name} masasını ${table.name} masasına taşımak istediğinize emin misiniz?`)) {
+                if (await showConfirm(`${tables.find(t => t.id === sourceId)?.name} masasını ${table.name} masasına taşımak istediğinize emin misiniz?`)) {
                     const res = await tableService.moveTable(sourceId, tableId, token!);
                     if (res.success) {
                         setSelectionMode("view");
@@ -170,7 +172,7 @@ export default function GarsonMasalarPage() {
                             active_order_id: t.active_order_id, current_total_amount: t.total_order_amount, floor: t.floor
                         })));
                     } else {
-                        alert("Hata: " + res.message);
+                        await showAlert("Hata: " + res.message, "error");
                     }
                 }
             }
@@ -178,7 +180,7 @@ export default function GarsonMasalarPage() {
 
         if (selectionMode === "merge") {
             if (table.status !== "OCCUPIED") {
-                alert("Birleştirmek istediğiniz masalar dolu olmalıdır!");
+                await showAlert("Birleştirmek istediğiniz masalar dolu olmalıdır!", "warning");
                 return;
             }
             if (selectedTables.includes(tableId)) {
@@ -188,7 +190,7 @@ export default function GarsonMasalarPage() {
                     const newSelection = [...selectedTables, tableId];
                     if (newSelection.length === 2) {
                         const [sId, tId] = newSelection;
-                        if (confirm(`${tables.find(t => t.id === sId)?.name} ve ${tables.find(t => t.id === tId)?.name} masalarını birleştirmek istediğinize emin misiniz?`)) {
+                        if (await showConfirm(`${tables.find(t => t.id === sId)?.name} ve ${tables.find(t => t.id === tId)?.name} masalarını birleştirmek istediğinize emin misiniz?`)) {
                             const res = await tableService.mergeTable(sId, tId, token!);
                             if (res.success) {
                                 setSelectionMode("view");
@@ -200,7 +202,7 @@ export default function GarsonMasalarPage() {
                                     active_order_id: t.active_order_id, current_total_amount: t.total_order_amount, floor: t.floor
                                 })));
                             } else {
-                                alert("Hata: " + res.message);
+                                await showAlert("Hata: " + res.message, "error");
                             }
                         } else {
                             setSelectedTables(newSelection);

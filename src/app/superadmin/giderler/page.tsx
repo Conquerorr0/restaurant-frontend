@@ -6,10 +6,12 @@ import {
     Loader2, AlertCircle, Calendar, Tag, CreditCard
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 import { expenseService, Expense } from "@/services/expenseService";
 
 export default function ExpenseManagement() {
     const { token } = useAuth();
+    const { showAlert, showConfirm } = useModal();
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -66,12 +68,12 @@ export default function ExpenseManagement() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Bu gider kaydını silmek istediğinize emin misiniz?")) return;
+        if (!(await showConfirm("Bu gider kaydını silmek istediğinize emin misiniz?", "Gider Silme Onayı"))) return;
         try {
             const res = await expenseService.deleteExpense(id, token!);
             if (res.success) fetchExpenses();
         } catch (err: any) {
-            alert(err.message || "Silme işlemi başarısız");
+            await showAlert(err.message || "Silme işlemi başarısız", "error");
         }
     };
 

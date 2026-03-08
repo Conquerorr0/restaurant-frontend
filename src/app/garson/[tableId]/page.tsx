@@ -7,6 +7,7 @@ import {
     ChevronRight, UtensilsCrossed, Trash2, Receipt, X, ChevronUp, MessageSquare
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 import { menuService } from "@/services/menuService";
 import { orderService } from "@/services/orderService";
 import { tableService } from "@/services/tableService";
@@ -17,6 +18,7 @@ interface Category { id: string; name: string; emoji: string; products: Product[
 export default function OrderPage({ params }: { params: Promise<{ tableId: string }> | { tableId: string } }) {
     const router = useRouter();
     const { token } = useAuth();
+    const { showAlert } = useModal();
     const resolvedParams = "then" in params ? use(params as any) : params;
     const tableId = (resolvedParams as any).tableId;
 
@@ -101,10 +103,10 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                 setLocalCart([]);
                 setOrderNote("");
                 setCartOpen(false);
-                alert("Sipariş başarıyla gönderildi!");
+                await showAlert("Sipariş başarıyla gönderildi!", "success");
             }
         } catch (error: any) {
-            alert("Sipariş gönderilirken hata oluştu: " + (error.message || "Bilinmeyen hata"));
+            await showAlert("Sipariş gönderilirken hata oluştu: " + (error.message || "Bilinmeyen hata"), "error");
         } finally {
             setIsSubmitting(false);
         }
