@@ -237,7 +237,7 @@ export default function GarsonMasalarPage() {
                 <div style={{
                     maxWidth: "1100px",
                     margin: "0 auto",
-                    padding: "14px 24px",
+                    padding: "12px 16px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -481,13 +481,13 @@ export default function GarsonMasalarPage() {
                                         border: isSelected
                                             ? "2.5px solid #eab308"
                                             : isOccupied
-                                                ? "1.5px solid rgba(239,68,68,0.35)"
-                                                : "1.5px solid rgba(34,197,94,0.3)",
+                                                ? "1.5px solid var(--table-occupied-border)"
+                                                : "1.5px solid var(--table-empty-border)",
                                         background: isSelected
                                             ? "rgba(234,179,8,0.2)"
                                             : isOccupied
-                                                ? "linear-gradient(145deg, rgba(60,10,10,0.85) 0%, rgba(40,6,6,0.95) 100%)"
-                                                : "linear-gradient(145deg, rgba(6,38,12,0.85) 0%, rgba(4,28,10,0.95) 100%)",
+                                                ? "var(--table-occupied-bg)"
+                                                : "var(--table-empty-bg)",
                                         cursor: "pointer",
                                         overflow: "hidden",
                                         display: "flex",
@@ -520,8 +520,8 @@ export default function GarsonMasalarPage() {
                                     <div style={{
                                         position: "absolute", inset: 0,
                                         background: isOccupied
-                                            ? "radial-gradient(ellipse at 50% 30%, rgba(239,68,68,0.12) 0%, transparent 70%)"
-                                            : "radial-gradient(ellipse at 50% 30%, rgba(34,197,94,0.10) 0%, transparent 70%)",
+                                            ? "radial-gradient(ellipse at 50% 30%, rgba(239,68,68,0.1) 0%, transparent 70%)"
+                                            : "radial-gradient(ellipse at 50% 30%, rgba(34,197,94,0.08) 0%, transparent 70%)",
                                         pointerEvents: "none",
                                     }} />
 
@@ -531,13 +531,13 @@ export default function GarsonMasalarPage() {
                                         top: "8px", left: "8px",
                                         fontWeight: 800,
                                         fontSize: "11px",
-                                        color: isOccupied ? "#fca5a5" : "#fde047",
+                                        color: isOccupied ? "var(--table-text-occupied)" : "var(--accent)",
                                         letterSpacing: "0.08em",
                                         lineHeight: 1,
                                         zIndex: 2,
                                         background: isOccupied
-                                            ? "rgba(239,68,68,0.15)"
-                                            : "rgba(234,179,8,0.15)",
+                                            ? "rgba(239,68,68,0.08)"
+                                            : "rgba(234,179,8,0.08)",
                                         borderRadius: "6px",
                                         padding: "3px 6px",
                                     }}>
@@ -572,7 +572,7 @@ export default function GarsonMasalarPage() {
                                     }}>
                                         <TableIcon
                                             size={24}
-                                            color={isOccupied ? "#fca5a5" : "#fde047"}
+                                            color={isOccupied ? "var(--table-text-occupied)" : "var(--accent)"}
                                         />
                                     </div>
 
@@ -593,7 +593,7 @@ export default function GarsonMasalarPage() {
                                         <span style={{
                                             fontWeight: 800,
                                             fontSize: "12px",
-                                            color: "#fbbf24",
+                                            color: "var(--table-amount)",
                                             letterSpacing: "0.03em",
                                             zIndex: 1,
                                         }}>
@@ -603,7 +603,7 @@ export default function GarsonMasalarPage() {
                                         <span style={{
                                             fontWeight: 700,
                                             fontSize: "10px",
-                                            color: "#4ade80",
+                                            color: "var(--table-text-empty)",
                                             letterSpacing: "0.1em",
                                             textTransform: "uppercase",
                                             zIndex: 1,

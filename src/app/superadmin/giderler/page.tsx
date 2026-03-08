@@ -110,7 +110,7 @@ export default function ExpenseManagement() {
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-[32px] overflow-hidden">
                 <table className="w-full text-left">
                     <thead>
-                        <tr className="border-b border-[var(--border)] bg-[#1c1c1f]">
+                        <tr className="border-b border-[var(--border)] bg-[var(--card-alt)]">
                             <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">TARİH</th>
                             <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">BAŞLIK</th>
                             <th className="px-6 py-5 text-[10px] font-black text-[var(--muted)] tracking-widest uppercase">KATEGORİ</th>
@@ -132,7 +132,7 @@ export default function ExpenseManagement() {
                                 </td>
                             </tr>
                         ) : expenses.map(expense => (
-                            <tr key={expense.id} className="hover:bg-[#1c1c1f] transition-colors">
+                            <tr key={expense.id} className="hover:bg-[var(--card-alt)] transition-colors">
                                 <td className="px-6 py-5">
                                     <div className="flex items-center gap-2 text-[var(--foreground)] font-bold text-sm">
                                         <Calendar size={14} className="text-[var(--muted)]" />

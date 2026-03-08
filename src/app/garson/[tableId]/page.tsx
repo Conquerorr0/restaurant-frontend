@@ -133,7 +133,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
     const currentCategory = categories.find(c => c.id === activeCategoryId);
 
     return (
-        <div style={{ minHeight: "100vh", background: "var(--background)", fontFamily: "sans-serif", color: "#e5e7eb" }}>
+        <div style={{ minHeight: "100vh", background: "var(--background)", fontFamily: "sans-serif", color: "var(--foreground)" }}>
             <style>{`
                 *, *::before, *::after { box-sizing: border-box; }
                 @keyframes spin    { to { transform: rotate(360deg); } }
@@ -147,7 +147,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                 }
             `}</style>
 
-            <header style={{ background: "#111", borderBottom: "1px solid rgba(234,179,8,0.12)", position: "sticky", top: 0, zIndex: 30 }}>
+            <header style={{ background: "var(--card-alt)", borderBottom: "1px solid rgba(234,179,8,0.12)", position: "sticky", top: 0, zIndex: 30 }}>
                 <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "11px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
                     <button onClick={() => router.push('/garson')} style={{ padding: "9px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "11px", color: "var(--muted)", cursor: "pointer" }}><ArrowLeft size={17} /></button>
                     <div style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.25)", borderRadius: "11px", padding: "7px 13px", display: "flex", alignItems: "center", gap: "7px" }}>
@@ -175,7 +175,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                             </div>
                             <div className="product-grid">
                                 {currentCategory?.products.map(product => (
-                                    <div key={product.id} style={{ padding: "11px 13px", borderRadius: "13px", background: "rgba(255,255,255,0.03)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                    <div key={product.id} style={{ padding: "11px 13px", borderRadius: "13px", background: "var(--card)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontWeight: 600, fontSize: "14px" }}>{product.name}</div>
                                             <div style={{ color: "#eab308", fontWeight: 700 }}>₺{product.price}</div>
@@ -217,7 +217,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                                 ))}
                             </div>
                             {order && (
-                                <div style={{ marginTop: "20px", padding: "15px", borderRadius: "13px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div style={{ marginTop: "20px", padding: "15px", borderRadius: "13px", background: "var(--card-alt)", border: "1px solid var(--border)" }}>
                                     <div style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 700, marginBottom: "10px" }}>MASADA MEVCUT SİPARİŞ</div>
                                     {order.items.map((item: any) => (
                                         <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", fontSize: "14px" }}>
@@ -288,7 +288,7 @@ function CartContent({ cartCount, localCart, setLocalCart, orderNote, setOrderNo
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {localCart.map((item: any) => (
-                <div key={item.product.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", background: "rgba(255,255,255,0.03)", borderRadius: "8px" }}>
+                <div key={item.product.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: "13px", fontWeight: 600 }}>{item.product.name}</div>
                         <div style={{ fontSize: "11px", color: "#eab308" }}>{item.quantity} x ₺{item.product.price}</div>
@@ -317,7 +317,7 @@ function CartContent({ cartCount, localCart, setLocalCart, orderNote, setOrderNo
                     </button>
                 </div>
             )}
-            {localCart.length === 0 && <div style={{ padding: "40px 0", textAlign: "center", color: "#444" }}>Sepet Boş</div>}
+            {localCart.length === 0 && <div style={{ padding: "40px 0", textAlign: "center", color: "var(--muted)" }}>Sepet Boş</div>}
         </div>
     );
 }

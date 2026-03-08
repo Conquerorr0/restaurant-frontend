@@ -88,7 +88,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4 font-sans text-gray-200">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4 font-sans text-[var(--foreground)]">
 
       {/* Header / Logo */}
       <div className="flex flex-col items-center mb-8">
@@ -110,7 +110,7 @@ export default function LoginPage() {
           }}
           className={`relative flex items-center justify-center gap-2 flex-1 py-3 px-4 rounded-full text-sm font-semibold transition-all duration-300 ${role === "GARSON"
             ? "bg-[#eab308] text-[var(--background)] shadow-md"
-            : "text-gray-400 hover:text-[var(--foreground)]"
+            : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
         >
           <Key className="w-4 h-4" />
@@ -125,7 +125,7 @@ export default function LoginPage() {
           }}
           className={`relative flex items-center justify-center gap-2 flex-1 py-3 px-4 rounded-full text-sm font-semibold transition-all duration-300 ${role === "YONETIM"
             ? "bg-[#eab308] text-[var(--background)] shadow-md"
-            : "text-gray-400 hover:text-[var(--foreground)]"
+            : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -140,11 +140,11 @@ export default function LoginPage() {
           /* Admin / Cashier Login Form */
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-[#eab308] text-xl font-bold mb-1 tracking-wide">KASA / ADMİN</h2>
-            <p className="text-gray-500 text-xs italic mb-6">Kurumsal kullanıcı girişi</p>
+            <p className="text-[var(--muted)] text-xs italic mb-6">Kurumsal kullanıcı girişi</p>
 
             <form onSubmit={handleAdminLogin} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
-                <label className="text-gray-400 text-xs font-medium ml-1">Kullanıcı Adı</label>
+                <label className="text-[var(--muted)] text-xs font-medium ml-1">Kullanıcı Adı</label>
                 <div className="relative flex items-center">
                   <User className={`absolute left-4 w-5 h-5 ${errorMsg ? 'text-red-400' : 'text-gray-500'}`} />
                   <input
@@ -155,14 +155,14 @@ export default function LoginPage() {
                       setUsername(e.target.value);
                       if (errorMsg) setErrorMsg(null);
                     }}
-                    className={`w-full bg-[#121212] border ${errorMsg ? 'border-red-500/50' : 'border-white/5'} text-[var(--foreground)] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#eab308] transition-colors shadow-inner`}
+                    className={`w-full bg-[var(--input)] border ${errorMsg ? 'border-red-500/50' : 'border-[var(--border)]'} text-[var(--foreground)] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#eab308] transition-colors shadow-inner`}
                     disabled={isLoading}
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-gray-400 text-xs font-medium ml-1">Şifre</label>
+                <label className="text-[var(--muted)] text-xs font-medium ml-1">Şifre</label>
                 <div className="relative flex items-center">
                   <Lock className={`absolute left-4 w-5 h-5 ${errorMsg ? 'text-red-400' : 'text-gray-500'}`} />
                   <input
@@ -173,7 +173,7 @@ export default function LoginPage() {
                       setPassword(e.target.value);
                       if (errorMsg) setErrorMsg(null);
                     }}
-                    className={`w-full bg-[#121212] border ${errorMsg ? 'border-red-500/50' : 'border-white/5'} text-[var(--foreground)] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#eab308] transition-colors shadow-inner`}
+                    className={`w-full bg-[var(--input)] border ${errorMsg ? 'border-red-500/50' : 'border-[var(--border)]'} text-[var(--foreground)] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#eab308] transition-colors shadow-inner`}
                     disabled={isLoading}
                   />
                 </div>
@@ -202,7 +202,7 @@ export default function LoginPage() {
           /* Waiter PIN Login */
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col items-center">
             <h2 className="text-[#eab308] text-xl font-bold mb-1 tracking-wide uppercase">Pin Girişi</h2>
-            <p className="text-gray-500 text-xs italic mb-8">4 haneli kodunuzu girin</p>
+            <p className="text-[var(--muted)] text-xs italic mb-8">4 haneli kodunuzu girin</p>
 
             {/* Pin Display */}
             <div className="flex gap-4 mb-6">
@@ -213,7 +213,7 @@ export default function LoginPage() {
                     ? 'border-[#eab308] bg-[#eab308]/10 text-[var(--foreground)] shadow-[0_0_10px_rgba(234,179,8,0.2)]'
                     : errorMsg
                       ? 'border-red-500/50 bg-red-500/10 text-transparent'
-                      : 'border-white/10 bg-[#121212] text-transparent'
+                      : 'border-[var(--border)] bg-[var(--input)] text-transparent'
                     }`}
                 >
                   {pin[index] ? '•' : ''}
@@ -234,7 +234,7 @@ export default function LoginPage() {
                   key={num}
                   onClick={() => handlePinInput(num)}
                   disabled={isLoading}
-                  className="bg-[#121212] disabled:opacity-50 hover:bg-[#202020] active:scale-95 text-xl font-semibold text-[var(--foreground)] aspect-square rounded-2xl flex items-center justify-center transition-all border border-white/5"
+                  className="bg-[var(--input)] disabled:opacity-50 hover:bg-[var(--card-alt)] active:scale-95 text-xl font-semibold text-[var(--foreground)] aspect-square rounded-2xl flex items-center justify-center transition-all border border-[var(--border)]"
                 >
                   {num}
                 </button>
@@ -242,14 +242,14 @@ export default function LoginPage() {
               <button
                 onClick={handlePinDelete}
                 disabled={isLoading}
-                className="bg-[#121212] disabled:opacity-50 hover:bg-red-900/20 active:scale-95 text-xl font-semibold text-red-400 aspect-square rounded-2xl flex items-center justify-center transition-all border border-white/5"
+                className="bg-[var(--input)] disabled:opacity-50 hover:bg-red-900/10 active:scale-95 text-xl font-semibold text-red-400 aspect-square rounded-2xl flex items-center justify-center transition-all border border-[var(--border)]"
               >
                 <Delete className="w-6 h-6" />
               </button>
               <button
                 onClick={() => handlePinInput(0)}
                 disabled={isLoading}
-                className="bg-[#121212] disabled:opacity-50 hover:bg-[#202020] active:scale-95 text-xl font-semibold text-[var(--foreground)] aspect-square rounded-2xl flex items-center justify-center transition-all border border-white/5"
+                className="bg-[var(--input)] disabled:opacity-50 hover:bg-[var(--card-alt)] active:scale-95 text-xl font-semibold text-[var(--foreground)] aspect-square rounded-2xl flex items-center justify-center transition-all border border-[var(--border)]"
               >
                 0
               </button>

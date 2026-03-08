@@ -36,7 +36,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <ModalProvider>
-              <div className="fixed top-4 right-4 z-[9999] flex items-center gap-3">
+              <div className="fixed bottom-6 left-6 md:top-4 md:right-4 md:bottom-auto md:left-auto z-[9999] flex flex-col md:flex-row items-center gap-3">
                 <LanguageToggle />
                 <ThemeToggle />
               </div>

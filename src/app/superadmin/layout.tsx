@@ -67,7 +67,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto">
-                <div className="max-w-[1100px] mx-auto w-full p-10 min-h-full">
+                <div className="max-w-[1100px] mx-auto w-full p-6 md:p-10 md:pt-16 min-h-full">
                     {children}
                 </div>
             </main>

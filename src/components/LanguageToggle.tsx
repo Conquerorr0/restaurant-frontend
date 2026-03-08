@@ -30,16 +30,16 @@ export default function LanguageToggle() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 h-10 px-4 rounded-full transition-all duration-300 bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20"
+                className="flex items-center gap-1.5 md:gap-2 h-9 md:h-10 px-2.5 md:px-4 rounded-full transition-all duration-300"
                 style={{
                     background: "var(--card-alt)",
                     border: "1px solid var(--border)",
                     color: "var(--foreground)"
                 }}
             >
-                <Globe size={18} />
-                <span className="font-bold text-sm leading-none pt-0.5">{lang}</span>
-                <ChevronDown size={14} className={`transition-transform duration-300 ml-1 opacity-70 ${isOpen ? "rotate-180" : ""}`} />
+                <Globe size={16} className="md:w-[18px] md:h-[18px]" />
+                <span className="font-bold text-xs md:text-sm leading-none pt-0.5">{lang}</span>
+                <ChevronDown size={12} className={`transition-transform duration-300 ml-0.5 md:ml-1 opacity-70 ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isOpen && (
