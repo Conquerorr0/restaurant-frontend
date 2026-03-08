@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import {
     ArrowLeft, Plus, Minus, ShoppingBag, CheckCircle2,
     ChevronRight, UtensilsCrossed, Trash2, Receipt, X, ChevronUp, MessageSquare
@@ -11,11 +11,13 @@ import { useModal } from "@/context/ModalContext";
 import { menuService } from "@/services/menuService";
 import { orderService } from "@/services/orderService";
 import { tableService } from "@/services/tableService";
+import { useTranslations } from "next-intl";
 
 interface Product { id: string; name: string; price: number; }
 interface Category { id: string; name: string; emoji: string; products: Product[]; }
 
 export default function OrderPage({ params }: { params: Promise<{ tableId: string }> | { tableId: string } }) {
+    const t = useTranslations("Garson");
     const router = useRouter();
     const { token } = useAuth();
     const { showAlert } = useModal();
@@ -103,10 +105,10 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                 setLocalCart([]);
                 setOrderNote("");
                 setCartOpen(false);
-                await showAlert("Sipariş başarıyla gönderildi!", "success");
+                await showAlert(t("order_success"), "success");
             }
         } catch (error: any) {
-            await showAlert("Sipariş gönderilirken hata oluştu: " + (error.message || "Bilinmeyen hata"), "error");
+            await showAlert(t("order_error") + " " + (error.message || t("error_general")), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -152,11 +154,11 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                     <button onClick={() => router.push('/garson')} style={{ padding: "9px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "11px", color: "var(--muted)", cursor: "pointer" }}><ArrowLeft size={17} /></button>
                     <div style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.25)", borderRadius: "11px", padding: "7px 13px", display: "flex", alignItems: "center", gap: "7px" }}>
                         <UtensilsCrossed size={14} color="#eab308" />
-                        <span style={{ color: "#eab308", fontWeight: 700, fontSize: "13px" }}>MASA {tableName || "..."}</span>
+                        <span style={{ color: "#eab308", fontWeight: 700, fontSize: "13px" }}>{t("table")} {tableName || "..."}</span>
                     </div>
                     <div style={{ flex: 1 }} />
                     <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "10px", color: "var(--muted)" }}>TOPLAM</div>
+                        <div style={{ fontSize: "10px", color: "var(--muted)" }}>{t("total")}</div>
                         <div style={{ fontSize: "20px", fontWeight: 800, color: "#eab308" }}>₺{grandTotal.toLocaleString("tr-TR")}</div>
                     </div>
                 </div>
@@ -178,7 +180,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                                     <div key={product.id} style={{ padding: "11px 13px", borderRadius: "13px", background: "var(--card)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontWeight: 600, fontSize: "14px" }}>{product.name}</div>
-                                            <div style={{ color: "#eab308", fontWeight: 700 }}>₺{product.price}</div>
+                                            <div style={{ color: "#eab308", fontWeight: 700 }}>₺{product.price.toLocaleString('tr-TR')}</div>
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                             {getQty(product.id) > 0 && (
@@ -218,16 +220,16 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                             </div>
                             {order && (
                                 <div style={{ marginTop: "20px", padding: "15px", borderRadius: "13px", background: "var(--card-alt)", border: "1px solid var(--border)" }}>
-                                    <div style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 700, marginBottom: "10px" }}>MASADA MEVCUT SİPARİŞ</div>
+                                    <div style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 700, marginBottom: "10px" }}>{t("existing_order")}</div>
                                     {order.items.map((item: any) => (
                                         <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", fontSize: "14px" }}>
                                             <span>{item.quantity}x {item.product_name}</span>
-                                            <span style={{ color: "#eab308" }}>₺{item.subtotal}</span>
+                                            <span style={{ color: "#eab308" }}>₺{item.subtotal.toLocaleString('tr-TR')}</span>
                                         </div>
                                     ))}
                                     {order.note && (
                                         <div style={{ marginTop: "10px", padding: "8px", background: "rgba(234,179,8,0.05)", borderRadius: "8px", border: "1px dashed rgba(234,179,8,0.2)" }}>
-                                            <div style={{ fontSize: "10px", color: "#eab308", fontWeight: 800 }}>NOT:</div>
+                                            <div style={{ fontSize: "10px", color: "#eab308", fontWeight: 800 }}>{t("note_label")}</div>
                                             <div style={{ fontSize: "12px", color: "var(--muted)" }}>{order.note}</div>
                                         </div>
                                     )}
@@ -245,6 +247,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                                 localTotal={localTotal}
                                 handleConfirmOrder={handleConfirmOrder}
                                 isSubmitting={isSubmitting}
+                                t={t}
                             />
                         </aside>
                     </div>
@@ -254,7 +257,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
             {!loading && (
                 <div style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 40 }} className="mobile-fab">
                     <button onClick={() => setCartOpen(true)} style={{ padding: "12px 24px", borderRadius: "50px", background: "#eab308", color: "var(--background)", fontWeight: 800, boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }}>
-                        SEPETİ GÖR ({cartCount})
+                        {t("view_cart")} ({cartCount})
                     </button>
                 </div>
             )}
@@ -264,7 +267,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                     <div onClick={() => setCartOpen(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)" }} />
                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "var(--card-alt)", borderRadius: "20px 20px 0 0", padding: "20px", maxHeight: "80vh", overflowY: "auto", animation: "slideUp 0.3s ease" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
-                            <span style={{ fontWeight: 800, color: "#eab308" }}>SEPET</span>
+                            <span style={{ fontWeight: 800, color: "#eab308" }}>{t("cart")}</span>
                             <button onClick={() => setCartOpen(false)}><X size={20} /></button>
                         </div>
                         <CartContent
@@ -276,6 +279,7 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
                             localTotal={localTotal}
                             handleConfirmOrder={handleConfirmOrder}
                             isSubmitting={isSubmitting}
+                            t={t}
                         />
                     </div>
                 </div>
@@ -284,14 +288,14 @@ export default function OrderPage({ params }: { params: Promise<{ tableId: strin
     );
 }
 
-function CartContent({ cartCount, localCart, setLocalCart, orderNote, setOrderNote, localTotal, handleConfirmOrder, isSubmitting }: any) {
+function CartContent({ cartCount, localCart, setLocalCart, orderNote, setOrderNote, localTotal, handleConfirmOrder, isSubmitting, t }: any) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {localCart.map((item: any) => (
                 <div key={item.product.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: "13px", fontWeight: 600 }}>{item.product.name}</div>
-                        <div style={{ fontSize: "11px", color: "#eab308" }}>{item.quantity} x ₺{item.product.price}</div>
+                        <div style={{ fontSize: "11px", color: "#eab308" }}>{item.quantity} x ₺{item.product.price.toLocaleString('tr-TR')}</div>
                     </div>
                     <button onClick={() => setLocalCart((prev: any) => prev.filter((i: any) => i.product.id !== item.product.id))} style={{ color: "#ef4444" }}><Trash2 size={16} /></button>
                 </div>
@@ -300,24 +304,24 @@ function CartContent({ cartCount, localCart, setLocalCart, orderNote, setOrderNo
             {localCart.length > 0 && (
                 <div style={{ marginTop: "10px" }}>
                     <div style={{ marginBottom: "10px" }}>
-                        <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>SİPARİŞ NOTU</div>
+                        <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>{t("order_note")}</div>
                         <textarea
                             value={orderNote}
                             onChange={(e) => setOrderNote(e.target.value)}
-                            placeholder="Notunuz..."
+                            placeholder={t("your_note")}
                             style={{ width: "100%", height: "60px", background: "var(--background)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--foreground)", padding: "8px", fontSize: "12px", resize: "none" }}
                         />
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                        <span>Eklenecek</span>
-                        <span style={{ color: "#eab308", fontWeight: 800 }}>₺{localTotal}</span>
+                        <span>{t("to_be_added")}</span>
+                        <span style={{ color: "#eab308", fontWeight: 800 }}>₺{localTotal.toLocaleString('tr-TR')}</span>
                     </div>
                     <button onClick={handleConfirmOrder} disabled={isSubmitting} style={{ width: "100%", padding: "12px", background: "#eab308", color: "var(--background)", fontWeight: 800, borderRadius: "8px", cursor: isSubmitting ? "not-allowed" : "pointer" }}>
-                        {isSubmitting ? "GÖNDERİLİYOR..." : "SİPARİŞİ ONAYLA"}
+                        {isSubmitting ? t("submitting") : t("confirm_order")}
                     </button>
                 </div>
             )}
-            {localCart.length === 0 && <div style={{ padding: "40px 0", textAlign: "center", color: "var(--muted)" }}>Sepet Boş</div>}
+            {localCart.length === 0 && <div style={{ padding: "40px 0", textAlign: "center", color: "var(--muted)" }}>{t("cart_empty")}</div>}
         </div>
     );
 }

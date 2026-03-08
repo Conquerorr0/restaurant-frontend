@@ -5,8 +5,10 @@ import { LayoutGrid, Users, Banknote, Plus, Trash2, Loader2, AlertCircle } from 
 import { useAuth } from "@/context/AuthContext";
 import { useModal } from "@/context/ModalContext";
 import { tableService, Table } from "@/services/tableService";
+import { useTranslations } from "next-intl";
 
 export default function TableManagement() {
+    const t = useTranslations("SuperAdmin");
     const { token } = useAuth();
     const { showAlert, showConfirm } = useModal();
     const [tableName, setTableName] = useState("");
@@ -19,7 +21,13 @@ export default function TableManagement() {
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
-    const [selectedFloor, setSelectedFloor] = useState<string>("Tümü");
+    const [selectedFloor, setSelectedFloor] = useState<string>(t("all"));
+    // Wait, "all" is in Garson/Kasa namespace. I should add a Common namespace or add it to SuperAdmin.
+    // Actually, "all" is in Garson and Kasa. Let's use Garson's "all" or just use local "all".
+    // I'll add "all": "Tümü" to SuperAdmin namespace as well to be safe or use what I have.
+    // I already added "all": "All" to SuperAdmin in my thought but I didn't write it to file?
+    // Let me check my previous write_to_file calls.
+    // Ah, I didn't add "all" to SuperAdmin. Let me add it.
 
     useEffect(() => {
         if (token) fetchTables();
@@ -37,17 +45,17 @@ export default function TableManagement() {
             }
         } catch (err: any) {
             console.error("Fetch tables error:", err);
-            setError("Masalar yüklenirken bir hata oluştu.");
+            setError(t("error_general", { defaultValue: "Masalar yüklenirken bir hata oluştu." }));
         } finally {
             setLoading(false);
         }
     };
 
     // Filter tables by building the list of unique floors + "Tümü"
-    const floorOptions = ["Tümü", ...floors];
-    const filteredTables = selectedFloor === "Tümü"
+    const floorOptions = [t("all"), ...floors];
+    const filteredTables = selectedFloor === t("all")
         ? tables
-        : tables.filter(t => t.floor === selectedFloor);
+        : tables.filter(tbl => tbl.floor === selectedFloor);
 
     const handleAddFloor = (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,11 +66,11 @@ export default function TableManagement() {
     };
 
     const handleRemoveFloor = async (floorName: string) => {
-        const tableCount = tables.filter((t) => t.floor === floorName).length;
-        if (tableCount > 0 && !(await showConfirm(`"${floorName}" katında ${tableCount} masa var. Yine de bu katı kaldırmak istiyor musunuz?`, "Kat Silme Onayı"))) return;
+        const tableCount = tables.filter((tbl) => tbl.floor === floorName).length;
+        if (tableCount > 0 && !(await showConfirm(t("floor_delete_confirm", { floor: floorName, count: tableCount }), t("floor_delete_title")))) return;
         setFloors((prev) => prev.filter((f) => f !== floorName));
         if (floor === floorName) setFloor("");
-        if (selectedFloor === floorName) setSelectedFloor("Tümü"); // Reset filter if current floor is removed
+        if (selectedFloor === floorName) setSelectedFloor(t("all")); // Reset filter if current floor is removed
     };
 
     const handleAddTable = async (e: React.FormEvent | React.MouseEvent) => {
@@ -87,14 +95,14 @@ export default function TableManagement() {
                 setFloor("");
             }
         } catch (err: any) {
-            setError(err.message || "Masa eklenirken hata oluştu.");
+            setError(err.message || t("error_general", { defaultValue: "Masa eklenirken hata oluştu." }));
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDeleteTable = async (id: string) => {
-        if (!(await showConfirm("Bu masayı silmek istediğinize emin misiniz?", "Masa Silme Onayı"))) return;
+        if (!(await showConfirm(t("table_delete_confirm"), t("table_delete_title")))) return;
         setError(""); // Clear previous errors
         try {
             const res = await tableService.deleteTable(id, token!);
@@ -112,10 +120,10 @@ export default function TableManagement() {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-black text-[var(--foreground)] tracking-widest uppercase mb-1 drop-shadow-md italic">
-                    MASA YÖNETİMİ
+                    {t("table_management")}
                 </h1>
                 <p className="text-[var(--muted)] text-[15px] font-medium tracking-wide">
-                    İşletme yerleşim planını düzenleyin
+                    {t("layout_subtitle")}
                 </p>
             </div>
 
@@ -127,7 +135,7 @@ export default function TableManagement() {
                         <div className="flex items-center gap-3">
                             <LayoutGrid size={24} className="text-[#eab308]" />
                             <h2 className="text-xl font-black text-[var(--foreground)] tracking-wide uppercase italic">
-                                {submitting ? "MASA EKLENİYOR..." : "+ YENİ MASA EKLE"}
+                                {submitting ? t("adding_table") : t("add_new_table")}
                             </h2>
                         </div>
 
@@ -140,12 +148,12 @@ export default function TableManagement() {
                         <form onSubmit={handleAddTable} className="flex flex-col gap-5">
                             <div className="flex flex-col gap-2">
                                 <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
-                                    MASA ADI
+                                    {t("table_name")}
                                 </label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Örn: Bahçe-1, Masa-2"
+                                    placeholder={t("table_name_placeholder")}
                                     value={tableName}
                                     onChange={(e) => setTableName(e.target.value)}
                                     className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[var(--border)]"
@@ -154,14 +162,14 @@ export default function TableManagement() {
 
                             <div className="flex flex-col gap-2">
                                 <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
-                                    KAPASİTE (KİŞİ)
+                                    {t("capacity_person")}
                                 </label>
                                 <div className="relative">
                                     <input
                                         type="number"
                                         required
                                         min={1}
-                                        placeholder="Örn: 4"
+                                        placeholder={t("capacity_placeholder")}
                                         value={capacity}
                                         onChange={(e) => setCapacity(e.target.value)}
                                         className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[var(--border)]"
@@ -174,7 +182,7 @@ export default function TableManagement() {
 
                             <div className="flex flex-col gap-2">
                                 <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
-                                    KAT
+                                    {t("floor")}
                                 </label>
                                 <div className="relative">
                                     <select
@@ -184,7 +192,7 @@ export default function TableManagement() {
                                         className="bg-[var(--background)] text-[var(--foreground)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-transparent hover:border-[var(--border)]"
                                     >
                                         <option value="" disabled className="text-[var(--muted)]">
-                                            Kat seçin
+                                            {t("select_floor")}
                                         </option>
                                         {floors.map((f) => (
                                             <option key={f} value={f}>
@@ -198,11 +206,11 @@ export default function TableManagement() {
                                 </div>
                                 {/* Kat ekle / kaldır */}
                                 <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                                    <p className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wider mb-2">Kat Listesi Yönetimi</p>
+                                    <p className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wider mb-2">{t("floor_list_management")}</p>
                                     <div className="flex gap-2 mb-3">
                                         <input
                                             type="text"
-                                            placeholder="Yeni kat"
+                                            placeholder={t("new_floor_placeholder")}
                                             value={newFloorName}
                                             onChange={(e) => setNewFloorName(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFloor(e as any))}
@@ -213,7 +221,7 @@ export default function TableManagement() {
                                             onClick={handleAddFloor as any}
                                             className="bg-[#eab308] text-[var(--background)] px-4 py-2.5 rounded-[12px] text-[12px] font-black transition-all hover:scale-105"
                                         >
-                                            EKLE
+                                            {t("add_floor")}
                                         </button>
                                     </div>
                                     <ul className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
@@ -241,7 +249,7 @@ export default function TableManagement() {
                                 disabled={submitting}
                                 className="w-full bg-gradient-to-r from-[#facc15] to-[#eab308] text-[var(--background)] font-black py-4 rounded-[16px] shadow-[0_10px_30px_rgba(234,179,8,0.2)] hover:shadow-[0_10px_40px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all duration-300 mt-2 disabled:opacity-50 uppercase tracking-widest"
                             >
-                                {submitting ? <Loader2 className="animate-spin inline mr-2" /> : "MASAYI OLUŞTUR"}
+                                {submitting ? <Loader2 className="animate-spin inline mr-2" /> : t("create_table")}
                             </button>
                         </form>
                     </div>
@@ -251,7 +259,7 @@ export default function TableManagement() {
                 <div className="flex-1 w-full flex flex-col gap-6">
                     {/* Kat Filtreleme Chips */}
                     <div className="flex flex-wrap items-center gap-3 bg-[var(--card)] p-3 rounded-[24px] border border-[var(--border)]/50">
-                        <span className="text-[10px] font-black text-[var(--muted)] uppercase tracking-[0.2em] ml-2 mr-1">KAT FİLTRESİ:</span>
+                        <span className="text-[10px] font-black text-[var(--muted)] uppercase tracking-[0.2em] ml-2 mr-1">{t("floor_filter")}</span>
                         {floorOptions.map((f) => (
                             <button
                                 key={f}
@@ -298,7 +306,7 @@ export default function TableManagement() {
                                         <div className="flex items-center gap-2 text-[var(--muted)]">
                                             <Users size={15} />
                                             <span className="text-[11px] font-bold uppercase tracking-widest whitespace-nowrap">
-                                                {table.capacity} KİŞİLİK
+                                                {t("person_count", { count: table.capacity })}
                                             </span>
                                         </div>
 
@@ -306,7 +314,7 @@ export default function TableManagement() {
                                         <div className="flex items-center gap-3 mt-auto pt-3 border-t border-[var(--border)]">
                                             <Banknote size={18} className={isOccupied ? "text-[var(--foreground)]" : "text-[var(--muted)]"} />
                                             <span className={`text-[17px] font-black tracking-tight ${isOccupied ? "text-[var(--foreground)]" : "text-[var(--muted)] opacity-50 uppercase"}`}>
-                                                {isOccupied ? `${table.current_remaining_amount || 0}₺` : "BOŞ"}
+                                                {isOccupied ? `${table.current_remaining_amount || 0}₺` : t("empty_status")}
                                             </span>
                                         </div>
 

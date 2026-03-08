@@ -68,6 +68,14 @@ body {
   color: var(--foreground);
 }
 
+html[lang="ar"] body {
+  font-family: var(--font-cairo), sans-serif;
+}
+
+[dir="rtl"] {
+  text-align: right;
+}
+
 /* Base styles for smooth transitions */
 * {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;

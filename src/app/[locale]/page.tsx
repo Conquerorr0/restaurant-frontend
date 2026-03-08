@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
+import { useTranslations } from "next-intl";
 
 export default function LoginPage() {
+  const t = useTranslations("Login");
   const { login: setAuth } = useAuth();
   const [role, setRole] = useState<"GARSON" | "YONETIM">("YONETIM");
 
@@ -40,7 +42,7 @@ export default function LoginPage() {
 
   const handlePinSubmit = async () => {
     if (pin.length !== 4) {
-      setErrorMsg("Lütfen 4 haneli PIN girin.");
+      setErrorMsg(t("enter_pin"));
       return;
     }
 
@@ -52,11 +54,11 @@ export default function LoginPage() {
       if (response.success) {
         setAuth(response);
       } else {
-        setErrorMsg(response.message || "Hatalı PIN.");
+        setErrorMsg(response.message || t("error_invalid_credentials"));
         setPin("");
       }
     } catch (error: any) {
-      setErrorMsg(error.message || "Bağlantı hatası oluştu.");
+      setErrorMsg(error.message || t("error_general"));
       setPin("");
     } finally {
       setIsLoading(false);
@@ -66,7 +68,7 @@ export default function LoginPage() {
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      setErrorMsg("Kullanıcı adı ve şifre zorunludur.");
+      setErrorMsg(t("error_invalid_credentials"));
       return;
     }
 
@@ -78,10 +80,10 @@ export default function LoginPage() {
       if (response.success) {
         setAuth(response);
       } else {
-        setErrorMsg(response.message || "Hatalı kullanıcı adı veya şifre.");
+        setErrorMsg(response.message || t("error_invalid_credentials"));
       }
     } catch (error: any) {
-      setErrorMsg(error.message || "Bağlantı hatası oluştu.");
+      setErrorMsg(error.message || t("error_general"));
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +116,7 @@ export default function LoginPage() {
             }`}
         >
           <Key className="w-4 h-4" />
-          GARSON
+          {t("garson_login")}
         </button>
         <button
           onClick={() => {
@@ -129,7 +131,7 @@ export default function LoginPage() {
             }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          YÖNETİM
+          {t("admin_login")}
         </button>
       </div>
 
@@ -139,12 +141,12 @@ export default function LoginPage() {
         {role === "YONETIM" ? (
           /* Admin / Cashier Login Form */
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-[#eab308] text-xl font-bold mb-1 tracking-wide">KASA / ADMİN</h2>
-            <p className="text-[var(--muted)] text-xs italic mb-6">Kurumsal kullanıcı girişi</p>
+            <h2 className="text-[#eab308] text-xl font-bold mb-1 tracking-wide">{t("cashier_admin")}</h2>
+            <p className="text-[var(--muted)] text-xs italic mb-6">{t("corporate_login")}</p>
 
             <form onSubmit={handleAdminLogin} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
-                <label className="text-[var(--muted)] text-xs font-medium ml-1">Kullanıcı Adı</label>
+                <label className="text-[var(--muted)] text-xs font-medium ml-1">{t("username")}</label>
                 <div className="relative flex items-center">
                   <User className={`absolute left-4 w-5 h-5 ${errorMsg ? 'text-red-400' : 'text-gray-500'}`} />
                   <input
@@ -162,7 +164,7 @@ export default function LoginPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-[var(--muted)] text-xs font-medium ml-1">Şifre</label>
+                <label className="text-[var(--muted)] text-xs font-medium ml-1">{t("password")}</label>
                 <div className="relative flex items-center">
                   <Lock className={`absolute left-4 w-5 h-5 ${errorMsg ? 'text-red-400' : 'text-gray-500'}`} />
                   <input
@@ -193,7 +195,7 @@ export default function LoginPage() {
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <>SİSTEME GİRİŞ YAP <ChevronRight className="w-5 h-5" /></>
+                  <>{t("login_button")} <ChevronRight className="w-5 h-5" /></>
                 )}
               </button>
             </form>
@@ -201,8 +203,8 @@ export default function LoginPage() {
         ) : (
           /* Waiter PIN Login */
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col items-center">
-            <h2 className="text-[#eab308] text-xl font-bold mb-1 tracking-wide uppercase">Pin Girişi</h2>
-            <p className="text-[var(--muted)] text-xs italic mb-8">4 haneli kodunuzu girin</p>
+            <h2 className="text-[#eab308] text-xl font-bold mb-1 tracking-wide uppercase">{t("pin_login")}</h2>
+            <p className="text-[var(--muted)] text-xs italic mb-8">{t("enter_pin")}</p>
 
             {/* Pin Display */}
             <div className="flex gap-4 mb-6">

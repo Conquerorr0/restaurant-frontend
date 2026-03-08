@@ -5,19 +5,14 @@ import { UserPlus, User, Lock, Edit2, Trash2, Settings, X, Save, Loader2, AlertC
 import { useAuth } from "@/context/AuthContext";
 import { useModal } from "@/context/ModalContext";
 import { userService, User as UserType } from "@/services/userService";
+import { useTranslations } from "next-intl";
 
 type RoleType = "SUPER_ADMIN" | "CASHIER" | "WAITER";
 
-const getRoleDisplay = (role: RoleType) => {
-    switch (role) {
-        case "SUPER_ADMIN": return { label: "SÜPER ADMİN", color: "text-[#eab308]", bg: "bg-[#eab308]/10" };
-        case "CASHIER": return { label: "KASİYER", color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10" };
-        case "WAITER": return { label: "GARSON", color: "text-[#a855f7]", bg: "bg-[#a855f7]/10" };
-        default: return { label: role, color: "text-[var(--muted)]", bg: "bg-[var(--muted)]/10" };
-    }
-};
+// Role display helper moved inside component to access translations
 
 export default function PersonnelManagement() {
+    const t = useTranslations("SuperAdmin");
     const { token } = useAuth();
     const { showAlert, showConfirm } = useModal();
     const [name, setName] = useState("");
@@ -32,6 +27,15 @@ export default function PersonnelManagement() {
     const [submitting, setSubmitting] = useState(false);
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
+    const getRoleDisplay = (role: RoleType) => {
+        switch (role) {
+            case "SUPER_ADMIN": return { label: t("role_super_admin"), color: "text-[#eab308]", bg: "bg-[#eab308]/10" };
+            case "CASHIER": return { label: t("role_cashier"), color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10" };
+            case "WAITER": return { label: t("role_waiter"), color: "text-[#a855f7]", bg: "bg-[#a855f7]/10" };
+            default: return { label: role, color: "text-[var(--muted)]", bg: "bg-[var(--muted)]/10" };
+        }
+    };
+
     useEffect(() => {
         if (token) fetchUsers();
     }, [token]);
@@ -43,7 +47,7 @@ export default function PersonnelManagement() {
             if (res.success) setPeople(res.data);
         } catch (err) {
             console.error(err);
-            setError("Personel listesi yüklenirken hata oluştu.");
+            setError(t("error_general", { defaultValue: "Personel listesi yüklenirken hata oluştu." }));
         } finally {
             setLoading(false);
         }
@@ -56,12 +60,12 @@ export default function PersonnelManagement() {
         const needsUsername = role && role !== 'WAITER';
 
         if (!name.trim() || !role || (needsUsername && !username.trim())) {
-            setError("Lütfen gerekli tüm alanları doldurun.");
+            setError(t("error_fill_all_fields"));
             return;
         }
 
         if (isWaiter && !pin.trim()) {
-            setError("Lütfen garson için PİN kodu girin.");
+            setError(t("error_waiter_pin_required"));
             return;
         }
 
@@ -91,7 +95,7 @@ export default function PersonnelManagement() {
                 }
             }
         } catch (err: any) {
-            setError(err.message || "İşlem başarısız");
+            setError(err.message || t("error_general", { defaultValue: "İşlem başarısız" }));
         } finally {
             setSubmitting(false);
         }
@@ -137,18 +141,18 @@ export default function PersonnelManagement() {
         if (personToDelete?.role === "SUPER_ADMIN") {
             const superAdminCount = people.filter(p => p.role === "SUPER_ADMIN").length;
             if (superAdminCount <= 1) {
-                setError("Sistemde en az bir Süper Admin bulunmalıdır. Bu kullanıcıyı silemezsiniz!");
+                setError(t("error_min_super_admin"));
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
         }
 
-        if (await showConfirm("Bu personeli silmek istediğinize emin misiniz?", "Personel Silme Onayı")) {
+        if (await showConfirm(t("personnel_delete_confirm"), t("personnel_delete_title"))) {
             try {
                 const res = await userService.deleteUser(id, token!);
                 if (res.success) fetchUsers();
             } catch (err: any) {
-                await showAlert(err.message || "Silme işlemi başarısız", "error");
+                await showAlert(err.message || t("error_general", { defaultValue: "Silme işlemi başarısız" }), "error");
             }
         }
     };
@@ -158,10 +162,10 @@ export default function PersonnelManagement() {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-black text-[var(--foreground)] tracking-widest uppercase mb-1 drop-shadow-md italic">
-                    PERSONEL YÖNETİMİ
+                    {t("personnel_management")}
                 </h1>
                 <p className="text-[var(--muted)] text-[15px] font-medium tracking-wide">
-                    Ekip üyelerini ve erişim yetkilerini düzenleyin
+                    {t("personnel_subtitle")}
                 </p>
             </div>
 
@@ -186,7 +190,7 @@ export default function PersonnelManagement() {
                                     <UserPlus size={24} className="text-[#eab308]" />
                                 )}
                                 <h2 className="text-xl font-black text-[var(--foreground)] tracking-wide uppercase italic">
-                                    {editingUserId ? "PERSONELİ DÜZENLE" : "YENİ PERSONEL"}
+                                    {editingUserId ? t("edit_personnel") : t("add_new_personnel")}
                                 </h2>
                             </div>
                             {editingUserId && (
@@ -203,12 +207,12 @@ export default function PersonnelManagement() {
                         <form onSubmit={handleAddOrEditPerson} className="flex flex-col gap-5">
                             <div className="flex flex-col gap-2">
                                 <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
-                                    AD SOYAD
+                                    {t("name_surname")}
                                 </label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Örn: Ahmet Yılmaz"
+                                    placeholder={t("name_placeholder")}
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[var(--border)]"
@@ -218,14 +222,14 @@ export default function PersonnelManagement() {
                             {role !== 'WAITER' && role !== "" && (
                                 <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-left-2">
                                     <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
-                                        KULLANICI ADI
+                                        {t("username_label")}
                                     </label>
                                     <div className="relative">
                                         <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--muted)] font-black">@</span>
                                         <input
                                             type="text"
                                             required
-                                            placeholder="username"
+                                            placeholder={t("username_placeholder")}
                                             value={username || ""}
                                             onChange={(e) => setUsername(e.target.value)}
                                             className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] pl-10 pr-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold border border-transparent hover:border-[var(--border)]"
@@ -237,7 +241,7 @@ export default function PersonnelManagement() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em]">
-                                        ROL
+                                        {t("role_label")}
                                     </label>
                                     <div className="relative">
                                         <select
@@ -246,10 +250,10 @@ export default function PersonnelManagement() {
                                             onChange={(e) => handleRoleChange(e.target.value as RoleType)}
                                             className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-bold appearance-none border border-transparent hover:border-[var(--border)]"
                                         >
-                                            <option value="" disabled className="text-[var(--muted)]">Seçiniz</option>
-                                            <option value="SUPER_ADMIN">Süper Admin</option>
-                                            <option value="CASHIER">Kasiyer</option>
-                                            <option value="WAITER">Garson</option>
+                                            <option value="" disabled className="text-[var(--muted)]">{t("select_option")}</option>
+                                            <option value="SUPER_ADMIN">{t("role_super_admin")}</option>
+                                            <option value="CASHIER">{t("role_cashier")}</option>
+                                            <option value="WAITER">{t("role_waiter")}</option>
                                         </select>
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                                             <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[var(--muted)]" />
@@ -259,11 +263,11 @@ export default function PersonnelManagement() {
 
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] leading-tight truncate">
-                                        {role === 'WAITER' ? 'PİN KODU' : 'YENİ ŞİFRE'}
+                                        {role === 'WAITER' ? t("pin_code_label") : t("new_password_label")}
                                     </label>
                                     <input
                                         type={role === 'WAITER' ? "text" : "password"}
-                                        placeholder={role === 'WAITER' ? "1234" : (editingUserId ? "****" : "123456")}
+                                        placeholder={role === 'WAITER' ? t("pin_placeholder") : (editingUserId ? "****" : t("password_placeholder"))}
                                         value={role === 'WAITER' ? (pin || "") : (password || "")}
                                         onChange={(e) => role === 'WAITER' ? setPin(e.target.value) : setPassword(e.target.value)}
                                         className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] px-4 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-transparent hover:border-[var(--border)]"
@@ -279,7 +283,7 @@ export default function PersonnelManagement() {
                                 {submitting ? <Loader2 className="animate-spin inline mr-2" /> : (
                                     <>
                                         {editingUserId ? <Save size={20} /> : <UserPlus size={20} />}
-                                        {editingUserId ? "GÜNCELLE" : "PERSONELİ KAYDET"}
+                                        {editingUserId ? t("update_personnel") : t("save_personnel")}
                                     </>
                                 )}
                             </button>
@@ -354,8 +358,8 @@ export default function PersonnelManagement() {
                             {people.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[var(--border)] rounded-[32px]">
                                     <UserPlus size={48} className="text-[var(--border)] mb-4" />
-                                    <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">Personel Bulunamadı</h3>
-                                    <p className="text-[var(--muted)] font-bold">Lütfen yeni bir personel kaydı yapın.</p>
+                                    <h3 className="text-xl font-black text-[var(--foreground)] mb-2 uppercase italic">{t("no_personnel_found")}</h3>
+                                    <p className="text-[var(--muted)] font-bold">{t("no_personnel_desc")}</p>
                                 </div>
                             )}
                         </>

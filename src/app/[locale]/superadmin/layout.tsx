@@ -1,21 +1,22 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/routing";
 import { BarChart3, UtensilsCrossed, LayoutGrid, Users, LogOut, ShieldCheck, Wallet } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
+    const t = useTranslations("SuperAdmin");
     const pathname = usePathname();
-    const { logout } = useAuth(); // Bizim çalışan logout fonksiyonumuz
+    const { logout } = useAuth();
 
     const navItems = [
-        { name: "Dashboard", href: "/superadmin", icon: BarChart3 },
-        { name: "Menü Yönetimi", href: "/superadmin/menu", icon: UtensilsCrossed },
-        { name: "Masalar", href: "/superadmin/masalar", icon: LayoutGrid },
-        { name: "Personel", href: "/superadmin/personel", icon: Users },
-        { name: "Giderler", href: "/superadmin/giderler", icon: Wallet }, // Bizim eklediğimiz link
+        { name: t("nav_dashboard"), href: "/superadmin", icon: BarChart3 },
+        { name: t("nav_menu"), href: "/superadmin/menu", icon: UtensilsCrossed },
+        { name: t("nav_tables"), href: "/superadmin/masalar", icon: LayoutGrid },
+        { name: t("nav_personnel"), href: "/superadmin/personel", icon: Users },
+        { name: t("nav_expenses"), href: "/superadmin/giderler", icon: Wallet },
     ];
 
     return (
@@ -28,8 +29,8 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                         <div className="w-16 h-16 bg-[#eab308] rounded-[20px] flex items-center justify-center mb-5 shadow-[0_0_20px_rgba(234,179,8,0.15)]">
                             <ShieldCheck size={32} className="text-[var(--background)]" />
                         </div>
-                        <h2 className="text-[#eab308] font-black text-xl tracking-[0.05em]">SÜPER ADMİN</h2>
-                        <p className="text-[10px] text-[var(--muted)] font-bold tracking-[0.2em] mt-1.5">YÖNETİM PANELİ</p>
+                        <h2 className="text-[#eab308] font-black text-xl tracking-[0.05em]">{t("super_admin")}</h2>
+                        <p className="text-[10px] text-[var(--muted)] font-bold tracking-[0.2em] mt-1.5">{t("management_panel")}</p>
                     </div>
 
                     {/* Navigation */}
@@ -61,7 +62,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                     className="flex items-center gap-3 text-[#ef4444] font-bold hover:text-red-400 transition-colors px-5 pt-8 mt-auto border-t border-[var(--card)]/50"
                 >
                     <LogOut size={20} />
-                    <span className="text-[15px]">Güvenli Çıkış</span>
+                    <span className="text-[15px]">{t("logout")}</span>
                 </button>
             </aside>
 
