@@ -29,6 +29,8 @@ export interface DashboardStats {
 export interface ChartDataPoint {
     label: string;
     value: number;
+    expenses?: number;
+    net?: number;
 }
 
 export interface TopProduct {
@@ -41,6 +43,22 @@ export interface StaffPerformance {
     waiter_name: string;
     total_sales: number;
     order_count: number;
+}
+
+export interface DailyBreakdownRow {
+    date: string;
+    revenue: number;
+    cash: number;
+    card: number;
+    meal: number;
+    expenses: number;
+    net: number;
+    expense_details: { amount: number; category: string; description: string }[];
+}
+
+export interface DailyBreakdown {
+    rows: DailyBreakdownRow[];
+    totals: { revenue: number; expenses: number; net: number };
 }
 
 export const reportService = {
@@ -80,5 +98,9 @@ export const reportService = {
         if (params.toString()) url += `?${params.toString()}`;
 
         return apiRequest<{ success: boolean; data: StaffPerformance[] }>(url, { token });
+    },
+
+    getDailyBreakdown: (token: string, period: 'week' | 'month' = 'week') => {
+        return apiRequest<{ success: boolean; data: DailyBreakdown }>(`/reports/daily-breakdown?period=${period}`, { token });
     }
 };
