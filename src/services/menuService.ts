@@ -13,6 +13,7 @@ export interface Product {
     category_id: string;
     name: string;
     price: number;
+    cost_price: number;
     description?: string;
     image_url?: string;
     sort_order: number;

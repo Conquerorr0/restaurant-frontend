@@ -26,6 +26,7 @@ export default function MenuManagement() {
     const [productName, setProductName] = useState("");
     const [productCategoryId, setProductCategoryId] = useState("");
     const [productPrice, setProductPrice] = useState("");
+    const [productCostPrice, setProductCostPrice] = useState("");
     const [productDescription, setProductDescription] = useState("");
 
     // Category form state
@@ -64,6 +65,7 @@ export default function MenuManagement() {
         setProductName(product.name);
         setProductCategoryId(product.category_id);
         setProductPrice(String(product.price));
+        setProductCostPrice(String(product.cost_price || 0));
         setProductDescription(product.description || "");
         setActiveTab("products");
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -74,6 +76,7 @@ export default function MenuManagement() {
         setProductName("");
         setProductCategoryId("");
         setProductPrice("");
+        setProductCostPrice("");
         setProductDescription("");
         setError("");
     };
@@ -114,6 +117,7 @@ export default function MenuManagement() {
                 name: productName,
                 category_id: productCategoryId,
                 price: parseFloat(productPrice),
+                cost_price: parseFloat(productCostPrice) || 0,
                 description: productDescription,
                 is_active: true
             };
@@ -306,6 +310,18 @@ export default function MenuManagement() {
                                     placeholder={t("price_placeholder")}
                                     value={productPrice}
                                     onChange={(e) => setProductPrice(e.target.value)}
+                                    className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--border-alt)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[11px] text-[var(--muted)] font-black uppercase tracking-[0.15em] ml-1">{t("cost_price_tl")}</label>
+                                <input
+                                    type="number"
+                                    required
+                                    placeholder={t("cost_placeholder")}
+                                    value={productCostPrice}
+                                    onChange={(e) => setProductCostPrice(e.target.value)}
                                     className="bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--border-alt)] px-5 py-4 rounded-[16px] w-full focus:outline-none focus:ring-1 focus:ring-[#eab308]/50 transition-all font-black border border-[var(--border)]/30 hover:border-[var(--border-alt)]"
                                 />
                             </div>
