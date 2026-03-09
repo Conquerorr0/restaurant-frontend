@@ -16,13 +16,12 @@ import { useTranslations } from "next-intl";
 interface Product { id: string; name: string; price: number; }
 interface Category { id: string; name: string; emoji: string; products: Product[]; }
 
-export default function OrderPage({ params }: { params: Promise<{ tableId: string }> | { tableId: string } }) {
+export default function OrderPage({ params }: { params: Promise<{ tableId: string }> }) {
     const t = useTranslations("Garson");
     const router = useRouter();
     const { token } = useAuth();
     const { showAlert } = useModal();
-    const resolvedParams = "then" in params ? use(params as any) : params;
-    const tableId = (resolvedParams as any).tableId;
+    const { tableId } = use(params);
 
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState<Category[]>([]);
