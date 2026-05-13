@@ -62,7 +62,7 @@ export default async function RootLayout({
           <ThemeProvider>
             <AuthProvider>
               <ModalProvider>
-                <div className="fixed bottom-6 right-6 md:top-4 md:right-4 md:bottom-auto z-[9999] flex flex-col md:flex-row items-center gap-3">
+                <div className="no-print fixed bottom-6 right-6 md:top-4 md:right-4 md:bottom-auto z-[9999] flex flex-col md:flex-row items-center gap-3">
                   <LanguageToggle />
                   <ThemeToggle />
                 </div>

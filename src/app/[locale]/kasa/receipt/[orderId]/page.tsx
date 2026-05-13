@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useLocale } from "next-intl";
 
 interface ReceiptData {
     restaurantName: string;
@@ -14,14 +15,40 @@ interface ReceiptData {
     total: number;
 }
 
-const METHOD_LABELS: Record<string, string> = {
-    CASH: "Nakit",
-    CREDIT_CARD: "Kart",
-    MEAL_CARD: "Yemek Kartı",
+const LABELS = {
+    tr: {
+        table: "Masa", waiter: "Garson", total: "TOPLAM", thanks: "Teşekkürler!",
+        loading: "Yükleniyor...", error: "Fiş verisi yüklenemedi.",
+        print: "Tekrar Yazdır", close: "Kapat",
+        ready: "Fiş hazır — yazdırma penceresi açılıyor...",
+    },
+    en: {
+        table: "Table", waiter: "Waiter", total: "TOTAL", thanks: "Thank you!",
+        loading: "Loading...", error: "Receipt data could not be loaded.",
+        print: "Print Again", close: "Close",
+        ready: "Receipt ready — print dialog opening...",
+    },
+    ar: {
+        table: "الطاولة", waiter: "النادل", total: "المجموع", thanks: "شكراً!",
+        loading: "جار التحميل...", error: "تعذر تحميل بيانات الفاتورة.",
+        print: "طباعة مجدداً", close: "إغلاق",
+        ready: "الفاتورة جاهزة — يتم فتح نافذة الطباعة...",
+    },
+} as const;
+
+const METHOD_LABELS: Record<string, Record<string, string>> = {
+    tr: { CASH: "Nakit", CREDIT_CARD: "Kart", MEAL_CARD: "Yemek Kartı" },
+    en: { CASH: "Cash", CREDIT_CARD: "Card", MEAL_CARD: "Meal Card" },
+    ar: { CASH: "نقدي", CREDIT_CARD: "بطاقة", MEAL_CARD: "بطاقة وجبات" },
 };
 
 export default function ReceiptPage() {
     const { orderId } = useParams<{ orderId: string }>();
+    const locale = useLocale();
+    const labels = LABELS[locale as keyof typeof LABELS] ?? LABELS.tr;
+    const methodLabels = METHOD_LABELS[locale] ?? METHOD_LABELS.tr;
+    const dir = locale === "ar" ? "rtl" : "ltr";
+
     const [receipt, setReceipt] = useState<ReceiptData | null>(null);
     const [error, setError] = useState(false);
 
@@ -30,7 +57,10 @@ export default function ReceiptPage() {
         if (!token || !orderId) { setError(true); return; }
 
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/print/receipt/${orderId}`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Accept-Language": locale,
+            },
         })
             .then((r) => r.json())
             .then((data) => {
@@ -38,7 +68,7 @@ export default function ReceiptPage() {
                 else setError(true);
             })
             .catch(() => setError(true));
-    }, [orderId]);
+    }, [orderId, locale]);
 
     useEffect(() => {
         if (!receipt) return;
@@ -51,10 +81,10 @@ export default function ReceiptPage() {
 
     if (error) {
         return (
-            <div style={{ padding: "40px", textAlign: "center", fontFamily: "monospace" }}>
-                <p>Fiş verisi yüklenemedi.</p>
+            <div style={{ padding: "40px", textAlign: "center", fontFamily: "monospace" }} dir={dir}>
+                <p>{labels.error}</p>
                 <button onClick={() => window.close()} style={{ marginTop: "16px", padding: "8px 16px", cursor: "pointer" }}>
-                    Kapat
+                    {labels.close}
                 </button>
             </div>
         );
@@ -62,8 +92,8 @@ export default function ReceiptPage() {
 
     if (!receipt) {
         return (
-            <div style={{ padding: "40px", textAlign: "center", fontFamily: "monospace" }}>
-                Yükleniyor...
+            <div style={{ padding: "40px", textAlign: "center", fontFamily: "monospace" }} dir={dir}>
+                {labels.loading}
             </div>
         );
     }
@@ -82,20 +112,20 @@ export default function ReceiptPage() {
                 body { background: #f5f5f5; }
             `}</style>
 
-            <div className="no-print" style={{ padding: "12px 16px", background: "#1a1a1a", color: "#fbbf24", fontFamily: "monospace", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>Fiş hazır — yazdırma penceresi açılıyor...</span>
+            <div className="no-print" style={{ padding: "12px 16px", background: "#1a1a1a", color: "#fbbf24", fontFamily: "monospace", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center" }} dir={dir}>
+                <span>{labels.ready}</span>
                 <div style={{ display: "flex", gap: "8px" }}>
                     <button onClick={() => window.print()} style={{ padding: "6px 14px", background: "#fbbf24", color: "#000", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: 700, fontSize: "13px" }}>
-                        Tekrar Yazdır
+                        {labels.print}
                     </button>
                     <button onClick={() => window.close()} style={{ padding: "6px 14px", background: "transparent", color: "#aaa", border: "1px solid #444", borderRadius: "6px", cursor: "pointer", fontSize: "13px" }}>
-                        Kapat
+                        {labels.close}
                     </button>
                 </div>
             </div>
 
             <div style={{ display: "flex", justifyContent: "center", padding: "24px", background: "#f5f5f5", minHeight: "calc(100vh - 44px)" }}>
-                <div id="receipt" style={{
+                <div id="receipt" dir={dir} style={{
                     width: "72mm",
                     background: "#fff",
                     fontFamily: "'Courier New', Courier, monospace",
@@ -110,8 +140,8 @@ export default function ReceiptPage() {
 
                     <div style={{ borderTop: "1px dashed #000", borderBottom: "1px dashed #000", padding: "4px 0", margin: "6px 0" }}>
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span>Masa: {receipt.tableName}</span>
-                            <span>Garson: {receipt.waiterName}</span>
+                            <span>{labels.table}: {receipt.tableName}</span>
+                            <span>{labels.waiter}: {receipt.waiterName}</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                             <span>{receipt.dateStr}</span>
@@ -136,19 +166,19 @@ export default function ReceiptPage() {
                     <div style={{ borderTop: "1px dashed #000", paddingTop: "4px", margin: "6px 0 4px" }}>
                         {receipt.payments.map((p, i) => (
                             <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
-                                <span>{METHOD_LABELS[p.method] || p.method}:</span>
+                                <span>{methodLabels[p.method] || p.method}:</span>
                                 <span>{p.amount.toFixed(2)} TL</span>
                             </div>
                         ))}
                     </div>
 
                     <div style={{ borderTop: "1px dashed #000", paddingTop: "4px", display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: "13px" }}>
-                        <span>TOPLAM:</span>
+                        <span>{labels.total}:</span>
                         <span>{receipt.total.toFixed(2)} TL</span>
                     </div>
 
                     <div style={{ textAlign: "center", marginTop: "10px", fontSize: "11px" }}>
-                        <div>Teşekkürler!</div>
+                        <div>{labels.thanks}</div>
                         <div style={{ marginTop: "4px" }}>* * *</div>
                     </div>
                 </div>
