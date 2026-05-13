@@ -29,6 +29,14 @@ export const expenseService = {
         });
     },
 
+    updateExpense: (id: string, data: Partial<Expense>, token: string): Promise<ApiResponse<Expense>> => {
+        return apiRequest<ApiResponse<Expense>>(`/expenses/${id}`, {
+            method: 'PUT',
+            token,
+            body: JSON.stringify(data)
+        });
+    },
+
     deleteExpense: (id: string, token: string): Promise<ApiResponse<void>> => {
         return apiRequest<ApiResponse<void>>(`/expenses/${id}`, {
             method: 'DELETE',

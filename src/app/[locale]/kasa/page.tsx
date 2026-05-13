@@ -8,7 +8,7 @@ import { tableService } from "@/services/tableService";
 import { orderService, Order } from "@/services/orderService";
 import { paymentService } from "@/services/paymentService";
 import { socketService } from "@/services/socketService";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 const playNotificationSound = (type: 'NEW_ORDER' | 'ADD_ITEM' | 'MOVE_MERGE') => {
     try {
@@ -59,6 +59,7 @@ interface TableData {
 
 export default function KasaDashboard() {
     const t = useTranslations("Kasa");
+    const locale = useLocale();
     const { token, logout } = useAuth();
     const { showAlert, showConfirm } = useModal();
     const [tables, setTables] = useState<TableData[]>([]);
@@ -370,6 +371,7 @@ export default function KasaDashboard() {
             }, token);
 
             if (response.success) {
+                window.open(`/${locale}/kasa/receipt/${orderRes.data.id}`, '_blank', 'width=480,height=700');
                 setSuccessPopup({ isOpen: true, message: t("payment_received", { name: selectedTable.name }) });
                 setTimeout(() => setSuccessPopup(prev => ({ ...prev, isOpen: false })), 3000);
                 setSelectedTableId(null);
@@ -406,6 +408,7 @@ export default function KasaDashboard() {
             if (response.success) {
                 setSelectedQuantities({});
                 if (response.data.isFullyPaid) {
+                    window.open(`/${locale}/kasa/receipt/${orderRes.data.id}`, '_blank', 'width=480,height=700');
                     setIsPartialPaymentModalOpen(false);
                     setSelectedTableId(null);
                     setSuccessPopup({ isOpen: true, message: t("table_closed_with_payment") });

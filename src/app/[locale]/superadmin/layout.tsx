@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link, usePathname } from "@/i18n/routing";
-import { BarChart3, UtensilsCrossed, LayoutGrid, Users, LogOut, ShieldCheck, Wallet } from "lucide-react";
+import { BarChart3, UtensilsCrossed, LayoutGrid, Users, LogOut, ShieldCheck, Wallet, TrendingUp } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
@@ -16,6 +16,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         { name: t("nav_menu"), href: "/superadmin/menu", icon: UtensilsCrossed },
         { name: t("nav_tables"), href: "/superadmin/masalar", icon: LayoutGrid },
         { name: t("nav_personnel"), href: "/superadmin/personel", icon: Users },
+        { name: t("nav_sales"), href: "/superadmin/satislar", icon: TrendingUp },
         { name: t("nav_expenses"), href: "/superadmin/giderler", icon: Wallet },
     ];
 
