@@ -52,7 +52,7 @@ export default function ReceiptPage() {
     if (error) {
         return (
             <div style={{ padding: "40px", textAlign: "center", fontFamily: "monospace" }}>
-                <p>Fiş verisi yüklenemedi.</p>
+                <p>Fiş verisi yüklenemedi!</p>
                 <button onClick={() => window.close()} style={{ marginTop: "16px", padding: "8px 16px", cursor: "pointer" }}>
                     Kapat
                 </button>
