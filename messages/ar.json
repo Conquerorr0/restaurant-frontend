@@ -274,7 +274,10 @@
         "method_treat": "مجانا",
         "no_transactions": "لا توجد معاملات.",
         "payment_method_dist": "توزيع المدفوعات",
-        "table_col": "الطاولة"
+        "table_col": "الطاولة",
+        "payment_delete_title": "تأكيد حذف المبيعات",
+        "payment_delete_confirm": "هل أنت متأكد من حذف هذه المعاملة؟ لا يمكن التراجع عن الحذف.",
+        "delete": "حذف"
     },
     "Common": {
         "loading": "جاري التحميل..."

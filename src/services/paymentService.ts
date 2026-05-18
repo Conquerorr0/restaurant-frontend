@@ -22,14 +22,18 @@ export interface PaymentResult {
 }
 
 export const paymentService = {
-    /**
-     * Process a payment for an order
-     */
     processPayment: async (data: PaymentRequest, token: string): Promise<ApiResponse<PaymentResult>> => {
         return apiRequest<ApiResponse<PaymentResult>>('/payments', {
             method: 'POST',
             token,
             body: JSON.stringify(data),
+        });
+    },
+
+    deletePayment: async (id: string, token: string): Promise<ApiResponse<{ id: string }>> => {
+        return apiRequest<ApiResponse<{ id: string }>>(`/payments/${id}`, {
+            method: 'DELETE',
+            token,
         });
     }
 };

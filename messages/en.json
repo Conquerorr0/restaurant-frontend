@@ -274,7 +274,10 @@
         "method_treat": "TREAT",
         "no_transactions": "No transactions found.",
         "payment_method_dist": "PAYMENT DISTRIBUTION",
-        "table_col": "TABLE"
+        "table_col": "TABLE",
+        "payment_delete_title": "Delete Payment Confirmation",
+        "payment_delete_confirm": "Are you sure you want to delete this payment record? This action cannot be undone.",
+        "delete": "DELETE"
     },
     "Common": {
         "loading": "Loading..."

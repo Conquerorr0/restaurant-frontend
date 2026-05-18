@@ -274,7 +274,10 @@
         "method_treat": "İKRAM",
         "no_transactions": "İşlem kaydı bulunamadı.",
         "payment_method_dist": "ÖDEME DAĞILIMI",
-        "table_col": "MASA"
+        "table_col": "MASA",
+        "payment_delete_title": "Satış Silme Onayı",
+        "payment_delete_confirm": "Bu ödeme kaydını silmek istediğinize emin misiniz? Silinmiş kayıtlar geri alınamaz.",
+        "delete": "SİL"
     },
     "Common": {
         "loading": "Yükleniyor..."

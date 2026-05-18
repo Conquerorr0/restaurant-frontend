@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
     TrendingUp, Loader2, Calendar, Banknote, CreditCard, UtensilsCrossed,
-    XCircle, Gift, AlertCircle
+    XCircle, Gift, AlertCircle, Trash2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 import { reportService, PaymentsList, PaymentTransaction } from "@/services/reportService";
+import { paymentService } from "@/services/paymentService";
 import { useTranslations } from "next-intl";
 
 const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
@@ -83,6 +85,7 @@ const today = () => new Date().toISOString().split("T")[0];
 export default function SatislarPage() {
     const t = useTranslations("SuperAdmin");
     const { token } = useAuth();
+    const { showConfirm } = useModal();
 
     const [filterFrom, setFilterFrom] = useState(today);
     const [filterTo, setFilterTo] = useState(today);
@@ -91,6 +94,7 @@ export default function SatislarPage() {
     const [data, setData] = useState<PaymentsList | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const fetchData = useCallback(async (from: string, to: string) => {
         if (!token) return;
@@ -121,6 +125,20 @@ export default function SatislarPage() {
         setFilterTo(t0);
         setAppliedFrom(t0);
         setAppliedTo(t0);
+    };
+
+    const handleDelete = async (row: PaymentTransaction) => {
+        const confirmed = await showConfirm(t("payment_delete_confirm"), t("payment_delete_title"));
+        if (!confirmed || !token) return;
+        setDeletingId(row.id);
+        try {
+            await paymentService.deletePayment(row.id, token);
+            await fetchData(appliedFrom, appliedTo);
+        } catch {
+            setError("Silme işlemi başarısız oldu.");
+        } finally {
+            setDeletingId(null);
+        }
     };
 
     const fmt = (n: number) => `₺${n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -252,6 +270,7 @@ export default function SatislarPage() {
                                     {[t("time"), t("date"), t("table_col"), t("waiter"), t("payment_method"), t("amount")].map(h => (
                                         <th key={h} className="px-6 py-3 text-left text-[10px] font-black tracking-widest text-[var(--muted)]">{h}</th>
                                     ))}
+                                    <th className="px-6 py-3" />
                                 </tr>
                             </thead>
                             <tbody>
@@ -275,6 +294,19 @@ export default function SatislarPage() {
                                             </td>
                                             <td className={`px-6 py-3.5 text-sm font-black ${isRevenue ? "text-[#eab308]" : "text-[var(--muted)]"}`}>
                                                 {isRevenue ? "+" : "-"}{fmt(row.amount)}
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <button
+                                                    onClick={() => handleDelete(row)}
+                                                    disabled={deletingId === row.id}
+                                                    className="p-1.5 rounded-lg text-[var(--muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                                                    title={t("delete")}
+                                                >
+                                                    {deletingId === row.id
+                                                        ? <Loader2 size={14} className="animate-spin" />
+                                                        : <Trash2 size={14} />
+                                                    }
+                                                </button>
                                             </td>
                                         </tr>
                                     );
