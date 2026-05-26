@@ -113,28 +113,27 @@ export default function ReceiptPage() {
                 .receipt-table {
                     width: 100%;
                     border-collapse: collapse;
-                    font-size: 11px;
+                    font-size: 10px;
                     table-layout: fixed;
                 }
                 .receipt-table th {
                     border-bottom: 1px dashed #000;
-                    padding: 2px 2px;
+                    padding: 2px 1px;
                     font-weight: bold;
                     font-size: 10px;
                     white-space: nowrap;
                     overflow: hidden;
                 }
                 .receipt-table td {
-                    padding: 2px 2px;
+                    padding: 2px 1px;
                     vertical-align: top;
                     white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
                 }
-                .col-name  { width: 42%; text-align: start; }
-                .col-qty   { width: 10%; text-align: center; }
-                .col-unit  { width: 22%; text-align: end; }
-                .col-total { width: 26%; text-align: end; }
+                /* Only the name column gets truncated — numbers must show in full */
+                .col-name  { width: 32%; text-align: start; overflow: hidden; text-overflow: ellipsis; }
+                .col-qty   { width: 8%;  text-align: center; }
+                .col-unit  { width: 28%; text-align: end; }
+                .col-total { width: 32%; text-align: end; }
             `}</style>
 
             <div className="no-print" style={{ padding: "12px 16px", background: "#1a1a1a", color: "#fbbf24", fontFamily: "monospace", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center" }} dir={dir}>
