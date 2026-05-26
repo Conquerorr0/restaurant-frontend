@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useLocale } from "next-intl";
+import Image from "next/image";
 
 interface ReceiptData {
     restaurantName: string;
@@ -21,18 +22,21 @@ const LABELS = {
         loading: "Yükleniyor...", error: "Fiş verisi yüklenemedi.",
         print: "Tekrar Yazdır", close: "Kapat",
         ready: "Fiş hazır — yazdırma penceresi açılıyor...",
+        colName: "ÜRÜN ADI", colQty: "AD", colUnit: "BİRİM FİYAT", colTotal: "TOPLAM",
     },
     en: {
         table: "Table", waiter: "Waiter", total: "TOTAL", thanks: "Thank you!",
         loading: "Loading...", error: "Receipt data could not be loaded.",
         print: "Print Again", close: "Close",
         ready: "Receipt ready — print dialog opening...",
+        colName: "ITEM", colQty: "QTY", colUnit: "UNIT PRICE", colTotal: "TOTAL",
     },
     ar: {
         table: "الطاولة", waiter: "النادل", total: "المجموع", thanks: "شكراً!",
         loading: "جار التحميل...", error: "تعذر تحميل بيانات الفاتورة.",
         print: "طباعة مجدداً", close: "إغلاق",
         ready: "الفاتورة جاهزة — يتم فتح نافذة الطباعة...",
+        colName: "الصنف", colQty: "الكمية", colUnit: "سعر الوحدة", colTotal: "المجموع",
     },
 } as const;
 
@@ -110,6 +114,13 @@ export default function ReceiptPage() {
                     .no-print { display: none !important; }
                 }
                 body { background: #f5f5f5; }
+                .item-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                .item-table th { border-bottom: 1px dashed #000; padding: 2px 2px; font-weight: bold; font-size: 10px; }
+                .item-table td { padding: 2px 2px; vertical-align: top; }
+                .col-name { text-align: left; width: 40%; }
+                .col-qty  { text-align: center; width: 12%; }
+                .col-unit { text-align: right; width: 22%; }
+                .col-total { text-align: right; width: 24%; }
             `}</style>
 
             <div className="no-print" style={{ padding: "12px 16px", background: "#1a1a1a", color: "#fbbf24", fontFamily: "monospace", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center" }} dir={dir}>
@@ -134,7 +145,19 @@ export default function ReceiptPage() {
                     padding: "4mm 2mm",
                     color: "#000",
                 }}>
-                    <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "14px", marginBottom: "4px" }}>
+                    {/* Logo */}
+                    <div style={{ textAlign: "center", marginBottom: "6px" }}>
+                        <Image
+                            src="/logo.png"
+                            alt={receipt.restaurantName}
+                            width={160}
+                            height={80}
+                            style={{ objectFit: "contain", maxWidth: "100%", height: "auto" }}
+                            priority
+                        />
+                    </div>
+
+                    <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "13px", marginBottom: "4px" }}>
                         {receipt.restaurantName}
                     </div>
 
@@ -149,19 +172,29 @@ export default function ReceiptPage() {
                         </div>
                     </div>
 
-                    <div style={{ margin: "4px 0" }}>
-                        {receipt.items.map((item, i) => (
-                            <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: "4px" }}>
-                                <span style={{ flex: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-                                    {item.name}
-                                </span>
-                                <span style={{ whiteSpace: "nowrap" }}>x{item.quantity}</span>
-                                <span style={{ whiteSpace: "nowrap", minWidth: "52px", textAlign: "right" }}>
-                                    {item.subtotal.toFixed(2)} TL
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+                    {/* Items table — 4 columns */}
+                    <table className="item-table">
+                        <thead>
+                            <tr>
+                                <th className="col-name">{labels.colName}</th>
+                                <th className="col-qty">{labels.colQty}</th>
+                                <th className="col-unit">{labels.colUnit}</th>
+                                <th className="col-total">{labels.colTotal}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {receipt.items.map((item, i) => (
+                                <tr key={i}>
+                                    <td className="col-name" style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", maxWidth: "28mm" }}>
+                                        {item.name}
+                                    </td>
+                                    <td className="col-qty">{item.quantity}</td>
+                                    <td className="col-unit">{item.unitPrice.toFixed(2)}</td>
+                                    <td className="col-total">{item.subtotal.toFixed(2)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
 
                     <div style={{ borderTop: "1px dashed #000", paddingTop: "4px", margin: "6px 0 4px" }}>
                         {receipt.payments.map((p, i) => (
