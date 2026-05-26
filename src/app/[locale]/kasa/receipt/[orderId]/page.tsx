@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useLocale } from "next-intl";
-import Image from "next/image";
 
 interface ReceiptData {
     restaurantName: string;
@@ -22,21 +21,21 @@ const LABELS = {
         loading: "Yükleniyor...", error: "Fiş verisi yüklenemedi.",
         print: "Tekrar Yazdır", close: "Kapat",
         ready: "Fiş hazır — yazdırma penceresi açılıyor...",
-        colName: "ÜRÜN ADI", colQty: "AD", colUnit: "BİRİM FİYAT", colTotal: "TOPLAM",
+        colName: "ÜRÜN", colQty: "AD", colUnit: "FİYAT", colTotal: "TUTAR",
     },
     en: {
         table: "Table", waiter: "Waiter", total: "TOTAL", thanks: "Thank you!",
         loading: "Loading...", error: "Receipt data could not be loaded.",
         print: "Print Again", close: "Close",
         ready: "Receipt ready — print dialog opening...",
-        colName: "ITEM", colQty: "QTY", colUnit: "UNIT PRICE", colTotal: "TOTAL",
+        colName: "ITEM", colQty: "QTY", colUnit: "PRICE", colTotal: "TOTAL",
     },
     ar: {
         table: "الطاولة", waiter: "النادل", total: "المجموع", thanks: "شكراً!",
         loading: "جار التحميل...", error: "تعذر تحميل بيانات الفاتورة.",
         print: "طباعة مجدداً", close: "إغلاق",
         ready: "الفاتورة جاهزة — يتم فتح نافذة الطباعة...",
-        colName: "الصنف", colQty: "الكمية", colUnit: "سعر الوحدة", colTotal: "المجموع",
+        colName: "الصنف", colQty: "الكمية", colUnit: "السعر", colTotal: "المجموع",
     },
 } as const;
 
@@ -55,6 +54,7 @@ export default function ReceiptPage() {
 
     const [receipt, setReceipt] = useState<ReceiptData | null>(null);
     const [error, setError] = useState(false);
+    const [logoReady, setLogoReady] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("rms_token");
@@ -74,14 +74,13 @@ export default function ReceiptPage() {
             .catch(() => setError(true));
     }, [orderId, locale]);
 
+    // Print only after both receipt data AND logo image are ready
     useEffect(() => {
-        if (!receipt) return;
-        const timer = setTimeout(() => {
-            window.print();
-        }, 400);
+        if (!receipt || !logoReady) return;
+        const timer = setTimeout(() => window.print(), 300);
         window.onafterprint = () => window.close();
         return () => clearTimeout(timer);
-    }, [receipt]);
+    }, [receipt, logoReady]);
 
     if (error) {
         return (
@@ -105,22 +104,37 @@ export default function ReceiptPage() {
     return (
         <>
             <style>{`
-                @page {
-                    size: 80mm auto;
-                    margin: 4mm;
-                }
+                @page { size: 80mm auto; margin: 4mm; }
                 @media print {
                     html, body { margin: 0; padding: 0; background: #fff; }
                     .no-print { display: none !important; }
                 }
                 body { background: #f5f5f5; }
-                .item-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-                .item-table th { border-bottom: 1px dashed #000; padding: 2px 2px; font-weight: bold; font-size: 10px; }
-                .item-table td { padding: 2px 2px; vertical-align: top; }
-                .col-name { text-align: left; width: 40%; }
-                .col-qty  { text-align: center; width: 12%; }
-                .col-unit { text-align: right; width: 22%; }
-                .col-total { text-align: right; width: 24%; }
+                .receipt-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 11px;
+                    table-layout: fixed;
+                }
+                .receipt-table th {
+                    border-bottom: 1px dashed #000;
+                    padding: 2px 2px;
+                    font-weight: bold;
+                    font-size: 10px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+                .receipt-table td {
+                    padding: 2px 2px;
+                    vertical-align: top;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .col-name  { width: 42%; text-align: start; }
+                .col-qty   { width: 10%; text-align: center; }
+                .col-unit  { width: 22%; text-align: end; }
+                .col-total { width: 26%; text-align: end; }
             `}</style>
 
             <div className="no-print" style={{ padding: "12px 16px", background: "#1a1a1a", color: "#fbbf24", fontFamily: "monospace", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center" }} dir={dir}>
@@ -145,15 +159,15 @@ export default function ReceiptPage() {
                     padding: "4mm 2mm",
                     color: "#000",
                 }}>
-                    {/* Logo */}
+                    {/* Logo — plain <img> for reliable print rendering */}
                     <div style={{ textAlign: "center", marginBottom: "6px" }}>
-                        <Image
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                             src="/logo.png"
                             alt={receipt.restaurantName}
-                            width={160}
-                            height={80}
-                            style={{ objectFit: "contain", maxWidth: "100%", height: "auto" }}
-                            priority
+                            style={{ maxWidth: "60mm", height: "auto", display: "block", margin: "0 auto" }}
+                            onLoad={() => setLogoReady(true)}
+                            onError={() => setLogoReady(true)}
                         />
                     </div>
 
@@ -172,8 +186,8 @@ export default function ReceiptPage() {
                         </div>
                     </div>
 
-                    {/* Items table — 4 columns */}
-                    <table className="item-table">
+                    {/* 4-column items table */}
+                    <table className="receipt-table">
                         <thead>
                             <tr>
                                 <th className="col-name">{labels.colName}</th>
@@ -185,9 +199,7 @@ export default function ReceiptPage() {
                         <tbody>
                             {receipt.items.map((item, i) => (
                                 <tr key={i}>
-                                    <td className="col-name" style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", maxWidth: "28mm" }}>
-                                        {item.name}
-                                    </td>
+                                    <td className="col-name">{item.name}</td>
                                     <td className="col-qty">{item.quantity}</td>
                                     <td className="col-unit">{item.unitPrice.toFixed(2)}</td>
                                     <td className="col-total">{item.subtotal.toFixed(2)}</td>
